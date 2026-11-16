@@ -171,6 +171,15 @@ select,input[type=search]{background:var(--surface-2);color:var(--ink);border:1p
 .eg.xlink .edge{opacity:.8}
 .limbo{fill:rgba(255,255,255,.02);stroke:#232a2d;stroke-dasharray:4 6}
 .treeopts{margin:-2px 0 10px}
+.worldtabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 10px}
+.worldtabs:empty{display:none}
+.worldtabs button{display:inline-flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:7px 12px;cursor:pointer;color:var(--muted);font-size:14px}
+.worldtabs button .wl{font-family:var(--font-mono);font-size:11px;border:1px solid currentColor;border-radius:4px;padding:0 5px}
+.worldtabs button[aria-selected="true"]{color:var(--ink);border-color:var(--same);background:var(--surface-2)}
+.worldtabs button.hasnew::after{content:"";width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.node .xw circle{fill:#0f1214;stroke:var(--same);stroke-width:1.5}
+.node .xw text{fill:var(--same);font-size:11px;stroke-width:0}
+.wbadge{font-family:var(--font-mono);font-size:10.5px;color:var(--same);border:1px solid var(--same);border-radius:4px;padding:0 4px;margin-left:6px;vertical-align:middle}
 .fullhead{display:none}
 .treewrap.full{position:fixed;inset:0;z-index:40;background:var(--bg);padding:12px 16px calc(12px + env(safe-area-inset-bottom));display:flex;flex-direction:column;overflow:hidden}
 .treewrap.full .fullhead{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px}
@@ -204,6 +213,8 @@ svg.focusing .eg.hl .edge{opacity:1;stroke-width:3px}
 .person .nm{font-weight:600;font-size:14.5px;line-height:1.25}
 .person .rl{display:block;font-size:12.5px;color:var(--accent);margin-top:2px}
 .person .ln{font-size:13px;color:var(--muted);margin-top:3px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.worldhead{grid-column:1/-1;display:flex;align-items:center;gap:10px;margin-top:18px;padding-top:12px;border-top:1px solid var(--line);font-family:var(--font-display);font-size:20px}
+.worldhead .wl{font-family:var(--font-mono);font-size:11px;color:var(--same);border:1px solid var(--same);border-radius:4px;padding:0 5px}
 .famhead{grid-column:1/-1;display:flex;align-items:center;gap:8px;margin-top:10px;font-family:var(--font-mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
 .famhead i{width:10px;height:10px;border-radius:50%;background:var(--c)}
 
@@ -371,7 +382,7 @@ let V = W;                                   // the episode we're viewing "as of
 let season = W + 1 < N ? EPS[Math.max(0, W + 1)].s : 3;
 let tab = W >= 0 ? "new" : "new";
 const photoMem = {};
-let showLoops = true, famFilter = "all", personFilter = "", worldShow = {A:true, B:true, O:true};
+let curWorld = "A", showLoops = true, famFilter = "all", personFilter = "", worldShow = {A:true, B:true, O:true};
 
 // ---------- Helpers ----------
 const $ = s => document.querySelector(s);
@@ -450,6 +461,15 @@ function fmtDate(d){
 // Name a character as known at V (identity reveals keep their own names)
 function name(id){ return CH[id] ? CH[id].name : id; }
 function jobOf(id){ const c = CH[id]; if (!c || !c.job) return ""; const r = c.job.filter(x => x.ep <= V); return r.length ? r[r.length-1].t : ""; }
+// The three worlds. Names follow what the show has revealed by the episode being viewed.
+const EPI = c => EPS.findIndex(e => e.code === c);
+function worldName(w){
+  if (w === "A") return V >= EPI("S3E3") ? "Adam's world" : "Jonas's world";
+  if (w === "B") return V >= EPI("S3E3") ? "Eva's world" : (V >= EPI("S3E1") ? "Martha's world" : "The other world");
+  return "The origin world";
+}
+const worldOf = id => (CH[id] && CH[id].world) || "A";
+const visWorlds = () => ["A","B","C"].filter(w => D.CHARACTERS.some(c => vis(c) && (c.world||"A") === w));
 function roleOf(id){ const c = CH[id]; if (!c || !c.role) return ""; const r = c.role.filter(x => x.ep <= V); return r.length ? r[r.length-1].t : ""; }
 
 // ---------- Header & selector ----------
@@ -539,7 +559,7 @@ function renderTimeline(){
   if (personFilter && !(CH[personFilter] && CH[personFilter].ep <= V)) personFilter = "";
   if (personFilter) evs = evs.filter(e => e.who.includes(personFilter));
   const worldsPresent = ["A","B","O"].filter(w => D.EVENTS.some(e => vis(e) && e.w === w));
-  const WN = {A:"Jonas's world", B:"The other world", O:"The origin world"};
+  const WN = {A:worldName("A"), B:worldName("B"), O:worldName("C")};
   const groups = worldsPresent.filter(w => worldShow[w]).map(w => {
     const list = evs.filter(e => e.w === w).sort(evSort);
     const byYear = {};
@@ -668,6 +688,16 @@ function showTip(g, clientX, clientY){
 }
 function hideTip(){ const tip = $("#edgetip"); if (tip) tip.hidden = true; if (tipG) { tipG.classList.remove("hover"); tipG = null; } }
 let view = {x:0, y:0, k:1}, treeBuilt = false, lastFitV = null;
+// People this person is tied to in other worlds: counterparts and cross-world relationships.
+function crossWorld(id){
+  const w = worldOf(id), out = [];
+  const c = CH[id];
+  if (c.twin && CH[c.twin] && vis(CH[c.twin]) && worldOf(c.twin) !== w) out.push({id:c.twin, kind:"Counterpart"});
+  D.CHARACTERS.forEach(o => { if (o.twin === id && vis(o) && worldOf(o.id) !== w) out.push({id:o.id, kind:"Counterpart"}); });
+  D.LINKS.forEach(l => { if (!vis(l) || superseded(l) || (l.a !== id && l.b !== id)) return; const o = l.a === id ? l.b : l.a;
+    if (CH[o] && vis(CH[o]) && worldOf(o) !== w && !out.some(x => x.id === o)) out.push({id:o, kind:relTo(l, id).kind}); });
+  return out;
+}
 function renderTree(){
   const el = $("#v-tree");
   if (W < 0) { el.innerHTML = lockedMsg("tree"); treeBuilt = false; return; }
@@ -676,6 +706,7 @@ function renderTree(){
       <div class="vhead"><h2>Relationship tree</h2><p>Read it like a family tree: each row is a generation (as far as the show has told you), couples sit side by side, and children hang from the line below their parents. Curved lines are the links the time loop won't let fit a normal tree. Hover over or tap any line to see the relationship; hover over a person to light up their links, tap them for their file. Lines from ${code(V)} glow.</p></div>
       <div class="treewrap" id="treewrap">
       <div class="fullhead"><h2>Relationship tree <span class="mono" id="fullep"></span></h2><button class="btn sm" id="zexit">✕ Exit</button></div>
+      <div class="worldtabs" id="worldtabs" role="tablist" aria-label="World"></div>
       <div class="famchips" id="famchips"></div>
       <div class="treeopts"><button class="toggle" id="loopsBtn" aria-pressed="true">Show time-loop &amp; identity links</button></div>
       <div class="treebox" id="treebox">
@@ -701,18 +732,22 @@ function renderTree(){
     bindTree();
   }
   // family chips
-  const famsVisible = Object.keys(FAM).filter(f => D.CHARACTERS.some(c => c.fam === f && vis(c)));
+  const worlds = visWorlds();
+  if (!worlds.includes(curWorld)) curWorld = "A";
+  $("#worldtabs").innerHTML = worlds.length > 1 ? worlds.map(w => `<button role="tab" data-world-tab="${w}" aria-selected="${w===curWorld}" class="${D.CHARACTERS.some(c => isNew(c) && (c.world||"A")===w) ? "hasnew" : ""}"><span class="wl">${w}</span>${esc(worldName(w))}</button>`).join("") : "";
+  const inWorld = c => (c.world || "A") === curWorld;
+  const famsVisible = Object.keys(FAM).filter(f => D.CHARACTERS.some(c => c.fam === f && vis(c) && inWorld(c)));
   if (famFilter !== "all" && !famsVisible.includes(famFilter)) famFilter = "all";
   $("#famchips").innerHTML = `<button data-fam="all" style="--c:var(--ink)" aria-pressed="${famFilter==="all"}"><i></i>Everyone</button>` +
     famsVisible.map(f => `<button data-fam="${f}" style="--c:${FAM[f].color}" aria-pressed="${famFilter===f}"><i></i>${FAM[f].name}</button>`).join("");
   // eras
   const GEN = ["Born c.1900s","Born c.1940s","Born c.1970s","Born c.2000s"];
   $("#eras").innerHTML = `<rect x="-${U*0.55}" y="-${RH*0.45}" width="${U*2.1}" height="${RH*4 - RH*0.1}" rx="18" class="limbo"/><text class="eralabel" x="${U*0.5}" y="-${RH*0.45 - 18}" text-anchor="middle">NOT YET PLACED</text>` +
-    (() => { const minRow = Math.min(0, ...D.CHARACTERS.filter(vis).map(n => nodePos(n).row)); const out = [];
+    (() => { const minRow = Math.min(0, ...D.CHARACTERS.filter(c => vis(c) && inWorld(c)).map(n => nodePos(n).row)); const out = [];
       for (let i = minRow; i <= 3; i++) out.push(`<line class="eraline" x1="${U*2}" x2="${U*22.3}" y1="${i*RH}" y2="${i*RH}"/><text class="eralabel" x="-${U*0.62}" y="${i*RH+4}" text-anchor="end">${i < 0 ? "Earlier" : GEN[i]}</text>`);
       return out.join(""); })();
   // nodes & edges
-  const nodes = D.CHARACTERS.filter(vis);
+  const nodes = D.CHARACTERS.filter(c => vis(c) && inWorld(c));
   const ids = new Set(nodes.map(n => n.id));
   const edges = D.LINKS.filter(l => vis(l) && !superseded(l) && ids.has(l.a) && ids.has(l.b));
   // neighbourhood for family filter
@@ -818,6 +853,7 @@ function renderTree(){
     const inner = `<rect class="halo" x="${-R-5}" y="${-R-5}" width="${2*R+10}" height="${2*R+10}" rx="10"/>
       <rect x="${-R}" y="${-R}" width="${2*R}" height="${2*R}" rx="7" fill="#0f1214" stroke="${col}" stroke-width="2.5"/>
       ${ph ? `<image href="${ph}" x="-27" y="-27" width="54" height="54" clip-path="url(#clipc)" preserveAspectRatio="xMidYMid slice"/>` : `<text text-anchor="middle" dy="5" style="fill:${col};stroke-width:0;font-family:var(--font-mono);font-size:15px">${esc(initials(n.name))}</text>`}
+      ${crossWorld(n.id).some(x => x.kind !== "Counterpart") ? `<g class="xw"><circle cx="${R-2}" cy="${-R+2}" r="9"/><text x="${R-2}" y="${-R+6}" text-anchor="middle">↔</text></g>` : ""}
       <text text-anchor="middle" y="${R+16}">${esc(n.name)}</text>
       ${jobOf(n.id) ? `<text class="job" text-anchor="middle" y="${R+30}">${esc(jobOf(n.id))}</text>` : ""}`;
     if (!g) {
@@ -846,7 +882,7 @@ function renderTree(){
 function applyView(){ const vp = $("#vp"); if (vp) vp.setAttribute("transform", `translate(${view.x},${view.y}) scale(${view.k})`); }
 function fitTree(nodes, P){
   const box = $("#treebox"); if (!box || !box.clientWidth) return;
-  nodes = nodes || D.CHARACTERS.filter(vis);
+  nodes = nodes || D.CHARACTERS.filter(c => vis(c) && (c.world || "A") === curWorld);
   if (!nodes.length) return;
   P = P || Object.fromEntries(nodes.map(n => [n.id, nodePos(n)]));
   let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;
@@ -907,7 +943,7 @@ function bindTree(){
     const g = e.target.closest && e.target.closest("g.eg");
     const n = e.target.closest && e.target.closest("g.node");
     setHL(n ? n.dataset.id : null);
-    if (n) { n._tip = {html:`<b>${esc(name(n.dataset.id))}</b><span class="role">${esc(roleOf(n.dataset.id))}</span><span class="k">${FAM[CH[n.dataset.id].fam].name} · tap for their file</span>`}; showTip(n, e.clientX, e.clientY); }
+    if (n) { const xw = crossWorld(n.dataset.id); n._tip = {html:`<b>${esc(name(n.dataset.id))}</b><span class="role">${esc(roleOf(n.dataset.id))}</span>${xw.length ? `<span class="role" style="color:var(--same)">↔ ${xw.map(x => `${esc(x.kind.toLowerCase())} ${esc(name(x.id))} (${esc(worldName(worldOf(x.id)))})`).join("; ")}</span>` : ""}<span class="k">${FAM[CH[n.dataset.id].fam].name} · tap for their file</span>`}; showTip(n, e.clientX, e.clientY); }
     else if (g) showTip(g, e.clientX, e.clientY); else hideTip();
   });
   svg.addEventListener("pointerleave", e => { if (e.pointerType === "mouse") { hideTip(); setHL(null); } });
@@ -957,12 +993,13 @@ function renderPeople(){
   const el = $("#v-people");
   if (W < 0) { el.innerHTML = lockedMsg("cast list"); return; }
   const order = ["kahnwald","nielsen","albers","tiedemann","doppler","tannhaus","obendorf","others","unknown","otherworld"];
-  const html = order.map(f => {
-    const list = D.CHARACTERS.filter(c => c.fam === f && vis(c));
+  const worlds = visWorlds();
+  const html = worlds.map(w => (worlds.length > 1 ? `<div class="worldhead"><span class="wl">${w}</span>${esc(worldName(w))}</div>` : "") + order.map(f => {
+    const list = D.CHARACTERS.filter(c => c.fam === f && vis(c) && (c.world || "A") === w);
     if (!list.length) return "";
     return `<div class="famhead" style="--c:${FAM[f].color}"><i></i>${FAM[f].name}</div>` + list.map(c =>
       `<button class="person ${isNew(c)?"new":""}" data-person="${c.id}">${avatar(c.id)}<span><span class="nm">${esc(c.name)} ${isNew(c)?'<span class="newtag">NEW</span>':""}</span><span class="rl">${esc(roleOf(c.id))}</span><span class="ln">${esc(latestBio(c))}</span></span></button>`).join("");
-  }).join("");
+  }).join("")).join("");
   el.innerHTML = `<div class="vhead"><h2>People</h2><p>Tap anyone for their file. ${apiOK ? "Photos the site owner adds appear for everyone. Photos you add yourself stay in this browser only and take priority for you." : "Add one photo from a file, or import a whole folder of your own photos at once. Photos stay in this browser only."}</p></div>
     <div class="btnrow" style="margin:-4px 0 14px"><button class="btn" id="bulkPhotos">${isOwnerMode() ? "Import photos for everyone…" : "Import photos…"}</button>${apiOK ? (isOwnerMode() ? `<button class="btn" id="ownerOut">Owner mode on · Sign out</button>` : `<button class="btn" id="ownerIn">Owner sign-in</button>`) : ""}${Object.keys(photoMem).some(k => photoMem[k]) || hasAnyPhoto() ? `<button class="btn warn" id="clearPhotos">Remove my local photos</button>` : ""}</div>
     <div class="people">${html}</div>`;
@@ -1083,7 +1120,7 @@ function openPerson(id){
   const trips = D.JOURNEYS.filter(t => vis(t) && t.who === id);
   const ph = photo(id);
   openSheet(`<div class="dossier">
-    <div class="dossier-top">${avatar(id)}<div><h2 id="sheetTitle">${esc(c.name)}</h2><div style="font-size:14px;margin-top:2px">${esc(roleOf(id))}</div><div style="color:var(--muted);font-size:12.5px">${FAM[c.fam].name} · first seen ${code(c.ep)}</div>
+    <div class="dossier-top">${avatar(id)}<div><h2 id="sheetTitle">${esc(c.name)}</h2><div style="font-size:14px;margin-top:2px">${esc(roleOf(id))}</div><div style="color:var(--muted);font-size:12.5px">${visWorlds().length > 1 ? esc(worldName(worldOf(id))) + " · " : ""}${FAM[c.fam].name} · first seen ${code(c.ep)}</div>
       <div class="btnrow" style="margin-top:8px">${isOwnerMode()
         ? `<button class="btn" data-photo="${id}">${shared[id] ? "Replace photo for everyone" : "Add photo for everyone"}</button>${shared[id] ? `<button class="btn" data-unphoto="${id}">Remove for everyone</button>` : ""}`
         : `<button class="btn" data-photo="${id}">${localPhoto(id) ? "Change my photo" : (shared[id] ? "Use my own photo" : "Add photo")}</button>${localPhoto(id) ? `<button class="btn" data-unphoto="${id}">Remove my photo</button>` : ""}`}</div></div></div>
@@ -1091,6 +1128,7 @@ function openPerson(id){
     <div class="bio">${bio.map(b => `<div class="row">${epBadge(b.ep)}<span>${isNew(b)?'<span class="newtag">NEW</span> ':""}<span class="${superseded(b)?"struck":""}">${esc(b.t)}</span>${superseded(b) ? `<div class="turned"><b>TURNED OUT · ${code(b.until)}</b> ${esc(b.later)}</div>` : ""}</span></div>`).join("")}</div>
     ${links.length ? `<h3>Connections</h3><div class="rels">${links.map(l => { const r = relTo(l, id); const sup = superseded(l);
         return `<button class="rel" data-person="${r.other}"><span class="kind ${sup?"struck":""}">${r.kind}</span>${avatar(r.other)}<span><span class="${sup?"struck":""}">${esc(name(r.other))}</span>${sup?` <span style="color:var(--thread);font-size:12px">· ${esc(l.later)} (${code(l.until)})</span>`:""} ${epBadge(l.ep)}${isNew(l)?' <span class="newtag">NEW</span>':""}</span></button>`; }).join("")}</div>` : ""}
+    ${(() => { const xw = crossWorld(id).filter(x => x.kind === "Counterpart"); return xw.length ? `<h3>In other worlds</h3><div class="rels">${xw.map(x => `<button class="rel" data-person="${x.id}"><span class="kind">${esc(worldName(worldOf(x.id)))}</span>${avatar(x.id)}<span>${esc(name(x.id))}</span></button>`).join("")}</div>` : ""; })()}
     ${trips.length ? `<h3>Time travel</h3><div class="bio">${trips.map(t => `<div class="row">${epBadge(t.ep)}<span class="mono">${esc(t.from)} → ${esc(t.to)}</span><span style="color:var(--muted)">${esc(t.how)}</span></div>`).join("")}</div>` : ""}
     ${evs.length ? `<h3>On the timeline</h3><div class="bio">${evs.map(e => `<div class="row"><span class="epb">${e.d ? e.d.slice(0,4) : "?"}${e.w==="B"?" ◐":e.w==="O"?" ○":""}</span><span class="${superseded(e)?"struck":""}">${esc(e.t)}</span></div>`).join("")}</div>` : ""}
   </div>`);
@@ -1101,6 +1139,7 @@ let photoTarget = null;
 // ---------- Bulk photo import (from the viewer's own files; kept in this browser only) ----------
 // File names may start with the official guide's character code (C01_..., C32_...) or contain the character's name.
 const CODE2ID = {C01:"jonas",C02:"stranger",C03:"adam",C04:"michael",C05:"hannah",C06:"ines",C07:"daniel",C08:"martha",C09:"magnus",C10:"mikkel",C11:"ulrich",C12:"katharina",C13:"mads",C14:"tronte",C15:"jana",C16:"helene",C17:"agnes",C18:"franziska",C19:"elisabeth",C20:"peter",C21:"charlotte",C22:"helge",C23:"bernd",C24:"greta",C25:"bartosz",C26:"aleksander",C27:"regina",C28:"claudia",C30:"egon",C31:"doris",C32:"noah",C33:"silja",C34:"torben",C35:"benni",C36:"jurgen",C37:"tannhaus",C38:"gustav",C39:"clausen",C40:"martha_alt",C61:"unknown",C66:"marek",C67:"sonja",C68:"charlotte_o",C75:"erik",C76:"hermann",C77:"sebastian",C78:"anatol",C79:"leopold",C80:"heinrich",C81:"ulla_s"};
+D.CHARACTERS.forEach(c => { if (c.code && !CODE2ID[c.code]) CODE2ID[c.code] = c.id; });   // other worlds
 function hasAnyPhoto(){ try { for (let i = 0; i < localStorage.length; i++) if ((localStorage.key(i)||"").startsWith("dark.photo.")) return true; } catch (e) {} return false; }
 const slug = t => t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-");
 function matchFile(fname){
@@ -1217,7 +1256,7 @@ function setWatched(i){
 function setV(i){ V = Math.max(0, Math.min(W, i)); renderAll(); }
 
 document.addEventListener("click", e => {
-  const t = e.target.closest("[data-season],[data-ep],[data-tab],[data-person],[data-close],[data-mark],[data-view],[data-goto],[data-fam],[data-world],[data-jump],[data-photo],[data-unphoto],[data-jumpch],#toLatest,#jumpNew,#scrim");
+  const t = e.target.closest("[data-season],[data-ep],[data-tab],[data-person],[data-close],[data-mark],[data-view],[data-goto],[data-fam],[data-world],[data-jump],[data-photo],[data-unphoto],[data-jumpch],[data-world-tab],#toLatest,#jumpNew,#scrim");
   if (!t) return;
   if (t.id === "scrim" || t.hasAttribute("data-close")) return closeSheet();
   if (t.dataset.season) { season = +t.dataset.season; renderSelector(); return; }
@@ -1228,6 +1267,7 @@ document.addEventListener("click", e => {
   if (t.dataset.view !== undefined) { closeSheet(); return setV(+t.dataset.view); }
   if (t.dataset.goto) { tab = t.dataset.goto; renderTabs(); if (tab === "tree") { renderTree(); requestAnimationFrame(() => fitTree()); } scrollToTabs(); return; }
   if (t.dataset.fam) { famFilter = t.dataset.fam; renderTree(); return; }
+  if (t.dataset.worldTab) { curWorld = t.dataset.worldTab; famFilter = "all"; renderTree(); requestAnimationFrame(() => fitTree()); return; }
   if (t.dataset.world) { worldShow[t.dataset.world] = !worldShow[t.dataset.world]; renderTimeline(); return; }
   if (t.dataset.jump) { const g = document.getElementById(t.dataset.jump); if (g) g.scrollIntoView({behavior:"smooth", block:"start"}); return; }
   if (t.id === "jumpNew") { const n = document.querySelector("#v-timeline .ev.new"); if (n) n.scrollIntoView({behavior:"smooth", block:"center"}); else toast("Nothing new on the timeline in " + code(V) + "."); return; }
