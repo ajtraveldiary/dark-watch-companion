@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dark Watch Companion</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,500;6..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* Plan: one committed night-forest theme. Episode selector on top, a replay bar, then tabs.
+   Everything is filtered by the episode you've watched; items new in the current episode glow yellow. */
+:root{
+  --bg:#0c0e0f; --surface:#14181a; --surface-2:#1b2023; --line:#2a3135;
+  --ink:#e9e4d8; --muted:#8e968f; --faint:#5d655f;
+  --accent:#e3b43c;      /* the yellow raincoat */
+  --thread:#c43a30;      /* the red thread */
+  --same:#d9b45d;
+  --font-display:"Bodoni Moda", "Didot", Georgia, serif;
+  --font-body:"IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono:"IBM Plex Mono", ui-monospace, Menlo, monospace;
+  color-scheme: dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.5}
+body{min-height:100%;-webkit-tap-highlight-color:transparent}
+button{font:inherit;color:inherit}
+button:focus-visible,input:focus-visible,select:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1100px;margin:0 auto;padding:0 16px}
+h1,h2,h3{font-family:var(--font-display);font-weight:500;text-wrap:balance;margin:0}
+.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+
+/* Header */
+header{padding:20px 0 8px}
+.brand{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.brand h1{font-size:30px;letter-spacing:.32em;font-weight:700}
+.brand h1 .flip{display:inline-block;transform:scaleX(-1)}
+.brand .sub{color:var(--muted);font-size:13px}
+.status:empty{display:none}
+.status{margin-top:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;font-size:14px}
+.pill{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:var(--surface-2);border:1px solid var(--line);font-size:13px}
+.pill.acc{border-color:var(--accent);color:var(--accent)}
+
+/* Episode selector */
+.selector{margin-top:14px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px}
+.pick{display:flex;align-items:center;gap:8px}
+.pick label{flex:none;font-size:13px;color:var(--muted)}
+.pick select{flex:1;min-width:0;height:38px;text-overflow:ellipsis;font-family:var(--font-mono);font-size:13.5px}
+.btn.sm{flex:none;height:38px;padding:0 12px;font-size:13px;white-space:nowrap}
+.btn.sm:disabled{opacity:.4;cursor:default}
+.replay{margin-top:8px!important}
+.seasons{display:flex;gap:6px;margin-bottom:12px}
+.seasons button{flex:1;background:none;border:1px solid var(--line);border-radius:9px;padding:8px 0;cursor:pointer;font-family:var(--font-mono);font-size:13px;color:var(--muted)}
+.seasons button[aria-pressed="true"]{border-color:var(--ink);color:var(--ink);background:var(--surface-2)}
+.seasons .meter{display:block;height:3px;margin:6px 10px 0;background:var(--line);border-radius:2px;overflow:hidden}
+.seasons .meter i{display:block;height:100%;background:var(--accent)}
+.eps{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.ep{position:relative;text-align:left;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:10px 10px 10px 12px;cursor:pointer;min-height:68px;display:flex;flex-direction:column;gap:2px}
+.ep .n{font-family:var(--font-mono);font-size:12px;color:var(--muted)}
+.ep .t{font-size:14px;line-height:1.25}
+.ep.watched{border-color:#3b4a3e}
+.ep.watched::before{content:"";position:absolute;left:0;top:8px;bottom:8px;width:3px;border-radius:2px;background:var(--accent)}
+.ep.watched .n::after{content:" · watched";color:var(--accent)}
+.ep.next{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
+.ep.next .n::after{content:" · up next";color:var(--accent)}
+.ep.locked .t{color:var(--muted)}
+.ep.viewing{outline:2px dashed var(--same);outline-offset:2px}
+
+/* Replay bar */
+.replay{margin-top:12px;display:flex;align-items:center;gap:8px}
+.replay input[type=range]{flex:1;min-width:90px;accent-color:var(--accent)}
+.iconbtn{background:var(--surface-2);border:1px solid var(--line);border-radius:8px;min-width:36px;height:36px;cursor:pointer;display:inline-grid;place-items:center;padding:0 10px}
+.iconbtn:disabled{opacity:.35;cursor:default}
+.replay .label{font-size:13px;color:var(--muted)}
+.replay .label b{color:var(--ink);font-weight:500}
+.replay-note{font-size:12px;color:var(--same)}
+
+/* Tabs */
+.tabbar{display:flex;align-items:center;gap:8px}
+.tabbar .tabrow{flex:1;min-width:0}
+.fsbtn{flex:none}
+.pagefull-head{display:none}
+#content.full{position:fixed;inset:0;z-index:35;background:var(--bg);overflow-y:auto;overscroll-behavior:contain;padding:0 max(16px, calc((100vw - 1100px)/2)) calc(24px + env(safe-area-inset-bottom))}
+#content.full .pagefull-head{display:flex;align-items:center;gap:8px;padding:12px 0 2px}
+#content.full .pf-title{font-family:var(--font-display);font-weight:700;letter-spacing:.3em;font-size:18px;margin-right:auto}
+#content.full .pf-ep{font-size:13px;color:var(--muted)}
+#content.full nav.tabs{top:0}
+body.pagefull{overflow:hidden}
+#content.full .fsbtn{display:none}
+nav.tabs{position:sticky;top:0;z-index:20;background:linear-gradient(var(--bg) 80%,transparent);padding:12px 0 10px;margin-top:8px}
+.tabrow{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+.tabrow::-webkit-scrollbar{display:none}
+.tabrow button{flex:none;background:none;border:1px solid transparent;border-radius:999px;padding:7px 14px;cursor:pointer;color:var(--muted);font-size:14px}
+.tabrow button[aria-selected="true"]{color:var(--bg);background:var(--ink)}
+.tabrow .dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--accent);margin-left:6px;vertical-align:middle}
+section.view{display:none;padding-bottom:60px}
+section.view.on{display:block}
+.vhead{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin:6px 0 14px}
+.vhead h2{font-size:24px}
+.vhead p{margin:0;color:var(--muted);font-size:13px;max-width:60ch}
+
+/* Generic cards */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px}
+.new{border-color:var(--accent)!important;box-shadow:0 0 0 1px rgba(227,180,60,.35),0 0 24px -8px rgba(227,180,60,.6)}
+.newtag{font-family:var(--font-mono);font-size:10px;letter-spacing:.08em;color:var(--bg);background:var(--accent);border-radius:4px;padding:1px 5px;vertical-align:middle}
+.epb{font-family:var(--font-mono);font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:0 5px;white-space:nowrap}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chip{display:inline-flex;align-items:center;gap:6px;background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:2px 10px 2px 2px;font-size:12.5px;cursor:pointer}
+.chip .av{width:22px;height:22px;font-size:9px}
+.struck{text-decoration:line-through;text-decoration-color:var(--thread);color:var(--muted)}
+.turned{margin-top:6px;font-size:13.5px;padding-left:10px;border-left:2px solid var(--thread)}
+.turned b{color:var(--thread);font-weight:600;font-size:11px;font-family:var(--font-mono);letter-spacing:.05em}
+.empty{color:var(--muted);padding:28px 16px;text-align:center;border:1px dashed var(--line);border-radius:12px}
+
+/* Avatars */
+.av{flex:none;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-family:var(--font-mono);font-size:13px;font-weight:500;background:#101315;border:2px solid var(--c,#888);color:var(--c,#888);overflow:hidden}
+.av img{width:100%;height:100%;object-fit:cover}
+
+/* What's new */
+.newgrid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.newgrid h3{font-size:17px;margin-bottom:8px}
+.newlist{display:flex;flex-direction:column;gap:8px}
+.newitem{display:flex;gap:10px;align-items:flex-start;font-size:14px}
+.newitem .k{flex:none;font-family:var(--font-mono);font-size:10.5px;color:var(--muted);width:62px;padding-top:3px;text-transform:uppercase;letter-spacing:.06em}
+.recap{font-size:15.5px;max-width:65ch}
+.counts{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 2px}
+.counts span{font-family:var(--font-mono);font-size:12px;color:var(--muted)}
+.counts b{color:var(--accent);font-weight:500}
+.linkbtn{background:none;border:none;color:var(--accent);cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:3px}
+
+/* Timeline */
+.tl-tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+select,input[type=search]{background:var(--surface-2);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:7px 10px;font:inherit;font-size:14px}
+.toggle{background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:5px 12px;cursor:pointer;font-size:13px;color:var(--muted)}
+.toggle[aria-pressed="true"]{color:var(--ink);border-color:var(--ink)}
+.yearstrip{display:flex;gap:4px;overflow-x:auto;padding-bottom:6px;margin-bottom:10px;scrollbar-width:thin}
+.yearstrip button{flex:none;font-family:var(--font-mono);font-size:12px;background:none;border:1px solid var(--line);color:var(--muted);border-radius:6px;padding:3px 8px;cursor:pointer}
+.yearstrip button.hasnew{border-color:var(--accent);color:var(--accent)}
+.world{margin-top:18px}
+.world > h3{font-size:14px;font-family:var(--font-mono);font-weight:400;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin:0 0 6px}
+.yeargroup{display:grid;grid-template-columns:72px 1fr;gap:0 14px;position:relative}
+.yeargroup .yr{font-family:var(--font-display);font-size:24px;line-height:1;padding-top:12px;text-align:right;position:sticky;top:58px;align-self:start}
+.yeargroup .evs{border-left:1px solid var(--line);padding:6px 0 10px 16px;display:flex;flex-direction:column;gap:8px}
+.ev{position:relative;padding:10px 12px}
+.ev::before{content:"";position:absolute;left:-21px;top:16px;width:9px;height:9px;border-radius:50%;background:var(--bg);border:2px solid var(--muted)}
+.ev.new::before{border-color:var(--accent);background:var(--accent)}
+.ev .meta{display:flex;justify-content:space-between;gap:8px;font-size:12px;color:var(--muted);margin-bottom:4px}
+.ev .meta .date{font-family:var(--font-mono)}
+.world-B .yr{color:#e8a2b7}
+.world-O .yr{color:var(--same)}
+
+/* Tree */
+.treebox{position:relative;height:min(72vh,720px);min-height:420px;background:radial-gradient(ellipse at 50% 30%,#141a1c,#0a0c0d 70%);border:1px solid var(--line);border-radius:14px;overflow:hidden;touch-action:none}
+.treebox svg{width:100%;height:100%;display:block;cursor:grab;user-select:none}
+.treebox svg.dragging{cursor:grabbing}
+.treectl{position:absolute;right:10px;top:10px;display:flex;flex-direction:column;gap:6px}
+.treehint{margin-top:6px;font-size:12px;color:var(--faint)}
+.node{cursor:pointer;transition:transform .7s cubic-bezier(.2,.8,.2,1),opacity .4s}
+.node text{fill:var(--ink);font-size:12px;font-family:var(--font-body);paint-order:stroke;stroke:#0b0d0e;stroke-width:3.5px}
+.node text.job{fill:var(--accent);font-size:10.5px;font-family:var(--font-mono);letter-spacing:.02em;opacity:.85}
+.node .sub{fill:var(--muted);font-size:10px;font-family:var(--font-mono)}
+.node.dim,.edge.dim{opacity:.12}
+.node .halo{fill:none;stroke:var(--accent);stroke-width:3;opacity:0}
+.node.isnew .halo{opacity:1;animation:pulse 1.8s ease-in-out infinite}
+@keyframes pulse{0%,100%{stroke-opacity:.95}50%{stroke-opacity:.25}}
+.edge{fill:none;transition:opacity .4s}
+.edge.isnew{filter:drop-shadow(0 0 4px rgba(227,180,60,.9))}
+.eg .hit{fill:none;stroke:transparent;stroke-width:16;pointer-events:stroke;cursor:help}
+.eg .edge{pointer-events:none}
+.eg.dim{opacity:.12}
+.eg.xlink .edge{opacity:.8}
+.limbo{fill:rgba(255,255,255,.02);stroke:#232a2d;stroke-dasharray:4 6}
+.treeopts{margin:-2px 0 10px}
+.fullhead{display:none}
+.treewrap.full{position:fixed;inset:0;z-index:40;background:var(--bg);padding:12px 16px calc(12px + env(safe-area-inset-bottom));display:flex;flex-direction:column;overflow:hidden}
+.treewrap.full .fullhead{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px}
+.treewrap.full .fullhead h2{font-size:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.treewrap.full .fullhead .mono{font-size:13px;color:var(--muted);margin-left:6px}
+.treewrap.full .famchips{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+.treewrap.full .treebox{flex:1;height:auto!important;min-height:0}
+.treewrap.full .legend{flex:none;max-height:20vh;overflow:auto}
+.treewrap.full .treehint{flex:none}
+body.treefull{overflow:hidden}
+svg.focusing .eg:not(.hl),svg.focusing .node:not(.hl){opacity:.1}
+svg.focusing .eg.hl .edge{opacity:1;stroke-width:3px}
+.eg.hover .edge{stroke-width:4px;filter:drop-shadow(0 0 4px rgba(255,255,255,.55))}
+.edgetip{position:absolute;z-index:5;max-width:min(300px,80%);background:var(--ink);color:var(--bg);border-radius:10px;padding:8px 11px;font-size:13px;line-height:1.35;pointer-events:none;box-shadow:0 6px 20px rgba(0,0,0,.5)}
+.edgetip b{font-weight:600}
+.edgetip .role{display:block;margin-top:2px}
+.edgetip .k{display:block;font-family:var(--font-mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;opacity:.65;margin-top:3px}
+.eralabel{fill:var(--faint);font-family:var(--font-mono);font-size:12px}
+.eraline{stroke:#1d2326;stroke-width:1}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:10px;font-size:12.5px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend svg{width:30px;height:10px}
+.famchips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.famchips button{display:inline-flex;align-items:center;gap:6px;background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:4px 11px;cursor:pointer;font-size:13px;color:var(--muted)}
+.famchips button i{width:9px;height:9px;border-radius:50%;background:var(--c)}
+.famchips button[aria-pressed="true"]{color:var(--ink);border-color:var(--c)}
+
+/* People */
+.people{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.person{display:flex;gap:12px;align-items:flex-start;text-align:left;cursor:pointer;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px}
+.person .nm{font-weight:600;font-size:14.5px;line-height:1.25}
+.person .rl{display:block;font-size:12.5px;color:var(--accent);margin-top:2px}
+.person .ln{font-size:13px;color:var(--muted);margin-top:3px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.famhead{grid-column:1/-1;display:flex;align-items:center;gap:8px;margin-top:10px;font-family:var(--font-mono);font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.famhead i{width:10px;height:10px;border-radius:50%;background:var(--c)}
+
+/* Mysteries */
+.mgrid{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
+.mq{font-family:var(--font-display);font-size:18px;line-height:1.25;margin-bottom:6px}
+.mstate{font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+.mstate.open{color:var(--thread)}
+.mstate.solved{color:#79b884}
+.mstate.partial{color:var(--accent)}
+.ans{font-size:14px;margin-top:6px;display:flex;gap:8px}
+
+/* Travels */
+.trips{display:flex;flex-direction:column;gap:8px}
+.trip{display:grid;grid-template-columns:40px 1fr auto;gap:12px;align-items:center}
+.trip .route{font-family:var(--font-mono);font-size:14px}
+.trip .route .arrow{color:var(--thread);margin:0 6px}
+.trip .who{font-size:14px;font-weight:600}
+.trip .how{font-size:12.5px;color:var(--muted)}
+
+/* Glossary */
+.gloss{display:grid;gap:10px;grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
+.gloss dt{font-family:var(--font-display);font-size:17px}
+.gloss dd{margin:4px 0 0;color:var(--muted);font-size:14px}
+
+/* Story */
+.story{max-width:68ch}
+.chapter{padding:22px 0 8px;border-top:1px solid var(--line)}
+.chapter:first-of-type{border-top:none;padding-top:4px}
+.chapter .ch-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.chapter .ch-num{font-family:var(--font-mono);font-size:12px;color:var(--muted);letter-spacing:.08em}
+.chapter h3{font-size:24px;line-height:1.15}
+.chapter p{font-size:16.5px;line-height:1.7;margin:0 0 14px;color:#ddd8cc}
+.chapter p:first-of-type::first-letter{font-family:var(--font-display);font-size:3.1em;float:left;line-height:.9;padding:4px 8px 0 0;color:var(--accent)}
+.chapter.latest h3{color:var(--accent)}
+.seasonbreak{font-family:var(--font-display);font-size:15px;letter-spacing:.3em;text-transform:uppercase;color:var(--muted);text-align:center;margin:30px 0 8px}
+.storytools{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+/* Recaps */
+.recaps{display:flex;flex-direction:column;gap:10px}
+.recaps .card h3{font-size:18px;margin-bottom:6px}
+.notes{margin:10px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px}
+.notes li{font-size:13.5px;color:var(--muted);padding-left:12px;border-left:2px solid var(--line)}
+.notes li em{font-style:normal;font-family:var(--font-mono);font-size:11px;color:var(--faint)}
+
+/* Sheets & dialogs */
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:50;display:none}
+.scrim.on{display:block}
+.sheet{position:fixed;z-index:60;left:50%;transform:translate(-50%,110%);bottom:0;width:min(560px,100%);max-height:88vh;overflow:auto;background:var(--surface);border:1px solid var(--line);border-bottom:none;border-radius:18px 18px 0 0;padding:18px 18px 28px;transition:transform .3s cubic-bezier(.2,.8,.2,1)}
+.sheet.on{transform:translate(-50%,0)}
+.sheet .grab{width:40px;height:4px;border-radius:2px;background:var(--line);margin:-6px auto 12px}
+.sheet h2{font-size:24px}
+.sheet .close{position:absolute;right:12px;top:12px}
+.btnrow{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.btn{border:1px solid var(--line);background:var(--surface-2);border-radius:10px;padding:10px 14px;cursor:pointer;font-size:14px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#141006;font-weight:600}
+.btn.warn{border-color:var(--thread);color:#f0a59f}
+.warnbox{margin-top:12px;padding:10px 12px;border:1px solid var(--thread);border-radius:10px;font-size:14px;color:#f3c3be;background:rgba(196,58,48,.08)}
+.dossier-top{display:flex;gap:14px;align-items:center}
+.dossier-top .av{width:84px;height:84px;font-size:22px;border-width:3px}
+.dossier h3{font-size:15px;font-family:var(--font-mono);font-weight:400;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:18px 0 8px}
+.bio{display:flex;flex-direction:column;gap:8px}
+.bio .row{display:flex;gap:10px;font-size:14.5px}
+.rels{display:flex;flex-direction:column;gap:6px}
+.rel{display:flex;align-items:center;gap:10px;font-size:14px;cursor:pointer;background:none;border:none;text-align:left;padding:4px 0}
+.rel .kind{color:var(--muted);font-size:12.5px;min-width:96px}
+.toast{position:fixed;left:50%;bottom:20px;transform:translate(-50%,140%);opacity:0;visibility:hidden;z-index:70;background:var(--ink);color:var(--bg);border-radius:12px;padding:10px 16px;font-size:14px;max-width:calc(100% - 32px);transition:transform .35s}
+.toast.on{transform:translate(-50%,0);opacity:1;visibility:visible}
+.footer{color:var(--faint);font-size:12px;padding:24px 0 40px;border-top:1px solid var(--line);margin-top:30px}
+@media (max-width:520px){
+  .brand h1{font-size:24px}
+  .eps{grid-template-columns:repeat(2,1fr)}
+  .yeargroup{grid-template-columns:52px 1fr;gap:0 10px}
+  .yeargroup .yr{font-size:19px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{transition:none!important;animation:none!important}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <h1>DARK</h1>
+      <span class="sub">Watch companion. Only shows what you've seen.</span>
+    </div>
+    <div class="status" id="status"></div>
+  </header>
+
+  <div class="selector" aria-label="Episode selector">
+    <div class="pick">
+      <label for="epSel">Watched</label>
+      <select id="epSel"></select>
+      <button class="btn primary sm" id="markNext"></button>
+    </div>
+    <div class="replay" id="replay">
+      <button class="iconbtn" id="vPrev" aria-label="Previous episode">◀</button>
+      <input type="range" id="vRange" min="0" max="0" value="0" aria-label="Show the story as of episode">
+      <button class="iconbtn" id="vNext" aria-label="Next episode">▶</button>
+      <span class="label" id="vLabel"></span>
+    </div>
+    <div class="replay-note" id="replayNote"></div>
+  </div>
+
+  <div id="content">
+  <div class="pagefull-head">
+    <span class="pf-title">DARK</span>
+    <span class="pf-ep mono" id="pfEp"></span>
+    <button class="iconbtn" id="pfPrev" aria-label="Previous episode">◀</button>
+    <button class="iconbtn" id="pfNext" aria-label="Next episode">▶</button>
+    <button class="btn sm" id="pfExit">✕ Exit</button>
+  </div>
+  <nav class="tabs" aria-label="Views">
+    <div class="tabbar">
+      <div class="tabrow" role="tablist" id="tabrow"></div>
+      <button class="iconbtn fsbtn" id="pageFull" aria-label="Full screen" title="Full screen">⛶</button>
+    </div>
+  </nav>
+
+  <section class="view" id="v-new" role="tabpanel"></section>
+  <section class="view" id="v-story" role="tabpanel"></section>
+  <section class="view" id="v-timeline" role="tabpanel"></section>
+  <section class="view" id="v-tree" role="tabpanel"></section>
+  <section class="view" id="v-people" role="tabpanel"></section>
+  <section class="view" id="v-mysteries" role="tabpanel"></section>
+  <section class="view" id="v-travels" role="tabpanel"></section>
+  <section class="view" id="v-recaps" role="tabpanel"></section>
+  <section class="view" id="v-glossary" role="tabpanel"></section>
+  </div>
+
+  <div class="footer">
+    Built from episode synopses on the Dark Wiki and observations from r/DarK. Misdirections are shown as the show presents them until the episode that overturns them. Your progress and photos are saved only in this browser.
+  </div>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle"></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+<input type="file" id="photoInput" accept="image/*" hidden>
+<input type="file" id="bulkInput" accept="image/*" multiple hidden>
+
+<script id="payload" type="application/octet-stream">__DATA__</script>
+<script>
+(function(){
+"use strict";
+// ---------- Data (encoded so a glance at the source doesn't spoil anything) ----------
+const raw = document.getElementById("payload").textContent.trim();
+const D = JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(raw), c => c.charCodeAt(0))));
+const EPS = D.EPISODES;               // [{i, code, s, n, title}]
+const FAM = D.FAMILIES;
+const CH = Object.fromEntries(D.CHARACTERS.map(c => [c.id, c]));
+const N = EPS.length;
+
+// ---------- Storage (best effort) ----------
+const store = {
+  get(k, d){ try{ const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); }catch(e){ return d; } },
+  set(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); return true; }catch(e){ return false; } },
+  del(k){ try{ localStorage.removeItem(k); }catch(e){} }
+};
+
+// ---------- State ----------
+let W = store.get("dark.watched", -1);      // highest watched episode index
+if (typeof W !== "number" || W < -1 || W >= N) W = -1;
+let V = W;                                   // the episode we're viewing "as of"
+let season = W + 1 < N ? EPS[Math.max(0, W + 1)].s : 3;
+let tab = W >= 0 ? "new" : "new";
+const photoMem = {};
+let showLoops = true, famFilter = "all", personFilter = "", worldShow = {A:true, B:true, O:true};
+
+// ---------- Helpers ----------
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]));
+const code = i => EPS[i] ? EPS[i].code : "";
+const vis = it => it.ep <= V;
+const isNew = it => it.ep === V;
+const superseded = it => it.until !== undefined && it.until <= V;
+function initials(name){
+  const n = name.replace(/^The /,"").replace(/\(.*\)/,"").trim().split(/\s+/);
+  return (n[0][0] + (n[1] ? n[1][0] : (n[0][1]||""))).toUpperCase();
+}
+function photo(id){
+  if (id in photoMem) return photoMem[id];
+  return photoMem[id] = store.get("dark.photo." + id, null);
+}
+function avatar(id, cls){
+  const c = CH[id]; const col = FAM[c.fam].color; const p = photo(id);
+  return `<span class="av ${cls||""}" style="--c:${col}" aria-hidden="true">${p ? `<img src="${p}" alt="">` : esc(initials(c.name))}</span>`;
+}
+function chip(id){
+  if (!CH[id] || CH[id].ep > V) return "";
+  return `<button class="chip" data-person="${id}">${avatar(id)}${esc(CH[id].name)}</button>`;
+}
+function epBadge(i){ return `<span class="epb">${code(i)}</span>`; }
+function toast(msg){ if (typeof hostLayers === "function") hostLayers(); const t = $("#toast"); t.textContent = msg; t.classList.add("on"); clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove("on"), 3200); }
+function fmtDate(d){
+  if (!d) return "Time unknown";
+  const m = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  const p = d.split("-");
+  if (p.length === 1) return p[0];
+  if (p.length === 2) return m[+p[1]-1] + " " + p[0];
+  return m[+p[1]-1] + " " + (+p[2]) + ", " + p[0];
+}
+// Name a character as known at V (identity reveals keep their own names)
+function name(id){ return CH[id] ? CH[id].name : id; }
+function jobOf(id){ const c = CH[id]; if (!c || !c.job) return ""; const r = c.job.filter(x => x.ep <= V); return r.length ? r[r.length-1].t : ""; }
+function roleOf(id){ const c = CH[id]; if (!c || !c.role) return ""; const r = c.role.filter(x => x.ep <= V); return r.length ? r[r.length-1].t : ""; }
+
+// ---------- Header & selector ----------
+function renderStatus(){
+  $("#status").innerHTML = ""; return;   // progress now lives in the one-line picker
+  const s = $("#status");
+  if (W < 0) { s.innerHTML = `<span class="pill">Nothing watched yet</span>`; return; }
+  const next = W + 1 < N ? `<span class="pill acc">Up next: ${code(W+1)} · ${esc(EPS[W+1].title)}</span>` : `<span class="pill acc">Series finished</span>`;
+  s.innerHTML = `<span class="pill">Watched through <b class="mono">&nbsp;${code(W)}</b></span>${next}`;
+}
+function renderSelector(){
+  // Titles past the next episode stay hidden: some of them give things away.
+  $("#epSel").innerHTML = `<option value="-1" ${W<0?"selected":""}>Nothing yet</option>` + [1,2,3].map(sn =>
+    `<optgroup label="Season ${sn}">` + EPS.filter(e => e.s === sn).map(e =>
+      `<option value="${e.i}" ${e.i===W?"selected":""}>${e.code} · ${e.i <= W + 1 ? esc(e.title) : "Locked"}${e.i === W + 1 ? "  (up next)" : ""}</option>`).join("") + `</optgroup>`).join("");
+  const mn = $("#markNext");
+  if (W + 1 < N) { mn.disabled = false; mn.textContent = `✓ ${code(W+1)}`; mn.setAttribute("aria-label", `Mark ${code(W+1)} as watched`); }
+  else { mn.disabled = true; mn.textContent = "All watched"; }
+  const r = $("#vRange");
+  $("#replay").style.display = W >= 0 ? "" : "none";
+  r.max = Math.max(0, W); r.value = Math.max(0, V);
+  $("#vPrev").disabled = V <= 0; $("#vNext").disabled = V >= W;
+  $("#vLabel").innerHTML = W >= 0 ? `As of <b class="mono">${code(V)}</b>` : "";
+  $("#replayNote").innerHTML = (W >= 0 && V < W) ? `Replay mode: you're seeing the story as it stood after ${code(V)}. <button class="linkbtn" id="toLatest">Back to ${code(W)}</button>` : "";
+}
+
+// ---------- Tabs ----------
+const TABS = [["new","What's new"],["story","Story"],["timeline","Timeline"],["tree","Relationship tree"],["people","People"],["mysteries","Mysteries"],["travels","Time travel"],["recaps","Recaps"],["glossary","Glossary"]];
+function renderTabs(){
+  $("#tabrow").innerHTML = TABS.map(([k,l]) => `<button role="tab" data-tab="${k}" aria-selected="${tab===k}">${l}${k==="new" && W>=0 ? '<span class="dot"></span>':''}</button>`).join("");
+  document.querySelectorAll("section.view").forEach(s => s.classList.toggle("on", s.id === "v-" + tab));
+}
+
+// ---------- What's new ----------
+function renderNew(){
+  const el = $("#v-new");
+  if (W < 0) {
+    el.innerHTML = `<div class="vhead"><h2>Start here</h2><p>Everything opens up as you watch.</p></div>
+      <div class="card recap">Watch <b>Season 1, Episode 1: Secrets</b>, then tap <b>✓ S1E1</b> above (or pick the latest episode you've seen from the list). The timeline, relationship tree and everything else will fill in with what that episode showed you, and nothing more. Each later episode adds to it, and new pieces glow yellow.</div>`;
+    return;
+  }
+  const people = D.CHARACTERS.filter(isNew);
+  const links = D.LINKS.filter(l => isNew(l) && CH[l.a].ep <= V && CH[l.b].ep <= V);
+  const events = D.EVENTS.filter(isNew);
+  const overturned = [...D.EVENTS, ...D.LINKS].filter(x => x.until === V);
+  const bioOverturned = []; D.CHARACTERS.forEach(c => c.bio.forEach(b => { if (b.until === V) bioOverturned.push([c,b]); }));
+  const raised = D.MYSTERIES.filter(isNew);
+  const answered = []; D.MYSTERIES.forEach(m => m.a.forEach(a => { if (a.ep === V && m.ep <= V) answered.push([m,a]); }));
+  const trips = D.JOURNEYS.filter(isNew);
+  const terms = D.GLOSSARY.filter(isNew);
+  const e = EPS[V];
+  const relTxt = l => relLabel(l);
+  el.innerHTML = `
+    <div class="vhead"><h2>${e.code} · ${esc(e.title)}</h2><p>What this episode added to the story.</p></div>
+    <div class="card recap">${esc(D.RECAPS[e.code] || "")}
+      <div class="counts"><span><b>${people.length}</b> people</span><span><b>${links.length}</b> connections</span><span><b>${events.length}</b> events</span><span><b>${answered.length}</b> answers</span></div>
+    </div>
+    <div class="newgrid" style="margin-top:12px">
+      ${people.length ? `<div class="card"><h3>New faces</h3><div class="chips">${people.map(c => chip(c.id)).join("")}</div></div>` : ""}
+      ${links.length ? `<div class="card"><h3>New connections</h3><div class="newlist">${links.map(l => `<div class="newitem"><span class="k">${l.type==="same"?"Identity":"Link"}</span><span><button class="linkbtn" data-person="${l.a}">${esc(name(l.a))}</button> ${relTxt(l)} <button class="linkbtn" data-person="${l.b}">${esc(name(l.b))}</button></span></div>`).join("")}</div>
+        <div class="btnrow"><button class="btn" data-goto="tree">See it in the tree</button></div></div>` : ""}
+      ${(overturned.length || bioOverturned.length) ? `<div class="card"><h3>Not what it seemed</h3><div class="newlist">
+        ${overturned.map(x => `<div class="newitem"><span class="k">Overturned</span><span><span class="struck">${esc(x.t || (name(x.a) + " " + relLabel(x) + " " + name(x.b)))}</span><div class="turned"><b>NOW</b> ${esc(x.later)}</div></span></div>`).join("")}
+        ${bioOverturned.map(([c,b]) => `<div class="newitem"><span class="k">${esc(c.name.split(" ")[0])}</span><span><span class="struck">${esc(b.t)}</span><div class="turned"><b>NOW</b> ${esc(b.later)}</div></span></div>`).join("")}
+        </div></div>` : ""}
+      ${events.length ? `<div class="card"><h3>On the timeline</h3><div class="newlist">${events.slice().sort(evSort).map(ev => `<div class="newitem"><span class="k">${ev.d ? ev.d.slice(0,4) : "?"}${ev.w!=="A" ? (ev.w==="B"?" ◐":" ○"):""}</span><span>${esc(ev.t)}</span></div>`).join("")}</div>
+        <div class="btnrow"><button class="btn" data-goto="timeline">Open the timeline</button></div></div>` : ""}
+      ${(raised.length || answered.length) ? `<div class="card"><h3>Mysteries</h3><div class="newlist">
+        ${answered.map(([m,a]) => `<div class="newitem"><span class="k" style="color:#79b884">Answer</span><span><b>${esc(m.q)}</b><br>${esc(a.t)}</span></div>`).join("")}
+        ${raised.filter(m => !answered.some(([mm]) => mm===m)).map(m => `<div class="newitem"><span class="k" style="color:var(--thread)">New</span><span>${esc(m.q)}</span></div>`).join("")}
+        </div></div>` : ""}
+      ${trips.length ? `<div class="card"><h3>Time travel</h3><div class="newlist">${trips.map(t => `<div class="newitem"><span class="k">${esc(t.how)}</span><span><b>${esc(name(t.who))}</b> <span class="mono">${esc(t.from)} → ${esc(t.to)}</span>${t.note?` <span style="color:var(--muted)">(${esc(t.note)})</span>`:""}</span></div>`).join("")}</div></div>` : ""}
+      ${terms.length ? `<div class="card"><h3>New terms</h3><div class="newlist">${terms.map(g => `<div class="newitem"><span class="k">Term</span><span><b>${esc(g.term)}</b>: ${esc(g.t)}</span></div>`).join("")}</div></div>` : ""}
+    </div>`;
+}
+
+// ---------- Timeline ----------
+function evSort(a,b){
+  const da = a.d || "0000", db = b.d || "0000";
+  return da < db ? -1 : da > db ? 1 : a.ep - b.ep;
+}
+function renderTimeline(){
+  const el = $("#v-timeline");
+  if (W < 0) { el.innerHTML = lockedMsg("timeline"); return; }
+  let evs = D.EVENTS.filter(vis);
+  const peopleOpts = D.CHARACTERS.filter(vis).sort((a,b)=>a.name.localeCompare(b.name));
+  if (personFilter && !(CH[personFilter] && CH[personFilter].ep <= V)) personFilter = "";
+  if (personFilter) evs = evs.filter(e => e.who.includes(personFilter));
+  const worldsPresent = ["A","B","O"].filter(w => D.EVENTS.some(e => vis(e) && e.w === w));
+  const WN = {A:"Jonas's world", B:"The other world", O:"The origin world"};
+  const groups = worldsPresent.filter(w => worldShow[w]).map(w => {
+    const list = evs.filter(e => e.w === w).sort(evSort);
+    const byYear = {};
+    list.forEach(e => { const y = e.d ? e.d.slice(0,4) : (w==="O" ? "—" : "?"); (byYear[y] = byYear[y] || []).push(e); });
+    return {w, years:Object.keys(byYear).sort((a,b) => (a==="?"?-1:b==="?"?1:a.localeCompare(b))).map(y => ({y, list:byYear[y]}))};
+  });
+  const allYears = [];
+  groups.forEach(g => g.years.forEach(y => allYears.push({w:g.w, y:y.y, hasNew:y.list.some(isNew)})));
+  el.innerHTML = `
+    <div class="vhead"><h2>Timeline</h2><p>Events in story order, by year. Events from ${code(V)} glow. Something the show later overturns is struck through, starting with the episode that overturns it.</p></div>
+    <div class="tl-tools">
+      <select id="personSel" aria-label="Filter by person"><option value="">Everyone</option>${peopleOpts.map(c => `<option value="${c.id}" ${c.id===personFilter?"selected":""}>${esc(c.name)}</option>`).join("")}</select>
+      ${worldsPresent.length > 1 ? worldsPresent.map(w => `<button class="toggle" data-world="${w}" aria-pressed="${worldShow[w]}">${WN[w]}</button>`).join("") : ""}
+      <button class="toggle" id="jumpNew">Jump to new</button>
+    </div>
+    <div class="yearstrip">${allYears.map(y => `<button data-jump="y-${y.w}-${y.y}" class="${y.hasNew?"hasnew":""}">${y.y==="?"?"When?":y.y}${y.w==="B"?" ◐":y.w==="O"?" ○":""}</button>`).join("")}</div>
+    ${groups.map(g => `<div class="world world-${g.w}">${worldsPresent.length>1?`<h3>${WN[g.w]}</h3>`:""}
+      ${g.years.map(y => `<div class="yeargroup" id="y-${g.w}-${y.y}"><div class="yr">${y.y==="?"?"?":y.y}</div><div class="evs">
+        ${y.list.map(ev => evCard(ev)).join("")}</div></div>`).join("")}</div>`).join("")}
+    ${evs.length ? "" : `<div class="empty">No events for this person yet.</div>`}`;
+}
+function evCard(ev){
+  const sup = superseded(ev);
+  return `<div class="card ev ${isNew(ev)?"new":""}">
+    <div class="meta"><span class="date">${fmtDate(ev.d)}${ev.d===null && ev.w!=="O"?" · year not yet known":""}</span><span>${isNew(ev)?'<span class="newtag">NEW</span> ':""}${epBadge(ev.ep)}</span></div>
+    <div class="${sup?"struck":""}">${esc(ev.t)}</div>
+    ${sup ? `<div class="turned"><b>TURNED OUT · ${code(ev.until)}</b> ${esc(ev.later)}</div>` : ""}
+    ${ev.who.length ? `<div class="chips">${ev.who.map(chip).join("")}</div>` : ""}
+  </div>`;
+}
+function lockedMsg(what){ return `<div class="vhead"><h2>${what[0].toUpperCase()+what.slice(1)}</h2></div><div class="empty">Mark S1E1 as watched to start the ${what}.</div>`; }
+
+// ---------- Relationship tree ----------
+const REL = {
+  parent:{label:"parent of", stroke:"#a7aea6", w:1.6, dash:"", arrow:true},
+  adoptive:{label:"adoptive parent of", stroke:"#a7aea6", w:1.6, dash:"2 4", arrow:true},
+  raised:{label:"grandfather of", stroke:"#a7aea6", w:1.4, dash:"2 4", arrow:true},
+  married:{label:"married to", stroke:"#e9e4d8", w:2.6, dash:""},
+  partner:{label:"together with", stroke:"#d78fa6", w:2, dash:""},
+  affair:{label:"affair with", stroke:"#c43a30", w:2, dash:"6 5"},
+  sibling:{label:"sibling of", stroke:"#7f8a90", w:1.4, dash:"1 4"},
+  same:{label:"is the same person as", stroke:"#d9b45d", w:3, dash:"9 6"},
+  counterpart:{label:"other-world version of", stroke:"#e07a9a", w:1.8, dash:"1 5"}
+};
+function relLabel(l){
+  if (l.type === "raised" && l.label) return l.label === "grandfather" ? "is the grandfather of" : l.label;
+  if (l.type === "adoptive" && l.label) return l.label === "raised her" ? "raised" : l.label;
+  return {parent:"is a parent of", adoptive:"adopted", married:"is married to", partner:"is with", affair:"is having an affair with", sibling:"is a sibling of", same:"is the same person as", counterpart:"has an other-world version:"}[l.type] || l.type;
+}
+const U = 125, RH = 200;   // column width, generation row height
+function nodePos(c){
+  let p = c.pos;
+  (c.posFrom || []).forEach(o => { if (o.ep <= V) p = o.pos; });
+  return {x:p[0]*U, y:p[1]*RH, row:p[1]};
+}
+// ---- Edge routing: try a few curve shapes and keep the first that clears every other circle and name ----
+function hits(pts, obs){
+  let n = 0;
+  // crossing a circle costs far more than grazing a name label
+  for (const o of obs) {
+    let c = 0;
+    for (const p of pts) {
+      if ((p[0]-o.x)**2 + (p[1]-o.y)**2 < o.r*o.r) { c = 10; break; }
+      if (!c && p[0] > o.lx0 && p[0] < o.lx1 && p[1] > o.ly0 && p[1] < o.ly1) c = 1;
+    }
+    n += c;
+  }
+  return n;
+}
+function sampleQ(a, c, b, k){ const out = []; for (let i = 1; i < k; i++){ const t = i/k, u = 1-t; out.push([u*u*a[0]+2*u*t*c[0]+t*t*b[0], u*u*a[1]+2*u*t*c[1]+t*t*b[1]]); } return out; }
+function sampleC(a, c1, c2, b, k){ const out = []; for (let i = 1; i < k; i++){ const t = i/k, u = 1-t;
+  out.push([u*u*u*a[0]+3*u*u*t*c1[0]+3*u*t*t*c2[0]+t*t*t*b[0], u*u*u*a[1]+3*u*u*t*c1[1]+3*u*t*t*c2[1]+t*t*t*b[1]]); } return out; }
+function trim(p, toward, by){ const dx = toward[0]-p[0], dy = toward[1]-p[1], L = Math.hypot(dx,dy) || 1; return [p[0]+dx/L*by, p[1]+dy/L*by]; }
+const f1 = v => Math.round(v*10)/10;
+function routeEdge(a, b, arrow, obs, R, nth, side){
+  const A = [a.x, a.y], B = [b.x, b.y], endGap = R + (arrow ? 4 : 1);
+  const dx = B[0]-A[0], dy = B[1]-A[1], L = Math.hypot(dx,dy) || 1, nx = -dy/L, ny = dx/L;
+  const cands = [];
+  // 1) Parent lines: the familiar vertical S-curve
+  if (arrow && Math.abs(dy) > 10) {
+    const my = (A[1]+B[1])/2;
+    cands.push({c1:[A[0],my], c2:[B[0],my]});
+  }
+  // 2) Quadratic arcs bowing out to either side, wider and wider
+  const base = nth > 1 ? (nth-1) * 34 : 0;
+  const offs = [0, 26, 48, 72, 100, 135, 175, 220, 270, 330, 400];
+  offs.forEach(o => { const v = o + base; if (v === 0) cands.push({o:0}); else { cands.push({o:v*side}); cands.push({o:-v*side}); } });
+  let best = null;
+  for (const c of cands) {
+    let pts, d;
+    if (c.c1) {
+      const s0 = trim(A, c.c1, R), e0 = trim(B, c.c2, endGap);
+      pts = sampleC(s0, c.c1, c.c2, e0, 36);
+      d = `M${f1(s0[0])},${f1(s0[1])} C${f1(c.c1[0])},${f1(c.c1[1])} ${f1(c.c2[0])},${f1(c.c2[1])} ${f1(e0[0])},${f1(e0[1])}`;
+    } else if (c.o === 0) {
+      const s0 = trim(A, B, R), e0 = trim(B, A, endGap);
+      pts = sampleQ(s0, [(s0[0]+e0[0])/2, (s0[1]+e0[1])/2], e0, 36);
+      d = `M${f1(s0[0])},${f1(s0[1])} L${f1(e0[0])},${f1(e0[1])}`;
+    } else {
+      const ctrl = [(A[0]+B[0])/2 + nx*c.o*2, (A[1]+B[1])/2 + ny*c.o*2];  // curve peaks at ~c.o from the straight line
+      const s0 = trim(A, ctrl, R), e0 = trim(B, ctrl, endGap);
+      pts = sampleQ(s0, ctrl, e0, 40);
+      d = `M${f1(s0[0])},${f1(s0[1])} Q${f1(ctrl[0])},${f1(ctrl[1])} ${f1(e0[0])},${f1(e0[1])}`;
+    }
+    const h = hits(pts, obs);
+    if (h === 0) return d;
+    if (!best || h < best.h) best = {h, d};
+  }
+  return best.d;
+}
+let edgeTips = [], tipG = null;
+const TIPKIND = {parent:"Parent → child", adoptive:"Adoptive", raised:"Grandparent", married:"Married", partner:"Couple", affair:"Affair", sibling:"Siblings", same:"Same person", counterpart:"Other-world version"};
+function showTip(g, clientX, clientY){
+  const tip = $("#edgetip"), box = $("#treebox"); if (!tip || !box) return;
+  const info = g.dataset.i !== undefined ? edgeTips[+g.dataset.i] : g._tip; if (!info) return;
+  if (tipG && tipG !== g) tipG.classList.remove("hover");
+  tipG = g; g.classList.add("hover");
+  tip.innerHTML = info.html || `<b>${esc(name(info.a))}</b> ${esc(info.txt)} <b>${esc(name(info.b))}</b><span class="k">${TIPKIND[info.type]||""} · revealed in ${code(info.ep)}</span>`;
+  tip.hidden = false;
+  const r = box.getBoundingClientRect();
+  let x = clientX - r.left + 14, y = clientY - r.top + 14;
+  const w = tip.offsetWidth, h = tip.offsetHeight;
+  if (x + w > r.width - 8) x = clientX - r.left - w - 14;
+  if (y + h > r.height - 8) y = clientY - r.top - h - 14;
+  tip.style.left = Math.max(8, x) + "px"; tip.style.top = Math.max(8, y) + "px";
+}
+function hideTip(){ const tip = $("#edgetip"); if (tip) tip.hidden = true; if (tipG) { tipG.classList.remove("hover"); tipG = null; } }
+let view = {x:0, y:0, k:1}, treeBuilt = false, lastFitV = null;
+function renderTree(){
+  const el = $("#v-tree");
+  if (W < 0) { el.innerHTML = lockedMsg("tree"); treeBuilt = false; return; }
+  if (!treeBuilt) {
+    el.innerHTML = `
+      <div class="vhead"><h2>Relationship tree</h2><p>Read it like a family tree: each row is a generation (as far as the show has told you), couples sit side by side, and children hang from the line below their parents. Curved lines are the links the time loop won't let fit a normal tree. Hover over or tap any line to see the relationship; hover over a person to light up their links, tap them for their file. Lines from ${code(V)} glow.</p></div>
+      <div class="treewrap" id="treewrap">
+      <div class="fullhead"><h2>Relationship tree <span class="mono" id="fullep"></span></h2><button class="btn sm" id="zexit">✕ Exit</button></div>
+      <div class="famchips" id="famchips"></div>
+      <div class="treeopts"><button class="toggle" id="loopsBtn" aria-pressed="true">Show time-loop &amp; identity links</button></div>
+      <div class="treebox" id="treebox">
+        <svg id="tree" aria-label="Relationship tree">
+          <defs>
+            <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="#a7aea6"/></marker>
+            <clipPath id="clipc"><circle r="19" cx="0" cy="0"/></clipPath>
+          </defs>
+          <g id="vp"><g id="eras"></g><g id="xedges"></g><g id="edges"></g><g id="nodes"></g></g>
+        </svg>
+        <div class="treectl">
+          <button class="iconbtn" id="zin" aria-label="Zoom in">+</button>
+          <button class="iconbtn" id="zout" aria-label="Zoom out">−</button>
+          <button class="iconbtn" id="zfit" aria-label="Fit to screen">⤢</button>
+          <button class="iconbtn" id="zfull" aria-label="Full screen" title="Full screen">⛶</button>
+        </div>
+        <div class="edgetip" id="edgetip" role="tooltip" hidden></div>
+      </div>
+      <div class="legend" id="legend"></div>
+      <div class="treehint" id="treehint"></div>
+      </div>`;
+    treeBuilt = true;
+    bindTree();
+  }
+  // family chips
+  const famsVisible = Object.keys(FAM).filter(f => D.CHARACTERS.some(c => c.fam === f && vis(c)));
+  if (famFilter !== "all" && !famsVisible.includes(famFilter)) famFilter = "all";
+  $("#famchips").innerHTML = `<button data-fam="all" style="--c:var(--ink)" aria-pressed="${famFilter==="all"}"><i></i>Everyone</button>` +
+    famsVisible.map(f => `<button data-fam="${f}" style="--c:${FAM[f].color}" aria-pressed="${famFilter===f}"><i></i>${FAM[f].name}</button>`).join("");
+  // eras
+  const GEN = ["Born c.1900s","Born c.1940s","Born c.1970s","Born c.2000s"];
+  $("#eras").innerHTML = `<rect x="-${U*0.55}" y="-${RH*0.45}" width="${U*2.1}" height="${RH*4 - RH*0.1}" rx="18" class="limbo"/><text class="eralabel" x="${U*0.5}" y="-${RH*0.45 - 18}" text-anchor="middle">NOT YET PLACED</text>` +
+    (() => { const minRow = Math.min(0, ...D.CHARACTERS.filter(vis).map(n => nodePos(n).row)); const out = [];
+      for (let i = minRow; i <= 3; i++) out.push(`<line class="eraline" x1="${U*2}" x2="${U*22.3}" y1="${i*RH}" y2="${i*RH}"/><text class="eralabel" x="-${U*0.62}" y="${i*RH+4}" text-anchor="end">${i < 0 ? "Earlier" : GEN[i]}</text>`);
+      return out.join(""); })();
+  // nodes & edges
+  const nodes = D.CHARACTERS.filter(vis);
+  const ids = new Set(nodes.map(n => n.id));
+  const edges = D.LINKS.filter(l => vis(l) && !superseded(l) && ids.has(l.a) && ids.has(l.b));
+  // neighbourhood for family filter
+  let focus = null;
+  if (famFilter !== "all") {
+    focus = new Set(nodes.filter(n => n.fam === famFilter).map(n => n.id));
+    edges.forEach(l => { if (CH[l.a].fam === famFilter) focus.add(l.b); if (CH[l.b].fam === famFilter) focus.add(l.a); });
+  }
+  const P = Object.fromEntries(nodes.map(n => [n.id, nodePos(n)]));
+  const R = 20;
+  // Obstacles: every visible circle plus its name label. Curved links are routed around them.
+  const OB = nodes.map(n => { const p = P[n.id], hw = Math.max(18, n.name.length * 3.15 + 4);
+    return {id:n.id, x:p.x, y:p.y, r:R + 6, lx0:p.x - hw, lx1:p.x + hw, ly0:p.y + R + 3, ly1:p.y + R + (jobOf(n.id) ? 32 : 19)}; });
+  edgeTips = []; hideTip();
+  const parts = [];
+  const tipOf = (l) => ({a:l.a, b:l.b, txt:relLabel(l), ep:l.ep, type:l.type});
+  const pushSeg = (d, style, tip, people, isNewSeg, dimSeg, layer) => {
+    edgeTips.push(tip);
+    parts.push({layer, html:`<g class="eg${dimSeg?" dim":""}${layer==="x"?" xlink":""}" data-i="${edgeTips.length-1}" data-p="${people.join(" ")}"><path class="hit" d="${d}"/><path class="edge${isNewSeg?" isnew":""}" d="${d}" stroke="${isNewSeg?"#e3b43c":style.stroke}" stroke-width="${style.w}" ${style.dash?`stroke-dasharray="${style.dash}"`:""} ${style.arrow?'marker-end="url(#arr)"':""}/></g>`});
+  };
+  const isDim = ids2 => !!focus && !ids2.every(x => focus.has(x));
+  const onRow = (id) => P[id].row;
+  const limbo = (id) => P[id].x < U * 1.6;   // the "not yet placed" column stays out of the family lines
+  const between = (x, y) => { const lo = Math.min(P[x].x, P[y].x), hi = Math.max(P[x].x, P[y].x);
+    return nodes.some(n => n.id !== x && n.id !== y && P[n.id].row === P[x].row && P[n.id].x > lo + 1 && P[n.id].x < hi - 1); };
+  const COUPLE = new Set(["married","partner","affair"]);
+  const coupleDone = new Set(), treeEdge = new Set();
+  // 1) Couples side by side on the same row: a straight line between them.
+  edges.forEach(l => {
+    if (!COUPLE.has(l.type) || limbo(l.a) || limbo(l.b) || onRow(l.a) !== onRow(l.b) || between(l.a, l.b)) return;
+    const [L1, R1] = P[l.a].x < P[l.b].x ? [l.a, l.b] : [l.b, l.a];
+    const y = P[L1].y + (coupleDone.has(L1+"|"+R1) ? 6 : 0);
+    coupleDone.add(L1+"|"+R1); treeEdge.add(l);
+    pushSeg(`M${P[L1].x + R},${y} L${P[R1].x - R},${y}`, REL[l.type], tipOf(l), [l.a,l.b], isNew(l), isDim([l.a,l.b]), "t");
+  });
+  const isCouple = (x, y) => edges.some(l => (l.type === "married" || l.type === "partner") && ((l.a===x && l.b===y) || (l.a===y && l.b===x)) && treeEdge.has(l));
+  // 2) Parent -> child one generation down: classic family-tree lines (trunk, bar, drops).
+  const groups = {};
+  edges.forEach(l => {
+    if (l.type !== "parent" && l.type !== "adoptive") return;
+    if (limbo(l.a) || limbo(l.b) || onRow(l.b) !== onRow(l.a) + 1) return;
+    (groups[l.b] = groups[l.b] || []).push(l);
+  });
+  const fam = {};   // key: parents|kind -> {parents, kind, kids:[{id, links}]}
+  Object.entries(groups).forEach(([kid, ls]) => {
+    ["parent","adoptive"].forEach(kind => {
+      const mine = ls.filter(l => l.type === kind); if (!mine.length) return;
+      let sets = [];
+      if (mine.length === 2 && isCouple(mine[0].a, mine[1].a)) sets = [mine];
+      else sets = mine.map(l => [l]);
+      sets.forEach(set => {
+        const parents = set.map(l => l.a).sort(); const key = parents.join("+") + "|" + kind;
+        (fam[key] = fam[key] || {parents, kind, kids:[]}).kids.push({id:kid, links:set});
+        set.forEach(l => treeEdge.add(l));
+      });
+    });
+  });
+  const levels = [];  // per parent row: list of [x0,x1,level]
+  Object.values(fam).sort((g1,g2) => (P[g1.parents[0]].x) - (P[g2.parents[0]].x)).forEach(g => {
+    const prow = onRow(g.parents[0]);
+    const px = g.parents.length === 2 ? (P[g.parents[0]].x + P[g.parents[1]].x)/2 : P[g.parents[0]].x;
+    const py = P[g.parents[0]].y;
+    const kx = g.kids.map(k => P[k.id].x);
+    const x0 = Math.min(px, ...kx), x1 = Math.max(px, ...kx);
+    const used = (levels[prow] = levels[prow] || []);
+    let lv = 0; while (used.some(u => u[2] === lv && !(x1 + 14 < u[0] || x0 - 14 > u[1]))) lv++;
+    used.push([x0, x1, lv]);
+    const barY = py + 64 + lv*16;
+    const style = g.kind === "adoptive" ? {stroke:"#a7aea6", w:1.8, dash:"3 5"} : {stroke:"#b9c0b8", w:1.8, dash:""};
+    const startY = g.parents.length === 2 ? py : py + R;
+    const pn = g.parents.map(name).join(" & ");
+    const kidsNames = g.kids.map(k => name(k.id));
+    const anyNew = g.kids.some(k => k.links.some(isNew));
+    const ppl = [...g.parents, ...g.kids.map(k => k.id)];
+    const verb = g.kind === "adoptive" ? "adopted" : (g.parents.length === 2 ? "are the parents of" : "is the parent of");
+    pushSeg(`M${px},${startY} L${px},${barY}` + (x1 - x0 > 1 ? ` M${x0},${barY} L${x1},${barY}` : ""), style,
+      {html:`<b>${esc(pn)}</b> ${verb} <b>${esc(kidsNames.join(", "))}</b><span class="k">${g.kind==="adoptive"?"Adoptive family":"Family line"}</span>`},
+      ppl, anyNew, isDim(ppl), "t");
+    g.kids.forEach(k => {
+      const kp = P[k.id]; const ln = k.links[0];
+      pushSeg(`M${kp.x},${barY} L${kp.x},${kp.y - R - 2}`, style,
+        {html:`<b>${esc(pn)}</b> ${g.kind==="adoptive"?"adopted":(g.parents.length===2?"are the parents of":"is the parent of")} <b>${esc(name(k.id))}</b><span class="k">${g.kind==="adoptive"?"Adoptive":"Parent → child"} · revealed in ${code(Math.max(...k.links.map(x => x.ep)))}</span>`},
+        [...g.parents, k.id], k.links.some(isNew), isDim([...g.parents, k.id]), "t");
+    });
+  });
+  // 3) Everything the time loop won't let sit in a normal tree: identities, cross-generation parents, other-world links.
+  const pair = {};
+  edges.filter(l => !treeEdge.has(l)).forEach(l => {
+    const s2 = REL[l.type]; const a2 = P[l.a], b2 = P[l.b];
+    const key = [l.a,l.b].sort().join("|"); const nth = pair[key] = (pair[key] || 0) + 1;
+    const d = routeEdge(a2, b2, s2.arrow, OB.filter(o => o.id !== l.a && o.id !== l.b), R, nth, l.a < l.b ? 1 : -1);
+    pushSeg(d, s2, tipOf(l), [l.a,l.b], isNew(l), isDim([l.a,l.b]), "x");
+  });
+  $("#edges").innerHTML = parts.filter(p => p.layer === "t").map(p => p.html).join("");
+  $("#xedges").innerHTML = showLoops ? parts.filter(p => p.layer === "x").map(p => p.html).join("") : "";
+  // nodes: keep existing <g> elements so moves animate
+  const ng = $("#nodes");
+  const existing = {}; ng.querySelectorAll("g.node").forEach(g => existing[g.dataset.id] = g);
+  Object.keys(existing).forEach(id => { if (!ids.has(id)) existing[id].remove(); });
+  nodes.forEach(n => {
+    const p = P[n.id]; let g = existing[n.id];
+    const col = FAM[n.fam].color, ph = photo(n.id);
+    const inner = `<circle class="halo" r="${R+5}"/>
+      <circle r="${R}" fill="#0f1214" stroke="${col}" stroke-width="2.5"/>
+      ${ph ? `<image href="${ph}" x="-19" y="-19" width="38" height="38" clip-path="url(#clipc)" preserveAspectRatio="xMidYMid slice"/>` : `<text text-anchor="middle" dy="4" style="fill:${col};stroke-width:0;font-family:var(--font-mono);font-size:11px">${esc(initials(n.name))}</text>`}
+      <text text-anchor="middle" y="${R+15}">${esc(n.name)}</text>
+      ${jobOf(n.id) ? `<text class="job" text-anchor="middle" y="${R+29}">${esc(jobOf(n.id))}</text>` : ""}`;
+    if (!g) {
+      g = document.createElementNS("http://www.w3.org/2000/svg","g");
+      g.setAttribute("class","node"); g.dataset.id = n.id; g.setAttribute("tabindex","0"); g.setAttribute("role","button");
+      g.style.transform = `translate(${p.x}px,${p.y}px)`;
+      ng.appendChild(g);
+    }
+    g.innerHTML = inner;
+    g.setAttribute("aria-label", n.name);
+    g.style.transform = `translate(${p.x}px,${p.y}px)`;
+    g.classList.toggle("isnew", isNew(n));
+    g.classList.toggle("dim", !!focus && !focus.has(n.id));
+  });
+  // legend
+  const used = new Set(edges.filter(l => !treeEdge.has(l) || COUPLE.has(l.type)).map(l => l.type));
+  const famLegend = `<span><svg viewBox="0 0 30 14"><path d="M15,0 V6 M4,6 H26 M4,6 V14 M26,6 V14" stroke="#b9c0b8" stroke-width="1.6" fill="none"/></svg>Parents → children</span>`;
+  $("#legend").innerHTML = famLegend + Object.entries(REL).filter(([k]) => used.has(k)).map(([k,s]) =>
+    `<span><svg viewBox="0 0 30 10"><line x1="1" y1="5" x2="29" y2="5" stroke="${s.stroke}" stroke-width="${Math.min(s.w,2.6)}" ${s.dash?`stroke-dasharray="${s.dash}"`:""}/></svg>${{parent:"Parent → child",adoptive:"Adoptive",raised:"Grandparent",married:"Married",partner:"Couple",affair:"Affair",sibling:"Siblings",same:"Same person",counterpart:"Other-world version"}[k]}</span>`).join("")
+    + `<span><svg viewBox="0 0 30 10"><line x1="1" y1="5" x2="29" y2="5" stroke="#e3b43c" stroke-width="2.5"/></svg>New in ${code(V)}</span>`;
+  $("#treehint").textContent = `${nodes.length} people · ${edges.length} connections`;
+  $("#loopsBtn").setAttribute("aria-pressed", String(showLoops));
+  $("#fullep").textContent = "as of " + code(V);
+  if (lastFitV === null) { requestAnimationFrame(() => fitTree(nodes, P)); lastFitV = V; }
+}
+function applyView(){ const vp = $("#vp"); if (vp) vp.setAttribute("transform", `translate(${view.x},${view.y}) scale(${view.k})`); }
+function fitTree(nodes, P){
+  const box = $("#treebox"); if (!box || !box.clientWidth) return;
+  nodes = nodes || D.CHARACTERS.filter(vis);
+  if (!nodes.length) return;
+  P = P || Object.fromEntries(nodes.map(n => [n.id, nodePos(n)]));
+  let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;
+  nodes.forEach(n => { const p = P[n.id]; x0=Math.min(x0,p.x); y0=Math.min(y0,p.y); x1=Math.max(x1,p.x); y1=Math.max(y1,p.y); });
+  x0 -= 200; x1 += 70; y0 -= 95; y1 += 55;
+  const W2 = box.clientWidth, cw = x1 - x0, ch = y1 - y0;
+  // Keep names readable: never zoom out below 0.55. Size the box to the tree's height at that zoom.
+  let k = Math.min(W2/cw, 1.6);
+  const tight = k < .55;
+  if (tight) k = .55;
+  const want = Math.round(ch * k);
+  const full = $("#treewrap") && $("#treewrap").classList.contains("full");
+  if (!full) box.style.height = Math.max(360, Math.min(want, Math.round(window.innerHeight*0.8))) + "px";
+  const H2 = box.clientHeight;
+  k = full ? Math.max(Math.min(W2/cw, H2/ch, 1.6), tight ? .55 : 0) : Math.min(k, H2/ch);
+  if (tight) {
+    // Centre horizontally on what's new in this episode (or on everyone).
+    // Centre on this episode's changes: new people plus both ends of new links (else on Jonas).
+    const ids3 = new Set(nodes.filter(isNew).map(n => n.id));
+    D.LINKS.filter(l => isNew(l) && P[l.a] && P[l.b]).forEach(l => { ids3.add(l.a); ids3.add(l.b); });
+    const set = ids3.size ? [...ids3].filter(id => P[id]) : (P.jonas ? ["jonas"] : nodes.map(n => n.id));
+    const cx = set.reduce((a,id) => a + P[id].x, 0)/set.length;
+    let vx = W2/2 - cx*k;
+    vx = Math.min(-x0*k, Math.max(W2 - x1*k, vx));   // don't scroll past the tree's edges
+    view = {k, x:vx, y:(H2 - ch*k)/2 - y0*k};
+  } else view = {k, x:(W2 - cw*k)/2 - x0*k, y:(H2 - ch*k)/2 - y0*k};
+  applyView();
+}
+function zoomAt(f, cx, cy){
+  const k2 = Math.max(.25, Math.min(3.5, view.k * f));
+  view.x = cx - (cx - view.x) * (k2/view.k); view.y = cy - (cy - view.y) * (k2/view.k); view.k = k2; applyView();
+}
+function bindTree(){
+  const svg = $("#tree"), box = $("#treebox");
+  const pts = new Map(); let moved = 0, pinch0 = null;
+  svg.addEventListener("pointerdown", e => { svg.setPointerCapture(e.pointerId); pts.set(e.pointerId, {x:e.clientX, y:e.clientY}); moved = 0; if (pts.size === 2) { const [a,b] = [...pts.values()]; pinch0 = {d:Math.hypot(a.x-b.x,a.y-b.y), k:view.k}; } });
+  svg.addEventListener("pointermove", e => {
+    if (!pts.has(e.pointerId)) return;
+    const prev = pts.get(e.pointerId); const cur = {x:e.clientX, y:e.clientY}; pts.set(e.pointerId, cur);
+    if (pts.size === 1) { view.x += cur.x-prev.x; view.y += cur.y-prev.y; moved += Math.abs(cur.x-prev.x)+Math.abs(cur.y-prev.y); if (moved>4) svg.classList.add("dragging"); applyView(); }
+    else if (pts.size === 2 && pinch0) {
+      const [a,b] = [...pts.values()]; const d = Math.hypot(a.x-b.x,a.y-b.y); const r = box.getBoundingClientRect();
+      const cx = (a.x+b.x)/2 - r.left, cy = (a.y+b.y)/2 - r.top; zoomAt((pinch0.k * d/pinch0.d)/view.k, cx, cy); moved += 10;
+    }
+  });
+  let hlId = null;
+  const setHL = id => {
+    if (id === hlId) return; hlId = id;
+    svg.querySelectorAll(".hl").forEach(x => x.classList.remove("hl"));
+    svg.classList.toggle("focusing", !!id);
+    if (!id) return;
+    const people = new Set([id]);
+    svg.querySelectorAll("g.eg").forEach(g => { const p = (g.dataset.p||"").split(" "); if (p.includes(id)) { g.classList.add("hl"); p.forEach(x => people.add(x)); } });
+    svg.querySelectorAll("g.node").forEach(n => { if (people.has(n.dataset.id)) n.classList.add("hl"); });
+  };
+  svg.addEventListener("pointermove", e => {
+    if (e.pointerType !== "mouse" || pts.size) return;
+    const g = e.target.closest && e.target.closest("g.eg");
+    const n = e.target.closest && e.target.closest("g.node");
+    setHL(n ? n.dataset.id : null);
+    if (n) { n._tip = {html:`<b>${esc(name(n.dataset.id))}</b><span class="role">${esc(roleOf(n.dataset.id))}</span><span class="k">${FAM[CH[n.dataset.id].fam].name} · tap for their file</span>`}; showTip(n, e.clientX, e.clientY); }
+    else if (g) showTip(g, e.clientX, e.clientY); else hideTip();
+  });
+  svg.addEventListener("pointerleave", e => { if (e.pointerType === "mouse") { hideTip(); setHL(null); } });
+  $("#loopsBtn").onclick = () => { showLoops = !showLoops; renderTree(); };
+  const up = e => { pts.delete(e.pointerId); if (pts.size < 2) pinch0 = null; svg.classList.remove("dragging"); };
+  svg.addEventListener("pointerup", e => {
+    const wasTap = moved < 6 && pts.size === 1;
+    up(e);
+    if (wasTap) {
+      const g = document.elementFromPoint(e.clientX, e.clientY);
+      const n = g && g.closest && g.closest("g.node");
+      const eg = g && g.closest && g.closest("g.eg");
+      if (n) { hideTip(); openPerson(n.dataset.id); }
+      else if (eg) showTip(eg, e.clientX, e.clientY);   // tap a line on a phone to see the relationship
+      else hideTip();
+    } else if (moved > 4) hideTip();
+  });
+  svg.addEventListener("pointercancel", up);
+  svg.addEventListener("wheel", e => { e.preventDefault(); const r = box.getBoundingClientRect(); zoomAt(e.deltaY < 0 ? 1.12 : 1/1.12, e.clientX-r.left, e.clientY-r.top); }, {passive:false});
+  svg.addEventListener("keydown", e => { if ((e.key === "Enter" || e.key === " ") && e.target.closest("g.node")) { e.preventDefault(); openPerson(e.target.closest("g.node").dataset.id); } });
+  $("#zin").onclick = () => zoomAt(1.25, box.clientWidth/2, box.clientHeight/2);
+  $("#zout").onclick = () => zoomAt(1/1.25, box.clientWidth/2, box.clientHeight/2);
+  $("#zfit").onclick = () => fitTree();
+  const wrap = $("#treewrap");
+  const setFull = on => {
+    wrap.classList.toggle("full", on); document.body.classList.toggle("treefull", on);
+    $("#zfull").textContent = on ? "✕" : "⛶"; $("#zfull").setAttribute("aria-label", on ? "Exit full screen" : "Full screen");
+    hideTip(); requestAnimationFrame(() => fitTree());
+  };
+  $("#zfull").onclick = () => {
+    const on = !wrap.classList.contains("full");
+    setFull(on);
+    // Real full screen where the viewer allows it; the in-page overlay works either way.
+    try {
+      if (on && wrap.requestFullscreen) wrap.requestFullscreen().catch(() => {});
+      else if (!on && document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    } catch (e) {}
+  };
+  $("#zexit").onclick = () => { setFull(false); try { if (document.fullscreenElement) document.exitFullscreen().catch(() => {}); } catch (e) {} };
+  document.addEventListener("fullscreenchange", () => { if (!document.fullscreenElement && wrap.classList.contains("full")) setFull(false); else requestAnimationFrame(() => fitTree()); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && wrap.classList.contains("full") && !document.fullscreenElement) setFull(false); });
+}
+
+// ---------- People ----------
+function latestBio(c){ const b = c.bio.filter(x => x.ep <= V); const last = b[b.length-1]; return last ? (superseded(last) ? last.later : last.t) : ""; }
+function renderPeople(){
+  const el = $("#v-people");
+  if (W < 0) { el.innerHTML = lockedMsg("cast list"); return; }
+  const order = ["kahnwald","nielsen","albers","tiedemann","doppler","tannhaus","obendorf","others","unknown","otherworld"];
+  const html = order.map(f => {
+    const list = D.CHARACTERS.filter(c => c.fam === f && vis(c));
+    if (!list.length) return "";
+    return `<div class="famhead" style="--c:${FAM[f].color}"><i></i>${FAM[f].name}</div>` + list.map(c =>
+      `<button class="person ${isNew(c)?"new":""}" data-person="${c.id}">${avatar(c.id)}<span><span class="nm">${esc(c.name)} ${isNew(c)?'<span class="newtag">NEW</span>':""}</span><span class="rl">${esc(roleOf(c.id))}</span><span class="ln">${esc(latestBio(c))}</span></span></button>`).join("");
+  }).join("");
+  el.innerHTML = `<div class="vhead"><h2>People</h2><p>Tap anyone for their file. Add one photo from a file, or import a whole folder of your own photos at once. Photos stay in this browser only.</p></div>
+    <div class="btnrow" style="margin:-4px 0 14px"><button class="btn" id="bulkPhotos">Import photos…</button>${Object.keys(photoMem).some(k => photoMem[k]) || hasAnyPhoto() ? `<button class="btn warn" id="clearPhotos">Remove all photos</button>` : ""}</div>
+    <div class="people">${html}</div>`;
+}
+
+// ---------- Mysteries ----------
+function renderMysteries(){
+  const el = $("#v-mysteries");
+  if (W < 0) { el.innerHTML = lockedMsg("mystery board"); return; }
+  const ms = D.MYSTERIES.filter(vis).map(m => ({m, ans:m.a.filter(a => a.ep <= V)}));
+  const open = ms.filter(x => !x.ans.length), part = ms.filter(x => x.ans.length);
+  const card = x => `<div class="card ${isNew(x.m) || x.ans.some(isNew) ? "new":""}">
+    <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:4px"><span class="mstate ${x.ans.length ? "solved" : "open"}">${x.ans.length ? "Answered" : "Open"}</span><span>${epBadge(x.m.ep)}</span></div>
+    <div class="mq">${esc(x.m.q)}</div>
+    ${x.ans.map(a => `<div class="ans">${epBadge(a.ep)}<span>${isNew(a)?'<span class="newtag">NEW</span> ':""}${esc(a.t)}</span></div>`).join("")}
+  </div>`;
+  el.innerHTML = `<div class="vhead"><h2>Mysteries</h2><p>Questions the show has raised so far. An answer appears only after the episode that gives it.</p></div>
+    <h3 style="font-size:18px;margin:4px 0 10px">Still open · ${open.length}</h3>
+    <div class="mgrid">${open.map(card).join("") || `<div class="empty">Nothing open right now.</div>`}</div>
+    <h3 style="font-size:18px;margin:22px 0 10px">Answered so far · ${part.length}</h3>
+    <div class="mgrid">${part.map(card).join("") || `<div class="empty">No answers yet. Keep watching.</div>`}</div>`;
+}
+
+// ---------- Travels ----------
+function renderTravels(){
+  const el = $("#v-travels");
+  if (W < 0) { el.innerHTML = lockedMsg("travel log"); return; }
+  const js = D.JOURNEYS.filter(vis);
+  el.innerHTML = `<div class="vhead"><h2>Time travel log</h2><p>Every crossing the show has shown or confirmed so far, in the order you saw them.</p></div>
+    <div class="trips">${js.map(t => `<div class="card trip ${isNew(t)?"new":""}">${avatar(t.who)}
+      <div><div class="who">${esc(name(t.who))}</div><div class="route"><span>${esc(t.from)}</span><span class="arrow">→</span><span>${esc(t.to)}</span></div><div class="how">${esc(t.how)}${t.note?" · "+esc(t.note):""}</div></div>
+      <div>${epBadge(t.ep)}</div></div>`).join("") || `<div class="empty">No one has travelled yet. As far as you know.</div>`}</div>`;
+}
+
+// ---------- Recaps ----------
+function renderStory(){
+  const el = $("#v-story");
+  if (W < 0) { el.innerHTML = lockedMsg("story"); return; }
+  const eps = EPS.filter(e => e.i <= V);
+  let lastS = 0;
+  const html = eps.map(e => {
+    const brk = e.s !== lastS ? `<div class="seasonbreak">Season ${e.s}</div>` : ""; lastS = e.s;
+    const paras = D.STORY[e.code] || [];
+    return brk + `<article class="chapter ${e.i===V?"latest":""}" id="ch-${e.i}">
+      <div class="ch-head"><span class="ch-num">${e.code}</span><h3>${esc(e.title)}</h3>${e.i===V?'<span class="newtag">LATEST</span>':""}</div>
+      ${paras.map(p => `<p>${esc(p)}</p>`).join("")}</article>`;
+  }).join("");
+  el.innerHTML = `<div class="vhead"><h2>The story so far</h2><p>Everything that's happened, told in the order the series shows it. One chapter per episode you've watched.</p></div>
+    <div class="storytools">${eps.length > 1 ? `<button class="btn" data-jumpch="${V}">Jump to ${code(V)}</button>` : ""}</div>
+    <div class="story">${html}</div>`;
+}
+function renderRecaps(){
+  const el = $("#v-recaps");
+  if (W < 0) { el.innerHTML = lockedMsg("recaps"); return; }
+  const list = EPS.filter(e => e.i <= V).reverse();
+  const nxt = V + 1 < N ? EPS[V+1] : null;
+  const openQs = D.MYSTERIES.filter(m => vis(m) && !m.a.some(a => a.ep <= V));
+  el.innerHTML = `<div class="vhead"><h2>Recaps</h2><p>Short summaries of what you've watched, plus details worth noticing.</p></div>
+    ${nxt && V === W ? `<div class="card" style="border-color:var(--accent);margin-bottom:12px"><h3 style="font-size:18px;margin-bottom:6px">Before you press play on ${nxt.code}</h3>
+      <div style="color:var(--muted);font-size:14px">Previously: ${esc(D.RECAPS[EPS[V].code])}</div>
+      ${openQs.length ? `<div style="margin-top:8px;font-size:14px">Open questions: ${openQs.slice(-4).map(m => esc(m.q)).join(" · ")}</div>` : ""}</div>` : ""}
+    <div class="recaps">${list.map(e => `<div class="card ${e.i===V?"new":""}"><h3>${e.code} · ${esc(e.title)}</h3><div class="recap">${esc(D.RECAPS[e.code]||"")}</div>
+      ${(D.NOTES[e.code]||[]).length ? `<ul class="notes">${D.NOTES[e.code].map(n => `<li>${esc(n.t)} <em>· ${esc(n.src)}</em></li>`).join("")}</ul>` : ""}</div>`).join("")}</div>`;
+}
+
+// ---------- Glossary ----------
+function renderGlossary(){
+  const el = $("#v-glossary");
+  if (W < 0) { el.innerHTML = lockedMsg("glossary"); return; }
+  const g = D.GLOSSARY.filter(vis);
+  el.innerHTML = `<div class="vhead"><h2>Glossary</h2><p>Terms the show has introduced so far, explained only as far as you've seen.</p></div>
+    <dl class="gloss">${g.map(x => `<div class="card ${isNew(x)?"new":""}"><dt>${esc(x.term)} ${epBadge(x.ep)}</dt><dd>${esc(x.t)}</dd></div>`).join("") || `<div class="empty">No terms yet.</div>`}</dl>`;
+}
+
+// ---------- Sheets ----------
+// In real full screen only the full-screen element is drawn, so popups must live inside it.
+function hostLayers(){
+  const host = document.fullscreenElement || document.body;
+  ["#scrim","#sheet","#toast"].forEach(sel => { const el = $(sel); if (el && el.parentNode !== host) host.appendChild(el); });
+}
+document.addEventListener("fullscreenchange", hostLayers);
+function openSheet(html){ hostLayers(); const s = $("#sheet"); s.innerHTML = `<div class="grab"></div><button class="iconbtn close" data-close aria-label="Close">✕</button>` + html; s.classList.add("on"); $("#scrim").classList.add("on"); s.focus && s.setAttribute("tabindex","-1"); s.focus(); }
+function closeSheet(){ $("#sheet").classList.remove("on"); $("#scrim").classList.remove("on"); }
+function openEpisode(i){
+  const e = EPS[i];
+  let body = `<h2 id="sheetTitle">${e.code}${i <= W + 1 ? " · " + esc(e.title) : ""}</h2>`;
+  if (i > W) {
+    const skip = i - W - 1;
+    body += `<p style="color:var(--muted)">Mark this episode as watched to unlock everything up to and including it.</p>
+      ${skip > 0 ? `<div class="warnbox">This also unlocks ${skip} episode${skip>1?"s":""} you haven't marked: ${code(W+1)}${skip>1?" to "+code(i-1):""}. Only continue if you've watched ${skip>1?"them":"it"}.</div>` : ""}
+      <div class="btnrow"><button class="btn primary" data-mark="${i}">I've watched ${e.code}</button><button class="btn" data-close>Not yet</button></div>`;
+  } else {
+    body += `<p style="color:var(--muted)">${i === W ? "This is the last episode you've marked." : "You've watched this one."}</p>
+      <div class="card recap" style="margin-top:8px">${esc(D.RECAPS[e.code]||"")}</div>
+      <div class="btnrow">
+        <button class="btn" data-view="${i}">Show the story as of ${e.code}</button>
+        ${i === W ? (i > 0 ? `<button class="btn warn" data-mark="${i-1}">Unmark (back to ${code(i-1)})</button>` : `<button class="btn warn" data-mark="-1">Unmark</button>`) : `<button class="btn warn" data-mark="${i}">Set progress back to ${e.code}</button>`}
+      </div>`;
+  }
+  openSheet(body);
+}
+function relTo(l, id){
+  // phrase relationship from the perspective of `id`
+  const other = l.a === id ? l.b : l.a, fromA = l.a === id;
+  const t = l.type;
+  let kind;
+  if (t === "parent") kind = fromA ? "Parent of" : "Child of";
+  else if (t === "adoptive") kind = fromA ? (l.label === "raised her" ? "Raised" : "Adoptive parent of") : (l.label === "raised her" ? "Raised by" : "Adopted by");
+  else if (t === "raised") kind = fromA ? "Grandparent of" : "Grandchild of";
+  else kind = {married:"Married to", partner:"Together with", affair:"Affair with", sibling:"Sibling of", same:"Same person as", counterpart:"Other-world version"}[t];
+  return {other, kind};
+}
+function openPerson(id){
+  const c = CH[id]; if (!c || c.ep > V) return;
+  const bio = c.bio.filter(vis);
+  const links = D.LINKS.filter(l => vis(l) && (l.a === id || l.b === id) && CH[l.a].ep <= V && CH[l.b].ep <= V);
+  const evs = D.EVENTS.filter(e => vis(e) && e.who.includes(id)).sort(evSort);
+  const trips = D.JOURNEYS.filter(t => vis(t) && t.who === id);
+  const ph = photo(id);
+  openSheet(`<div class="dossier">
+    <div class="dossier-top">${avatar(id)}<div><h2 id="sheetTitle">${esc(c.name)}</h2><div style="font-size:14px;margin-top:2px">${esc(roleOf(id))}</div><div style="color:var(--muted);font-size:12.5px">${FAM[c.fam].name} · first seen ${code(c.ep)}</div>
+      <div class="btnrow" style="margin-top:8px"><button class="btn" data-photo="${id}">${ph ? "Change photo" : "Add photo"}</button>${ph ? `<button class="btn" data-unphoto="${id}">Remove</button>` : ""}</div></div></div>
+    <h3>What you know</h3>
+    <div class="bio">${bio.map(b => `<div class="row">${epBadge(b.ep)}<span>${isNew(b)?'<span class="newtag">NEW</span> ':""}<span class="${superseded(b)?"struck":""}">${esc(b.t)}</span>${superseded(b) ? `<div class="turned"><b>TURNED OUT · ${code(b.until)}</b> ${esc(b.later)}</div>` : ""}</span></div>`).join("")}</div>
+    ${links.length ? `<h3>Connections</h3><div class="rels">${links.map(l => { const r = relTo(l, id); const sup = superseded(l);
+        return `<button class="rel" data-person="${r.other}"><span class="kind ${sup?"struck":""}">${r.kind}</span>${avatar(r.other)}<span><span class="${sup?"struck":""}">${esc(name(r.other))}</span>${sup?` <span style="color:var(--thread);font-size:12px">· ${esc(l.later)} (${code(l.until)})</span>`:""} ${epBadge(l.ep)}${isNew(l)?' <span class="newtag">NEW</span>':""}</span></button>`; }).join("")}</div>` : ""}
+    ${trips.length ? `<h3>Time travel</h3><div class="bio">${trips.map(t => `<div class="row">${epBadge(t.ep)}<span class="mono">${esc(t.from)} → ${esc(t.to)}</span><span style="color:var(--muted)">${esc(t.how)}</span></div>`).join("")}</div>` : ""}
+    ${evs.length ? `<h3>On the timeline</h3><div class="bio">${evs.map(e => `<div class="row"><span class="epb">${e.d ? e.d.slice(0,4) : "?"}${e.w==="B"?" ◐":e.w==="O"?" ○":""}</span><span class="${superseded(e)?"struck":""}">${esc(e.t)}</span></div>`).join("")}</div>` : ""}
+  </div>`);
+}
+
+// ---------- Photo upload (stored locally) ----------
+let photoTarget = null;
+// ---------- Bulk photo import (from the viewer's own files; kept in this browser only) ----------
+// File names may start with the official guide's character code (C01_..., C32_...) or contain the character's name.
+const CODE2ID = {C01:"jonas",C02:"stranger",C03:"adam",C04:"michael",C05:"hannah",C06:"ines",C07:"daniel",C08:"martha",C09:"magnus",C10:"mikkel",C11:"ulrich",C12:"katharina",C13:"mads",C14:"tronte",C15:"jana",C16:"helene",C17:"agnes",C18:"franziska",C19:"elisabeth",C20:"peter",C21:"charlotte",C22:"helge",C23:"bernd",C24:"greta",C25:"bartosz",C26:"aleksander",C27:"regina",C28:"claudia",C30:"egon",C31:"doris",C32:"noah",C33:"silja",C34:"torben",C35:"benni",C36:"jurgen",C37:"tannhaus",C38:"gustav",C39:"clausen",C40:"martha_alt",C61:"unknown",C66:"marek",C67:"sonja",C68:"charlotte_o",C75:"erik",C76:"hermann",C77:"sebastian",C78:"anatol",C79:"leopold",C80:"heinrich",C81:"ulla_s"};
+function hasAnyPhoto(){ try { for (let i = 0; i < localStorage.length; i++) if ((localStorage.key(i)||"").startsWith("dark.photo.")) return true; } catch (e) {} return false; }
+const slug = t => t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-");
+function matchFile(fname){
+  const base = fname.replace(/\.[a-z0-9]+$/i, "");
+  const m = base.match(/^(C\d+)(?:_|$)/i);
+  if (m) return CODE2ID[m[1].toUpperCase()] || null;
+  const b = slug(base);
+  if (CH[b]) return b;
+  let best = null;
+  D.CHARACTERS.forEach(c => { const n = slug(c.name.replace(/\(.*\)/, "")).replace(/^the-/, "").replace(/-$/, ""); if (n && (b === n || b.startsWith(n + "-") || b.endsWith("-" + n))) { if (!best || n.length > best[1]) best = [c.id, n.length]; } });
+  return best ? best[0] : null;
+}
+function shrink(file){
+  return new Promise((res, rej) => {
+    const img = new Image(), url = URL.createObjectURL(file);
+    img.onload = () => { const S = 160, cv = document.createElement("canvas"); cv.width = cv.height = S; const ctx = cv.getContext("2d"); const m = Math.min(img.width, img.height);
+      ctx.drawImage(img, (img.width-m)/2, (img.height-m)/2*0.6, m, m, 0, 0, S, S); URL.revokeObjectURL(url); res(cv.toDataURL("image/jpeg", .82)); };
+    img.onerror = () => { URL.revokeObjectURL(url); rej(); };
+    img.src = url;
+  });
+}
+$("#bulkInput").addEventListener("change", async ev => {
+  const files = [...(ev.target.files || [])]; ev.target.value = "";
+  if (!files.length) return;
+  let ok = 0, skipped = 0, failed = 0; const seen = new Set();
+  for (const f of files) {
+    const id = matchFile(f.name);
+    if (!id || seen.has(id)) { skipped++; continue; }
+    try { const data = await shrink(f); photoMem[id] = data; if (!store.set("dark.photo." + id, data)) failed++; seen.add(id); ok++; } catch (e) { failed++; }
+  }
+  renderAll();
+  toast(`Added ${ok} photo${ok===1?"":"s"}${skipped ? `, skipped ${skipped} file${skipped===1?"":"s"} with no matching character` : ""}${failed ? `. ${failed} couldn't be saved in this browser` : ""}.`);
+});
+document.addEventListener("click", e => {
+  if (e.target.id === "bulkPhotos") $("#bulkInput").click();
+  if (e.target.id === "clearPhotos") {
+    try { const ks = []; for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith("dark.photo.")) ks.push(k); } ks.forEach(k => localStorage.removeItem(k)); } catch (err) {}
+    Object.keys(photoMem).forEach(k => photoMem[k] = null); renderAll(); toast("All photos removed from this browser.");
+  }
+});
+
+$("#photoInput").addEventListener("change", ev => {
+  const f = ev.target.files && ev.target.files[0]; ev.target.value = "";
+  if (!f || !photoTarget) return;
+  const img = new Image(); const url = URL.createObjectURL(f);
+  img.onload = () => {
+    const S = 160, cv = document.createElement("canvas"); cv.width = cv.height = S;
+    const ctx = cv.getContext("2d"); const m = Math.min(img.width, img.height);
+    ctx.drawImage(img, (img.width-m)/2, (img.height-m)/2, m, m, 0, 0, S, S);
+    const data = cv.toDataURL("image/jpeg", .82); URL.revokeObjectURL(url);
+    photoMem[photoTarget] = data;
+    if (!store.set("dark.photo." + photoTarget, data)) toast("Photo shown for now, but this browser won't let it be saved.");
+    else toast("Photo added to " + name(photoTarget) + ".");
+    const id = photoTarget; photoTarget = null;
+    renderAll(); openPerson(id);
+  };
+  img.onerror = () => { toast("That file couldn't be read as an image. Try a JPG or PNG."); URL.revokeObjectURL(url); };
+  img.src = url;
+});
+
+// ---------- Actions ----------
+function setWatched(i){
+  const prevW = W;
+  W = Math.max(-1, Math.min(N-1, i)); V = W;
+  store.set("dark.watched", W);
+  if (W >= 0) season = EPS[Math.min(N-1, W + 1 < N ? W + 1 : W)].s;
+  lastFitV = null;
+  closeSheet();
+  if (W > prevW) {
+    const e = EPS[W];
+    const nl = D.LINKS.filter(l => l.ep > prevW && l.ep <= W).length, ne = D.EVENTS.filter(x => x.ep > prevW && x.ep <= W).length;
+    toast(`${e.code} unlocked: ${ne} event${ne===1?"":"s"}, ${nl} connection${nl===1?"":"s"}.`);
+    tab = "new";
+  } else toast(W >= 0 ? `Progress set back to ${code(W)}.` : "Progress cleared.");
+  renderAll();
+  scrollToTabs();
+}
+function setV(i){ V = Math.max(0, Math.min(W, i)); renderAll(); }
+
+document.addEventListener("click", e => {
+  const t = e.target.closest("[data-season],[data-ep],[data-tab],[data-person],[data-close],[data-mark],[data-view],[data-goto],[data-fam],[data-world],[data-jump],[data-photo],[data-unphoto],[data-jumpch],#toLatest,#jumpNew,#scrim");
+  if (!t) return;
+  if (t.id === "scrim" || t.hasAttribute("data-close")) return closeSheet();
+  if (t.dataset.season) { season = +t.dataset.season; renderSelector(); return; }
+  if (t.dataset.ep !== undefined) return openEpisode(+t.dataset.ep);
+  if (t.dataset.tab) { tab = t.dataset.tab; renderTabs(); if (tab === "tree") { renderTree(); requestAnimationFrame(() => fitTree()); } return; }
+  if (t.dataset.person) return openPerson(t.dataset.person);
+  if (t.dataset.mark !== undefined) return setWatched(+t.dataset.mark);
+  if (t.dataset.view !== undefined) { closeSheet(); return setV(+t.dataset.view); }
+  if (t.dataset.goto) { tab = t.dataset.goto; renderTabs(); if (tab === "tree") { renderTree(); requestAnimationFrame(() => fitTree()); } scrollToTabs(); return; }
+  if (t.dataset.fam) { famFilter = t.dataset.fam; renderTree(); return; }
+  if (t.dataset.world) { worldShow[t.dataset.world] = !worldShow[t.dataset.world]; renderTimeline(); return; }
+  if (t.dataset.jump) { const g = document.getElementById(t.dataset.jump); if (g) g.scrollIntoView({behavior:"smooth", block:"start"}); return; }
+  if (t.id === "jumpNew") { const n = document.querySelector("#v-timeline .ev.new"); if (n) n.scrollIntoView({behavior:"smooth", block:"center"}); else toast("Nothing new on the timeline in " + code(V) + "."); return; }
+  if (t.id === "toLatest") return setV(W);
+  if (t.dataset.jumpch !== undefined) { const c = document.getElementById("ch-" + t.dataset.jumpch); if (c) c.scrollIntoView({behavior:"smooth", block:"start"}); return; }
+  if (t.dataset.photo) { photoTarget = t.dataset.photo; $("#photoInput").click(); return; }
+  if (t.dataset.unphoto) { const id = t.dataset.unphoto; store.del("dark.photo." + id); photoMem[id] = null; renderAll(); openPerson(id); return; }
+});
+document.addEventListener("change", e => { if (e.target.id === "personSel") { personFilter = e.target.value; renderTimeline(); } });
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeSheet(); });
+$("#vRange").addEventListener("input", e => setV(+e.target.value));
+$("#epSel").addEventListener("change", e => {
+  const v = +e.target.value;
+  e.target.value = String(W);           // keep showing real progress until confirmed
+  if (v === W) return;
+  if (v > W + 1) return openEpisode(v); // skipping ahead: confirm first
+  setWatched(v);
+});
+$("#markNext").onclick = () => { if (W + 1 < N) setWatched(W + 1); };
+$("#vPrev").onclick = () => setV(V-1);
+$("#vNext").onclick = () => setV(V+1);
+window.addEventListener("resize", () => { if (tab === "tree") fitTree(); });
+
+function scrollToTabs(){ if (inPageFull()) $("#content").scrollTo({top:0, behavior:"smooth"}); else window.scrollTo({top: document.querySelector("nav.tabs").offsetTop - 4, behavior:"smooth"}); }
+// ---------- Page full screen (any tab) ----------
+function inPageFull(){ return $("#content").classList.contains("full"); }
+function setPageFull(on){
+  const c = $("#content");
+  c.classList.toggle("full", on); document.body.classList.toggle("pagefull", on);
+  $("#pageFull").textContent = on ? "✕" : "⛶"; $("#pageFull").setAttribute("aria-label", on ? "Exit full screen" : "Full screen");
+  try {
+    if (on && c.requestFullscreen) c.requestFullscreen().catch(() => {});
+    else if (!on && document.fullscreenElement === c) document.exitFullscreen().catch(() => {});
+  } catch (e) {}
+  if (tab === "tree") requestAnimationFrame(() => fitTree());
+  updatePF();
+}
+function updatePF(){
+  $("#pfEp").textContent = W >= 0 ? "as of " + code(V) : "";
+  $("#pfPrev").disabled = V <= 0; $("#pfNext").disabled = V >= W;
+}
+$("#pageFull").onclick = () => setPageFull(!inPageFull());
+$("#pfExit").onclick = () => setPageFull(false);
+$("#pfPrev").onclick = () => setV(V-1);
+$("#pfNext").onclick = () => setV(V+1);
+document.addEventListener("fullscreenchange", () => { if (!document.fullscreenElement && inPageFull()) setPageFull(false); });
+document.addEventListener("keydown", e => { if (e.key === "Escape" && inPageFull() && !document.fullscreenElement && !$("#sheet").classList.contains("on") && !($("#treewrap") && $("#treewrap").classList.contains("full"))) setPageFull(false); });
+
+function renderAll(){
+  renderStatus(); renderSelector(); renderTabs(); updatePF();
+  renderNew(); renderStory(); renderTimeline(); renderTree(); renderPeople(); renderMysteries(); renderTravels(); renderRecaps(); renderGlossary();
+}
+renderAll();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,14 @@
+{
+  "name": "dark-watch-companion",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A spoiler-safe companion for watching the Netflix series Dark: timeline, relationship tree, story and more, unlocked episode by episode.",
+  "scripts": {
+    "build": "node build.js",
+    "dev": "npm run build && wrangler dev",
+    "deploy": "npm run build && wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "4.156.1"
+  }
+}
