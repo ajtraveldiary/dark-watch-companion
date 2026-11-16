@@ -589,7 +589,7 @@ function relLabel(l){
   if (l.type === "adoptive" && l.label) return l.label === "raised her" ? "raised" : l.label;
   return {parent:"is a parent of", adoptive:"adopted", married:"is married to", partner:"is with", affair:"is having an affair with", sibling:"is a sibling of", same:"is the same person as", counterpart:"has an other-world version:"}[l.type] || l.type;
 }
-const U = 125, RH = 200;   // column width, generation row height
+const U = 130, RH = 225;   // column width, generation row height
 function nodePos(c){
   let p = c.pos;
   (c.posFrom || []).forEach(o => { if (o.ep <= V) p = o.pos; });
@@ -682,7 +682,7 @@ function renderTree(){
         <svg id="tree" aria-label="Relationship tree">
           <defs>
             <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,1 L9,5 L0,9 z" fill="#a7aea6"/></marker>
-            <clipPath id="clipc"><circle r="19" cx="0" cy="0"/></clipPath>
+            <clipPath id="clipc"><rect x="-27" y="-27" width="54" height="54" rx="5"/></clipPath>
           </defs>
           <g id="vp"><g id="eras"></g><g id="xedges"></g><g id="edges"></g><g id="nodes"></g></g>
         </svg>
@@ -722,10 +722,10 @@ function renderTree(){
     edges.forEach(l => { if (CH[l.a].fam === famFilter) focus.add(l.b); if (CH[l.b].fam === famFilter) focus.add(l.a); });
   }
   const P = Object.fromEntries(nodes.map(n => [n.id, nodePos(n)]));
-  const R = 20;
+  const R = 30;   // half the size of a square portrait tile
   // Obstacles: every visible circle plus its name label. Curved links are routed around them.
   const OB = nodes.map(n => { const p = P[n.id], hw = Math.max(18, n.name.length * 3.15 + 4);
-    return {id:n.id, x:p.x, y:p.y, r:R + 6, lx0:p.x - hw, lx1:p.x + hw, ly0:p.y + R + 3, ly1:p.y + R + (jobOf(n.id) ? 32 : 19)}; });
+    return {id:n.id, x:p.x, y:p.y, r:R * 1.42 + 4, lx0:p.x - hw, lx1:p.x + hw, ly0:p.y + R + 3, ly1:p.y + R + (jobOf(n.id) ? 32 : 19)}; });
   edgeTips = []; hideTip();
   const parts = [];
   const tipOf = (l) => ({a:l.a, b:l.b, txt:relLabel(l), ep:l.ep, type:l.type});
@@ -780,7 +780,7 @@ function renderTree(){
     const used = (levels[prow] = levels[prow] || []);
     let lv = 0; while (used.some(u => u[2] === lv && !(x1 + 14 < u[0] || x0 - 14 > u[1]))) lv++;
     used.push([x0, x1, lv]);
-    const barY = py + 64 + lv*16;
+    const barY = py + R + 48 + lv*14;
     const style = g.kind === "adoptive" ? {stroke:"#a7aea6", w:1.8, dash:"3 5"} : {stroke:"#b9c0b8", w:1.8, dash:""};
     const startY = g.parents.length === 2 ? py : py + R;
     const pn = g.parents.map(name).join(" & ");
@@ -815,11 +815,11 @@ function renderTree(){
   nodes.forEach(n => {
     const p = P[n.id]; let g = existing[n.id];
     const col = FAM[n.fam].color, ph = photo(n.id);
-    const inner = `<circle class="halo" r="${R+5}"/>
-      <circle r="${R}" fill="#0f1214" stroke="${col}" stroke-width="2.5"/>
-      ${ph ? `<image href="${ph}" x="-19" y="-19" width="38" height="38" clip-path="url(#clipc)" preserveAspectRatio="xMidYMid slice"/>` : `<text text-anchor="middle" dy="4" style="fill:${col};stroke-width:0;font-family:var(--font-mono);font-size:11px">${esc(initials(n.name))}</text>`}
-      <text text-anchor="middle" y="${R+15}">${esc(n.name)}</text>
-      ${jobOf(n.id) ? `<text class="job" text-anchor="middle" y="${R+29}">${esc(jobOf(n.id))}</text>` : ""}`;
+    const inner = `<rect class="halo" x="${-R-5}" y="${-R-5}" width="${2*R+10}" height="${2*R+10}" rx="10"/>
+      <rect x="${-R}" y="${-R}" width="${2*R}" height="${2*R}" rx="7" fill="#0f1214" stroke="${col}" stroke-width="2.5"/>
+      ${ph ? `<image href="${ph}" x="-27" y="-27" width="54" height="54" clip-path="url(#clipc)" preserveAspectRatio="xMidYMid slice"/>` : `<text text-anchor="middle" dy="5" style="fill:${col};stroke-width:0;font-family:var(--font-mono);font-size:15px">${esc(initials(n.name))}</text>`}
+      <text text-anchor="middle" y="${R+16}">${esc(n.name)}</text>
+      ${jobOf(n.id) ? `<text class="job" text-anchor="middle" y="${R+30}">${esc(jobOf(n.id))}</text>` : ""}`;
     if (!g) {
       g = document.createElementNS("http://www.w3.org/2000/svg","g");
       g.setAttribute("class","node"); g.dataset.id = n.id; g.setAttribute("tabindex","0"); g.setAttribute("role","button");
@@ -853,15 +853,15 @@ function fitTree(nodes, P){
   nodes.forEach(n => { const p = P[n.id]; x0=Math.min(x0,p.x); y0=Math.min(y0,p.y); x1=Math.max(x1,p.x); y1=Math.max(y1,p.y); });
   x0 -= 200; x1 += 70; y0 -= 95; y1 += 55;
   const W2 = box.clientWidth, cw = x1 - x0, ch = y1 - y0;
-  // Keep names readable: never zoom out below 0.55. Size the box to the tree's height at that zoom.
+  // Keep names readable: never zoom out below 0.8. Size the box to the tree's height at that zoom.
   let k = Math.min(W2/cw, 1.6);
-  const tight = k < .55;
-  if (tight) k = .55;
+  const tight = k < .8;
+  if (tight) k = .8;
   const want = Math.round(ch * k);
   const full = $("#treewrap") && $("#treewrap").classList.contains("full");
   if (!full) box.style.height = Math.max(360, Math.min(want, Math.round(window.innerHeight*0.8))) + "px";
   const H2 = box.clientHeight;
-  k = full ? Math.max(Math.min(W2/cw, H2/ch, 1.6), tight ? .55 : 0) : Math.min(k, H2/ch);
+  k = full ? Math.max(Math.min(W2/cw, H2/ch, 1.6), tight ? .8 : 0) : Math.min(k, H2/ch);
   if (tight) {
     // Centre horizontally on what's new in this episode (or on everyone).
     // Centre on this episode's changes: new people plus both ends of new links (else on Jonas).
