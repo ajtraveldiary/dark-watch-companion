@@ -1,10 +1,19 @@
 {
-  // Static site served by Cloudflare Workers (Static Assets). No server code needed.
+  // Static site + a small Worker that stores shared character photos in R2.
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "dark-watch-companion",
+  "main": "src/worker.js",
   "compatibility_date": "2026-11-01",
   "assets": {
     "directory": "./public",
-    "not_found_handling": "single-page-application"
-  }
+    "binding": "ASSETS",
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*", "/photos/*"]
+  },
+  "r2_buckets": [
+    { "binding": "PHOTOS", "bucket_name": "dark-watch-photos" }
+  ]
+  // Secret (not in this file): ADMIN_KEY – the owner key that allows uploading and removing photos.
+  // Set it with `npx wrangler secret put ADMIN_KEY`, or add a PHOTO_ADMIN_KEY secret to the GitHub repo
+  // and the deploy workflow sets it for you.
 }

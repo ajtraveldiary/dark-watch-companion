@@ -384,9 +384,50 @@ function initials(name){
   const n = name.replace(/^The /,"").replace(/\(.*\)/,"").trim().split(/\s+/);
   return (n[0][0] + (n[1] ? n[1][0] : (n[0][1]||""))).toUpperCase();
 }
-function photo(id){
+function localPhoto(id){
   if (id in photoMem) return photoMem[id];
   return photoMem[id] = store.get("dark.photo." + id, null);
+}
+function photo(id){ return localPhoto(id) || shared[id] || null; }
+
+// ---------- Shared photos (only on the Cloudflare site, where /api/photos exists) ----------
+const shared = {};                       // character id -> image URL everyone sees
+let apiOK = false;                       // true once the photo API answers
+let ownerKey = store.get("dark.ownerKey", null);
+const isOwnerMode = () => apiOK && !!ownerKey;
+async function hashId(id){
+  const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode("dark-photo:" + id));
+  return [...new Uint8Array(b)].slice(0, 12).map(x => x.toString(16).padStart(2, "0")).join("");
+}
+async function loadShared(){
+  try {
+    const r = await fetch("/api/photos", {cache:"no-store"});
+    if (!r.ok || !(r.headers.get("content-type")||"").includes("json")) return;
+    const j = await r.json(); if (!j || !Array.isArray(j.photos)) return;
+    apiOK = true;
+    const byH = {}; for (const c of D.CHARACTERS) byH[await hashId(c.id)] = c.id;
+    j.photos.forEach(p => { const id = byH[p.h]; if (id) shared[id] = `/photos/${encodeURIComponent(id)}?v=${encodeURIComponent(p.v)}`; });
+    renderAll();
+  } catch (e) { /* not on the Cloudflare site, or offline: local photos only */ }
+}
+function dataUrlToBlob(u){
+  const [head, b64] = u.split(","); const bin = atob(b64); const a = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) a[i] = bin.charCodeAt(i);
+  return new Blob([a], {type: (head.match(/data:([^;]+)/)||[])[1] || "image/jpeg"});
+}
+async function ownerFetch(path, opts){
+  const r = await fetch(path, {...opts, headers:{...(opts.headers||{}), authorization:"Bearer " + ownerKey}});
+  if (r.status === 401) { ownerKey = null; store.del("dark.ownerKey"); renderAll(); throw new Error("Your owner key didn't work, so you're signed out. Sign in again on the People tab."); }
+  if (!r.ok) { let m = "Something went wrong saving the photo."; try { m = (await r.json()).error || m; } catch (e) {} throw new Error(m); }
+  return r;
+}
+async function uploadShared(id, dataUrl){
+  const r = await ownerFetch("/api/photos/" + encodeURIComponent(id), {method:"PUT", headers:{"content-type":"image/jpeg"}, body:dataUrlToBlob(dataUrl)});
+  const j = await r.json(); shared[id] = `/photos/${encodeURIComponent(id)}?v=${encodeURIComponent(j.v)}`;
+}
+async function deleteShared(id){
+  await ownerFetch("/api/photos/" + encodeURIComponent(id), {method:"DELETE"});
+  delete shared[id];
 }
 function avatar(id, cls){
   const c = CH[id]; const col = FAM[c.fam].color; const p = photo(id);
@@ -922,8 +963,8 @@ function renderPeople(){
     return `<div class="famhead" style="--c:${FAM[f].color}"><i></i>${FAM[f].name}</div>` + list.map(c =>
       `<button class="person ${isNew(c)?"new":""}" data-person="${c.id}">${avatar(c.id)}<span><span class="nm">${esc(c.name)} ${isNew(c)?'<span class="newtag">NEW</span>':""}</span><span class="rl">${esc(roleOf(c.id))}</span><span class="ln">${esc(latestBio(c))}</span></span></button>`).join("");
   }).join("");
-  el.innerHTML = `<div class="vhead"><h2>People</h2><p>Tap anyone for their file. Add one photo from a file, or import a whole folder of your own photos at once. Photos stay in this browser only.</p></div>
-    <div class="btnrow" style="margin:-4px 0 14px"><button class="btn" id="bulkPhotos">Import photos…</button>${Object.keys(photoMem).some(k => photoMem[k]) || hasAnyPhoto() ? `<button class="btn warn" id="clearPhotos">Remove all photos</button>` : ""}</div>
+  el.innerHTML = `<div class="vhead"><h2>People</h2><p>Tap anyone for their file. ${apiOK ? "Photos the site owner adds appear for everyone. Photos you add yourself stay in this browser only and take priority for you." : "Add one photo from a file, or import a whole folder of your own photos at once. Photos stay in this browser only."}</p></div>
+    <div class="btnrow" style="margin:-4px 0 14px"><button class="btn" id="bulkPhotos">${isOwnerMode() ? "Import photos for everyone…" : "Import photos…"}</button>${apiOK ? (isOwnerMode() ? `<button class="btn" id="ownerOut">Owner mode on · Sign out</button>` : `<button class="btn" id="ownerIn">Owner sign-in</button>`) : ""}${Object.keys(photoMem).some(k => photoMem[k]) || hasAnyPhoto() ? `<button class="btn warn" id="clearPhotos">Remove my local photos</button>` : ""}</div>
     <div class="people">${html}</div>`;
 }
 
@@ -1043,7 +1084,9 @@ function openPerson(id){
   const ph = photo(id);
   openSheet(`<div class="dossier">
     <div class="dossier-top">${avatar(id)}<div><h2 id="sheetTitle">${esc(c.name)}</h2><div style="font-size:14px;margin-top:2px">${esc(roleOf(id))}</div><div style="color:var(--muted);font-size:12.5px">${FAM[c.fam].name} · first seen ${code(c.ep)}</div>
-      <div class="btnrow" style="margin-top:8px"><button class="btn" data-photo="${id}">${ph ? "Change photo" : "Add photo"}</button>${ph ? `<button class="btn" data-unphoto="${id}">Remove</button>` : ""}</div></div></div>
+      <div class="btnrow" style="margin-top:8px">${isOwnerMode()
+        ? `<button class="btn" data-photo="${id}">${shared[id] ? "Replace photo for everyone" : "Add photo for everyone"}</button>${shared[id] ? `<button class="btn" data-unphoto="${id}">Remove for everyone</button>` : ""}`
+        : `<button class="btn" data-photo="${id}">${localPhoto(id) ? "Change my photo" : (shared[id] ? "Use my own photo" : "Add photo")}</button>${localPhoto(id) ? `<button class="btn" data-unphoto="${id}">Remove my photo</button>` : ""}`}</div></div></div>
     <h3>What you know</h3>
     <div class="bio">${bio.map(b => `<div class="row">${epBadge(b.ep)}<span>${isNew(b)?'<span class="newtag">NEW</span> ':""}<span class="${superseded(b)?"struck":""}">${esc(b.t)}</span>${superseded(b) ? `<div class="turned"><b>TURNED OUT · ${code(b.until)}</b> ${esc(b.later)}</div>` : ""}</span></div>`).join("")}</div>
     ${links.length ? `<h3>Connections</h3><div class="rels">${links.map(l => { const r = relTo(l, id); const sup = superseded(l);
@@ -1073,7 +1116,7 @@ function matchFile(fname){
 function shrink(file){
   return new Promise((res, rej) => {
     const img = new Image(), url = URL.createObjectURL(file);
-    img.onload = () => { const S = 160, cv = document.createElement("canvas"); cv.width = cv.height = S; const ctx = cv.getContext("2d"); const m = Math.min(img.width, img.height);
+    img.onload = () => { const S = 220, cv = document.createElement("canvas"); cv.width = cv.height = S; const ctx = cv.getContext("2d"); const m = Math.min(img.width, img.height);
       ctx.drawImage(img, (img.width-m)/2, (img.height-m)/2*0.6, m, m, 0, 0, S, S); URL.revokeObjectURL(url); res(cv.toDataURL("image/jpeg", .82)); };
     img.onerror = () => { URL.revokeObjectURL(url); rej(); };
     img.src = url;
@@ -1086,12 +1129,42 @@ $("#bulkInput").addEventListener("change", async ev => {
   for (const f of files) {
     const id = matchFile(f.name);
     if (!id || seen.has(id)) { skipped++; continue; }
-    try { const data = await shrink(f); photoMem[id] = data; if (!store.set("dark.photo." + id, data)) failed++; seen.add(id); ok++; } catch (e) { failed++; }
+    try {
+      const data = await shrink(f);
+      if (isOwnerMode()) { await uploadShared(id, data); }
+      else { photoMem[id] = data; if (!store.set("dark.photo." + id, data)) { failed++; continue; } }
+      seen.add(id); ok++;
+      if (isOwnerMode() && ok % 5 === 0) toast(`Uploaded ${ok} so far…`);
+    } catch (e) { failed++; if (/owner key/.test(e.message || "")) { toast(e.message); break; } }
   }
   renderAll();
-  toast(`Added ${ok} photo${ok===1?"":"s"}${skipped ? `, skipped ${skipped} file${skipped===1?"":"s"} with no matching character` : ""}${failed ? `. ${failed} couldn't be saved in this browser` : ""}.`);
+  toast(`${isOwnerMode() ? "Shared" : "Added"} ${ok} photo${ok===1?"":"s"}${skipped ? `, skipped ${skipped} file${skipped===1?"":"s"} with no matching character` : ""}${failed ? `. ${failed} couldn't be saved in this browser` : ""}.`);
+});
+function openOwnerSignIn(){
+  openSheet(`<h2 id="sheetTitle">Owner sign-in</h2>
+    <p style="color:var(--muted)">Enter the owner key you set for this site. In owner mode, photos you add or import are saved for everyone who visits. Visitors can only view them.</p>
+    <form id="ownerForm" class="btnrow" style="align-items:center">
+      <label for="ownerKeyInput" class="visually-hidden" style="position:absolute;left:-9999px">Owner key</label>
+      <input type="password" id="ownerKeyInput" autocomplete="current-password" placeholder="Owner key" style="flex:1;min-width:180px;background:var(--surface-2);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:10px 12px;font:inherit">
+      <button class="btn primary" type="submit">Sign in</button>
+    </form>
+    <div id="ownerMsg" style="margin-top:10px;font-size:14px;color:#f0a59f"></div>`);
+  setTimeout(() => { const i = $("#ownerKeyInput"); if (i) i.focus(); }, 50);
+}
+document.addEventListener("submit", async e => {
+  if (e.target.id !== "ownerForm") return;
+  e.preventDefault();
+  const key = ($("#ownerKeyInput").value || "").trim(); const msg = $("#ownerMsg");
+  if (!key) { msg.textContent = "Enter your owner key."; return; }
+  try {
+    const r = await fetch("/api/owner", {headers:{authorization:"Bearer " + key}, cache:"no-store"});
+    if (r.status === 204) { ownerKey = key; store.set("dark.ownerKey", key); closeSheet(); renderAll(); toast("Owner mode on. Photos you add now are shared with everyone."); }
+    else { let m = "That key didn't work."; try { m = (await r.json()).error || m; } catch (x) {} msg.textContent = m; }
+  } catch (x) { msg.textContent = "Couldn't reach the site. Check your connection and try again."; }
 });
 document.addEventListener("click", e => {
+  if (e.target.id === "ownerIn") openOwnerSignIn();
+  if (e.target.id === "ownerOut") { ownerKey = null; store.del("dark.ownerKey"); renderAll(); toast("Signed out of owner mode."); }
   if (e.target.id === "bulkPhotos") $("#bulkInput").click();
   if (e.target.id === "clearPhotos") {
     try { const ks = []; for (let i = 0; i < localStorage.length; i++) { const k = localStorage.key(i); if (k && k.startsWith("dark.photo.")) ks.push(k); } ks.forEach(k => localStorage.removeItem(k)); } catch (err) {}
@@ -1104,14 +1177,20 @@ $("#photoInput").addEventListener("change", ev => {
   if (!f || !photoTarget) return;
   const img = new Image(); const url = URL.createObjectURL(f);
   img.onload = () => {
-    const S = 160, cv = document.createElement("canvas"); cv.width = cv.height = S;
+    const S = 220, cv = document.createElement("canvas"); cv.width = cv.height = S;
     const ctx = cv.getContext("2d"); const m = Math.min(img.width, img.height);
     ctx.drawImage(img, (img.width-m)/2, (img.height-m)/2, m, m, 0, 0, S, S);
     const data = cv.toDataURL("image/jpeg", .82); URL.revokeObjectURL(url);
-    photoMem[photoTarget] = data;
-    if (!store.set("dark.photo." + photoTarget, data)) toast("Photo shown for now, but this browser won't let it be saved.");
-    else toast("Photo added to " + name(photoTarget) + ".");
     const id = photoTarget; photoTarget = null;
+    if (isOwnerMode()) {
+      toast("Uploading…");
+      uploadShared(id, data).then(() => { toast("Photo saved for everyone: " + name(id) + "."); renderAll(); openPerson(id); })
+        .catch(e => toast(e.message));
+      return;
+    }
+    photoMem[id] = data;
+    if (!store.set("dark.photo." + id, data)) toast("Photo shown for now, but this browser won't let it be saved.");
+    else toast("Photo added to " + name(id) + ".");
     renderAll(); openPerson(id);
   };
   img.onerror = () => { toast("That file couldn't be read as an image. Try a JPG or PNG."); URL.revokeObjectURL(url); };
@@ -1155,7 +1234,11 @@ document.addEventListener("click", e => {
   if (t.id === "toLatest") return setV(W);
   if (t.dataset.jumpch !== undefined) { const c = document.getElementById("ch-" + t.dataset.jumpch); if (c) c.scrollIntoView({behavior:"smooth", block:"start"}); return; }
   if (t.dataset.photo) { photoTarget = t.dataset.photo; $("#photoInput").click(); return; }
-  if (t.dataset.unphoto) { const id = t.dataset.unphoto; store.del("dark.photo." + id); photoMem[id] = null; renderAll(); openPerson(id); return; }
+  if (t.dataset.unphoto) {
+    const id = t.dataset.unphoto;
+    if (isOwnerMode() && shared[id]) { deleteShared(id).then(() => { toast("Removed for everyone."); renderAll(); openPerson(id); }).catch(e2 => toast(e2.message)); return; }
+    store.del("dark.photo." + id); photoMem[id] = null; renderAll(); openPerson(id); return;
+  }
 });
 document.addEventListener("change", e => { if (e.target.id === "personSel") { personFilter = e.target.value; renderTimeline(); } });
 document.addEventListener("keydown", e => { if (e.key === "Escape") closeSheet(); });
@@ -1202,6 +1285,7 @@ function renderAll(){
   renderNew(); renderStory(); renderTimeline(); renderTree(); renderPeople(); renderMysteries(); renderTravels(); renderRecaps(); renderGlossary();
 }
 renderAll();
+loadShared();
 })();
 </script>
 </body>
