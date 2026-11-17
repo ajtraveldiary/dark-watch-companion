@@ -661,7 +661,7 @@ function renderYears(){
     const others = [...(seenAt[p.id] || [])].sort((a,b) => a.split("|")[1].localeCompare(b.split("|")[1]));
     const same = sameAs(p.id);
     return `<div role="button" tabindex="0" class="yp ${p.isNew?"new":""}" data-person="${p.id}">${avatar(p.id)}
-      <div><div class="nm">${esc(name(p.id))}</div>${ageIn(p.id) ? `<div class="jb">${ageIn(p.id)}</div>` : ""}
+      <div><div class="nm">${esc(name(p.id))}</div>
       <div class="sub">
         ${p.arr.map(j => `<span class="tag">arrived from ${esc(j.from)}</span> `).join("")}
         ${p.dep.map(j => `<span class="tag">leaves for ${esc(j.to)}</span> `).join("")}
@@ -670,7 +670,7 @@ function renderYears(){
       </div></div></div>`;
   };
   el.innerHTML = `
-    <div class="vhead"><h2>What year am I in?</h2><p>Pick the year on screen to see who's around then and what you've seen happen there. Only scenes up to ${code(V)} count. Photos show each person at one age, so check the age line.</p></div>
+    <div class="vhead"><h2>What year am I in?</h2><p>Pick the year on screen to see who's around then and what you've seen happen there. Only scenes up to ${code(V)} count. Photos show each person at one age.</p></div>
     ${nowKeys.length ? `<div class="yr-now"><span>${code(V)} spends time in</span>${nowKeys.map(k => { const [ww,yy] = k.split("|"); return `<button data-yr="${k}" class="${k===key(w,y)?"on":""}">${yy}${worlds.length>1?" · "+esc(WN[ww]):""}</button>`; }).join("")}</div>` : ""}
     ${worlds.length > 1 ? `<div class="tl-tools">${worlds.map(ww => `<button class="toggle" data-yr="${key(ww, ww===w ? y : (yearsIn(ww).includes(y) ? y : yearsIn(ww).slice(-1)[0]))}" aria-pressed="${ww===w}">${esc(WN[ww])}</button>`).join("")}</div>` : ""}
     <div class="yearstrip">${yearsIn(w).map(yy => `<button data-yr="${key(w,yy)}" class="${yy===y?"on":""} ${nowKeys.includes(key(w,yy))&&yy!==y?"hasnew":""}">${yy}</button>`).join("")}</div>
