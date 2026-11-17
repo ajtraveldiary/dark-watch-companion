@@ -70,3 +70,12 @@ jobs:
           else
             echo "::notice::Add a PHOTO_ADMIN_KEY repository secret to enable owner photo uploads."
           fi
+
+      - name: Tell search engines the site changed (IndexNow; Bing, Yandex and others)
+        if: steps.secrets.outputs.ready == 'true'
+        continue-on-error: true
+        run: |
+          sleep 20
+          curl -sS -o /dev/null -w "IndexNow: HTTP %{http_code}\n" -X POST "https://api.indexnow.org/indexnow" \
+            -H "content-type: application/json; charset=utf-8" \
+            -d '{"host":"dark-watch-companion.workdesk.workers.dev","key":"d4rkw4tch5e0c1a2b3c4d5e6f7a8b9c0","keyLocation":"https://dark-watch-companion.workdesk.workers.dev/d4rkw4tch5e0c1a2b3c4d5e6f7a8b9c0.txt","urlList":["https://dark-watch-companion.workdesk.workers.dev/","https://dark-watch-companion.workdesk.workers.dev/llms.txt"]}'

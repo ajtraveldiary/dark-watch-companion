@@ -3,13 +3,44 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Dark Watch Companion</title>
+<title>Dark Watch Companion: Spoiler-Free Family Tree, Timeline &amp; Recaps for Netflix's Dark</title>
+<meta name="description" content="A free, spoiler-safe companion for watching Netflix's Dark. Mark the last episode you finished and see the family tree, timeline, characters and recaps only up to that point.">
+<link rel="canonical" href="__SITE__/">
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
+<meta name="theme-color" content="#0c0e0f">
+<meta name="color-scheme" content="dark">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="alternate" type="text/markdown" href="/llms.txt" title="Site summary for AI assistants">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Dark Watch Companion">
+<meta property="og:url" content="__SITE__/">
+<meta property="og:title" content="Dark, without spoilers: a watch companion that unlocks one episode at a time">
+<meta property="og:description" content="Family tree, timeline, characters and recaps for Netflix's Dark, showing only what you've already watched. Free, no sign-up.">
+<meta property="og:image" content="__SITE__/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Dark Watch Companion: family tree, timeline and recaps that unlock one episode at a time">
+<meta property="og:locale" content="en_US">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Dark, without spoilers">
+<meta name="twitter:description" content="A spoiler-safe family tree, timeline and recaps for Netflix's Dark that unlock one episode at a time.">
+<meta name="twitter:image" content="__SITE__/og-image.png">
+<script type="application/ld+json">__JSONLD__</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,500;6..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 /* Plan: one committed night-forest theme. Episode selector on top, a replay bar, then tabs.
    Everything is filtered by the episode you've watched; items new in the current episode glow yellow. */
+.vh{position:absolute!important;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.about{margin-top:28px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-size:14px;line-height:1.6;max-width:780px}
+.about h2{font-size:20px;color:var(--ink);margin:0 0 8px}
+.about h3{font-size:15px;color:var(--ink);margin:16px 0 6px}
+.about details{border-top:1px solid var(--line);padding:8px 0}
+.about summary{cursor:pointer;color:var(--ink);font-weight:500}
+.about p{margin:6px 0}
 :root{
   --bg:#0c0e0f; --surface:#14181a; --surface-2:#1b2023; --line:#2a3135;
   --ink:#e9e4d8; --muted:#8e968f; --faint:#5d655f;
@@ -325,7 +356,7 @@ svg.focusing .eg.hl .edge{opacity:1;stroke-width:3px}
 <div class="wrap">
   <header>
     <div class="brand">
-      <h1>DARK</h1>
+      <h1>DARK<span class="vh"> watch companion: a spoiler-free guide to Netflix's Dark</span></h1>
       <span class="sub">Watch companion. Only shows what you've seen.</span>
     </div>
     <div class="status" id="status"></div>
@@ -372,6 +403,17 @@ svg.focusing .eg.hl .edge{opacity:1;stroke-width:3px}
   <section class="view" id="v-recaps" role="tabpanel"></section>
   <section class="view" id="v-glossary" role="tabpanel"></section>
   </div>
+
+  <section class="about" aria-labelledby="aboutTitle">
+    <h2 id="aboutTitle">About this spoiler-free guide to Dark</h2>
+    <p><em>Dark</em> is a German Netflix series (2017–2020, three seasons, 26 episodes) set in the small town of Winden, where a child's disappearance pulls four families into a mystery. It has a large cast and a story that is famously hard to keep straight, so this site helps you follow it while you watch, without spoiling anything ahead.</p>
+    <p>Pick the last episode you finished. Everything on the page, including the relationship tree, timeline, character notes, open mysteries, glossary and recaps, then shows only what the show has revealed up to that episode. Mark the next episode and it updates, highlighting what's new. Twists are shown the way the show presents them until the episode that reveals the truth.</p>
+    <h3>Questions</h3>
+    <details><summary>Is it really spoiler-free?</summary><p>Yes, as far as the episode you've marked. Nothing from later episodes is shown, not even their titles. If you go back to an earlier episode, the page goes back with you.</p></details>
+    <details><summary>What can I use it for while watching?</summary><p>Checking who someone is and how they're related, catching up on what happened in the last episode before starting the next one, and keeping track of the open questions the show has raised so far.</p></details>
+    <details><summary>Do I need an account?</summary><p>No. It's free, with no ads and no sign-up. Your progress is saved only in your own browser.</p></details>
+    <details><summary>Is this made by Netflix?</summary><p>No. It's an unofficial fan project and isn't affiliated with Netflix.</p></details>
+  </section>
 
   <div class="footer">
     Built from episode synopses on the Dark Wiki and observations from r/DarK. Misdirections are shown as the show presents them until the episode that overturns them. Your progress is saved only in this browser.
