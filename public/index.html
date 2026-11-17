@@ -106,14 +106,14 @@ section.view.on{display:block}
 .epb{font-family:var(--font-mono);font-size:11px;color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:0 5px;white-space:nowrap}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .chip{display:inline-flex;align-items:center;gap:6px;background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:2px 10px 2px 2px;font-size:12.5px;cursor:pointer}
-.chip .av{width:22px;height:22px;font-size:9px}
+.chip .av{width:22px;height:22px;font-size:9px;border-radius:4px}
 .struck{text-decoration:line-through;text-decoration-color:var(--thread);color:var(--muted)}
 .turned{margin-top:6px;font-size:13.5px;padding-left:10px;border-left:2px solid var(--thread)}
 .turned b{color:var(--thread);font-weight:600;font-size:11px;font-family:var(--font-mono);letter-spacing:.05em}
 .empty{color:var(--muted);padding:28px 16px;text-align:center;border:1px dashed var(--line);border-radius:12px}
 
 /* Avatars */
-.av{flex:none;width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-family:var(--font-mono);font-size:13px;font-weight:500;background:#101315;border:2px solid var(--c,#888);color:var(--c,#888);overflow:hidden}
+.av{flex:none;width:40px;height:40px;border-radius:6px;display:grid;place-items:center;font-family:var(--font-mono);font-size:13px;font-weight:500;background:#101315;border:2px solid var(--c,#888);color:var(--c,#888);overflow:hidden}
 .av img{width:100%;height:100%;object-fit:cover}
 
 /* What's new */
@@ -296,7 +296,7 @@ svg.focusing .eg.hl .edge{opacity:1;stroke-width:3px}
 .btn.warn{border-color:var(--thread);color:#f0a59f}
 .warnbox{margin-top:12px;padding:10px 12px;border:1px solid var(--thread);border-radius:10px;font-size:14px;color:#f3c3be;background:rgba(196,58,48,.08)}
 .dossier-top{display:flex;gap:14px;align-items:center}
-.dossier-top .av{width:84px;height:84px;font-size:22px;border-width:3px}
+.dossier-top .av{width:84px;height:84px;font-size:22px;border-width:3px;border-radius:10px}
 .dossier h3{font-size:15px;font-family:var(--font-mono);font-weight:400;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:18px 0 8px}
 .bio{display:flex;flex-direction:column;gap:8px}
 .bio .row{display:flex;gap:10px;font-size:14.5px}
@@ -1229,7 +1229,7 @@ function openPerson(id){
         return `<button class="rel" data-person="${r.other}"><span class="kind ${sup?"struck":""}">${r.kind}</span>${avatar(r.other)}<span><span class="${sup?"struck":""}">${esc(name(r.other))}</span>${sup?` <span style="color:var(--thread);font-size:12px">· ${esc(l.later)} (${code(l.until)})</span>`:""} ${epBadge(l.ep)}${isNew(l)?' <span class="newtag">NEW</span>':""}</span></button>`; }).join("")}</div>` : ""}
     ${(() => { const xw = crossWorld(id).filter(x => x.kind === "Counterpart"); return xw.length ? `<h3>In other worlds</h3><div class="rels">${xw.map(x => `<button class="rel" data-person="${x.id}"><span class="kind">${esc(worldName(worldOf(x.id)))}</span>${avatar(x.id)}<span>${esc(name(x.id))}</span></button>`).join("")}</div>` : ""; })()}
     ${trips.length ? `<h3>Time travel</h3><div class="bio">${trips.map(t => `<div class="row">${epBadge(t.ep)}<span class="mono">${esc(t.from)} → ${esc(t.to)}</span><span style="color:var(--muted)">${esc(t.how)}</span></div>`).join("")}</div>` : ""}
-    ${evs.length ? `<h3>On the timeline</h3><div class="bio">${evs.map(e => `<div class="row">${e.d ? `<button class="epb" data-yr="${e.w}|${e.d.slice(0,4)}" title="Who's around in ${e.d.slice(0,4)}" style="cursor:pointer">${e.d.slice(0,4)}${e.w==="B"?" ◐":e.w==="O"?" ○":""}</button>` : `<span class="epb">?</span>`}<span class="${superseded(e)?"struck":""}">${esc(e.t)}</span></div>`).join("")}</div>` : ""}
+    ${evs.length ? `<h3>On the timeline</h3><div class="bio">${evs.map(e => `<div class="row">${e.d ? `<button class="epb" data-yr="${e.w}|${e.d.slice(0,4)}" title="Who's around in ${e.d.slice(0,4)}" style="cursor:pointer;background:none;font:inherit;font-family:var(--font-mono);font-size:11px;color:var(--accent);border-color:var(--accent)">${e.d.slice(0,4)}${e.w==="B"?" ◐":e.w==="O"?" ○":""}</button>` : `<span class="epb">?</span>`}<span class="${superseded(e)?"struck":""}">${esc(e.t)}</span></div>`).join("")}</div>` : ""}
   </div>`);
 }
 
