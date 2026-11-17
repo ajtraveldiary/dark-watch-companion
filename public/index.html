@@ -150,6 +150,10 @@ select,input[type=search]{background:var(--surface-2);color:var(--ink);border:1p
 .world-O .yr{color:var(--same)}
 
 /* Tree */
+/* The tree breaks out of the centred column and uses the full window width (16px gutters). */
+html{overflow-x:clip}
+nav.tabs{box-shadow:0 0 0 100vmax var(--bg);clip-path:inset(0 -100vmax)}
+.treewrap:not(.full){width:calc(100vw - 32px);margin-left:calc(50% - 50vw + 16px)}
 .treebox{position:relative;height:min(72vh,720px);min-height:420px;background:radial-gradient(ellipse at 50% 30%,#141a1c,#0a0c0d 70%);border:1px solid var(--line);border-radius:14px;overflow:hidden;touch-action:none}
 .treebox svg{width:100%;height:100%;display:block;cursor:grab;user-select:none}
 .treebox svg.dragging{cursor:grabbing}
@@ -895,7 +899,7 @@ function fitTree(nodes, P){
   if (tight) k = .8;
   const want = Math.round(ch * k);
   const full = $("#treewrap") && $("#treewrap").classList.contains("full");
-  if (!full) box.style.height = Math.max(360, Math.min(want, Math.round(window.innerHeight*0.8))) + "px";
+  if (!full) box.style.height = Math.max(420, Math.min(Math.max(want, Math.round(window.innerHeight*0.6)), window.innerHeight - 90)) + "px";
   const H2 = box.clientHeight;
   k = full ? Math.max(Math.min(W2/cw, H2/ch, 1.6), tight ? .8 : 0) : Math.min(k, H2/ch);
   if (tight) {
