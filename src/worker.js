@@ -7,7 +7,12 @@
 //   DELETE /api/photos/:id      -> remove           (owner only)
 //   GET    /api/owner           -> 204 if the key is right, 401 if not (used by the page to check a key)
 //
+//   POST   /api/visit           -> count this visitor (once per browser per day) and return the counts
+//   GET    /api/visits          -> { total, today }  (cached at the edge for 60 s)
+//
 // Character ids are listed hashed so the photo list doesn't reveal who appears later in the show.
+
+import { DurableObject } from "cloudflare:workers";
 
 const ID_RE = /^[a-z][a-z0-9_]{1,30}$/;
 const MAX_BYTES = 300 * 1024;
@@ -35,10 +40,98 @@ function isOwner(request, env) {
   return !!env.ADMIN_KEY && sameKey(key, env.ADMIN_KEY);
 }
 
+// ---------- Visitor counter ----------
+// One SQLite-backed Durable Object holds the counts. A visitor is counted at most once per UTC day:
+// the Worker sends a salted hash of IP + browser + day (no IP is ever stored), and duplicates are ignored.
+// Protection, outermost first:
+//   1. The page only calls POST /api/visit once per day per browser.
+//   2. Cross-site POSTs are refused before anything else runs.
+//   3. Per-IP rate limits (Workers Rate Limiting binding) refuse floods before they reach storage.
+//   4. GET /api/visits is cached at the edge for 60 s, so readers rarely reach the object.
+//   5. The object itself stops recording new visitors after DAILY_CAP in one day, and keeps
+//      per-visitor rows for two days only, so storage writes and size stay bounded no matter what.
+const DAILY_CAP = 20000;
+const COUNTER_NAME = "global";
+
+export class VisitCounter extends DurableObject {
+  constructor(ctx, env) {
+    super(ctx, env);
+    this.sql = ctx.storage.sql;
+    this.sql.exec("CREATE TABLE IF NOT EXISTS seen (day TEXT NOT NULL, h TEXT NOT NULL, PRIMARY KEY (day, h)) WITHOUT ROWID");
+    this.sql.exec("CREATE TABLE IF NOT EXISTS totals (k TEXT PRIMARY KEY, n INTEGER NOT NULL)");
+    this.prunedFor = "";
+  }
+  get(k) { const r = this.sql.exec("SELECT n FROM totals WHERE k = ?", k).toArray(); return r.length ? r[0].n : 0; }
+  counts(day) { return { total: this.get("all"), today: this.get("day:" + day) }; }
+  async stats(day) { return this.counts(day); }
+  async visit(day, h) {
+    if (this.prunedFor !== day) {                  // once a day: drop per-visitor rows older than yesterday
+      const y = new Date(Date.parse(day + "T00:00:00Z") - 86400000).toISOString().slice(0, 10);
+      this.sql.exec("DELETE FROM seen WHERE day < ?", y);
+      this.sql.exec("DELETE FROM totals WHERE k LIKE 'day:%' AND k < ?", "day:" + y);
+      this.prunedFor = day;
+    }
+    if (this.get("day:" + day) >= DAILY_CAP) return { ...this.counts(day), capped: true };
+    const ins = this.sql.exec("INSERT OR IGNORE INTO seen (day, h) VALUES (?, ?)", day, h);
+    ins.toArray();                                  // run it, then check whether a new row went in
+    if (ins.rowsWritten > 0) {
+      this.sql.exec("INSERT INTO totals (k, n) VALUES ('all', 1) ON CONFLICT(k) DO UPDATE SET n = n + 1");
+      this.sql.exec("INSERT INTO totals (k, n) VALUES (?, 1) ON CONFLICT(k) DO UPDATE SET n = n + 1", "day:" + day);
+    }
+    return this.counts(day);
+  }
+}
+
+const today = () => new Date().toISOString().slice(0, 10);
+const clientIp = request => request.headers.get("cf-connecting-ip") || "unknown";
+async function limited(binding, key) {
+  if (!binding) return false;                       // local dev without the binding: don't block
+  try { const { success } = await binding.limit({ key }); return !success; } catch { return false; }
+}
+function sameSite(request, url) {
+  const site = request.headers.get("sec-fetch-site");
+  if (site && site !== "same-origin") return false;
+  const origin = request.headers.get("origin");
+  return !origin || origin === url.origin;
+}
+async function visitorHash(request, env, day) {
+  const salt = env.ADMIN_KEY || "dark-watch";       // secret salt, so hashes can't be reversed to IPs
+  const raw = [salt, clientIp(request), request.headers.get("user-agent") || "", day].join("|");
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(raw));
+  return [...new Uint8Array(buf)].slice(0, 12).map(b => b.toString(16).padStart(2, "0")).join("");
+}
+
+async function handleVisits(request, env, ctx, url) {
+  if (!env.VISITS) return err(503, "Visitor counter isn't set up.");
+  const stub = env.VISITS.get(env.VISITS.idFromName(COUNTER_NAME));
+  const day = today();
+
+  if (url.pathname === "/api/visit") {
+    if (request.method !== "POST") return err(405, "Use POST.");
+    if (!sameSite(request, url)) return err(403, "Not allowed.");
+    if (await limited(env.VISIT_LIMIT, "v:" + clientIp(request))) return err(429, "Too many requests. Try again in a minute.");
+    if (await limited(env.VISIT_GLOBAL, "all")) return json(await stub.stats(day));   // flood: answer, but don't record
+    return json(await stub.visit(day, await visitorHash(request, env, day)));
+  }
+
+  // GET /api/visits
+  if (request.method !== "GET") return err(405, "Use GET.");
+  if (await limited(env.READ_LIMIT, "r:" + clientIp(request))) return err(429, "Too many requests. Try again in a minute.");
+  const cache = caches.default;
+  const key = new Request(url.origin + "/api/visits?d=" + day);
+  const hit = await cache.match(key);
+  if (hit) return hit;
+  const res = new Response(JSON.stringify(await stub.stats(day)), { headers: { "content-type": "application/json; charset=utf-8", "cache-control": "public, max-age=60" } });
+  ctx.waitUntil(cache.put(key, res.clone()));
+  return res;
+}
+
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const url = new URL(request.url);
     const { pathname } = url;
+
+    if (pathname === "/api/visit" || pathname === "/api/visits") return handleVisits(request, env, ctx, url);
 
     if (pathname === "/api/photos" && request.method === "GET") {
       const out = [];

@@ -307,6 +307,8 @@ svg.focusing .eg.hl .edge{opacity:1;stroke-width:3px}
 .toast.on{transform:translate(-50%,0);opacity:1;visibility:visible}
 .footer{color:var(--faint);font-size:12px;padding:24px 0 40px;border-top:1px solid var(--line);margin-top:30px}
 .footer .disclaimer{margin-top:10px;color:var(--muted)}
+.footer .visits{margin-top:10px;color:var(--muted);font-family:var(--font-mono);font-size:12px}
+.footer .visits b{color:var(--accent);font-weight:500}
 .footer a{color:var(--accent)}
 @media (max-width:520px){
   .brand h1{font-size:24px}
@@ -373,6 +375,7 @@ svg.focusing .eg.hl .edge{opacity:1;stroke-width:3px}
 
   <div class="footer">
     Built from episode synopses on the Dark Wiki and observations from r/DarK. Misdirections are shown as the show presents them until the episode that overturns them. Your progress is saved only in this browser.
+    <p class="visits" id="visits" hidden></p>
     <p class="disclaimer">Unofficial fan project, not affiliated with Netflix. Contact us to request removal. Mail us at <a href="mailto:ajtraveldiary@proton.me">ajtraveldiary@proton.me</a></p>
   </div>
 </div>
@@ -1430,6 +1433,26 @@ function renderAll(){
 }
 renderAll();
 loadShared();
+countVisit();
+
+// ---------- Visitor counter (only on the Cloudflare site) ----------
+async function countVisit(){
+  const day = new Date().toISOString().slice(0, 10);
+  try {
+    let r = null;
+    if (store.get("dark.visitDay", null) !== day) {          // count this browser once a day
+      r = await fetch("/api/visit", {method:"POST"});
+      if (r.ok) store.set("dark.visitDay", day);
+    }
+    if (!r || !r.ok) r = await fetch("/api/visits");
+    if (!r.ok || !(r.headers.get("content-type") || "").includes("json")) return;
+    const j = await r.json();
+    if (typeof j.total !== "number") return;
+    const el = $("#visits");
+    el.innerHTML = `<b>${j.total.toLocaleString()}</b> ${j.total === 1 ? "visitor" : "visitors"} so far · <b>${(j.today||0).toLocaleString()}</b> today`;
+    el.hidden = false;
+  } catch (e) {}
+}
 })();
 </script>
 </body>

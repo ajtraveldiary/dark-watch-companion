@@ -57,3 +57,11 @@ Until both secrets exist, the workflow builds the site and skips the deploy step
 ## Editing the story
 
 Change `src/data.js`, run `npm run build`, and commit. Keep the spoiler rule: an item's `ep` must be the first episode that shows it, and if in doubt, unlock it later.
+
+## Visitor counter
+
+The footer shows total visitors and today's visitors. Counts live in one SQLite-backed Durable Object
+(`VisitCounter`), so there's no separate database to create. Each browser is counted once per UTC day,
+using a salted hash of IP + browser + day (no IP addresses are stored). Floods are stopped before they reach
+storage: cross-site requests are refused, per-IP rate limits apply to both endpoints, the read endpoint is
+cached at the edge for 60 seconds, and the counter stops recording after 20,000 visitors in a day.
