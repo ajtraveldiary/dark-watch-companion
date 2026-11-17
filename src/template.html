@@ -136,6 +136,25 @@ select,input[type=search]{background:var(--surface-2);color:var(--ink);border:1p
 .yearstrip{display:flex;gap:4px;overflow-x:auto;padding-bottom:6px;margin-bottom:10px;scrollbar-width:thin}
 .yearstrip button{flex:none;font-family:var(--font-mono);font-size:12px;background:none;border:1px solid var(--line);color:var(--muted);border-radius:6px;padding:3px 8px;cursor:pointer}
 .yearstrip button.hasnew{border-color:var(--accent);color:var(--accent)}
+.yearstrip button.on{background:var(--accent);border-color:var(--accent);color:var(--bg)}
+.yr-now{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-bottom:12px;font-size:13px;color:var(--muted)}
+.yr-now button{font-family:var(--font-mono);font-size:12.5px;background:var(--surface-2);border:1px solid var(--accent);color:var(--accent);border-radius:999px;padding:3px 10px;cursor:pointer}
+.yr-now button.on{background:var(--accent);color:var(--bg)}
+.yr-title{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin:6px 0 4px}
+.yr-title .big{font-family:var(--font-mono);font-size:40px;line-height:1;color:var(--ink)}
+.yr-title .wn{color:var(--muted);font-size:14px}
+.ypeople{display:grid;gap:8px;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));margin:10px 0 18px}
+.yp{display:flex;gap:10px;align-items:flex-start;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px;cursor:pointer;color:var(--ink);font:inherit;width:100%}
+.yp .av{width:46px;height:46px;flex:none;border-radius:8px;font-size:15px}
+.yp .av img{border-radius:8px}
+.yp .nm{font-weight:600;font-size:14px}
+.yp .jb{color:var(--accent);font-size:11.5px;font-family:var(--font-mono)}
+.yp .sub{color:var(--muted);font-size:12px;margin-top:3px;line-height:1.4}
+.yp .sub b{color:var(--ink);font-weight:500}
+.yp .tag{display:inline-block;font-family:var(--font-mono);font-size:10.5px;border:1px solid var(--thread);color:#e88a80;border-radius:4px;padding:0 5px;margin-top:4px}
+.yp.new{border-color:var(--accent)}
+.yrlink{display:block;margin-top:4px;background:none;border:none;color:var(--accent);font-size:11px;font-family:var(--font-mono);cursor:pointer;padding:0;text-align:left}
+
 .world{margin-top:18px}
 .world > h3{font-size:14px;font-family:var(--font-mono);font-weight:400;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin:0 0 6px}
 .yeargroup{display:grid;grid-template-columns:72px 1fr;gap:0 14px;position:relative}
@@ -341,6 +360,7 @@ svg.focusing .eg.hl .edge{opacity:1;stroke-width:3px}
   <section class="view" id="v-new" role="tabpanel"></section>
   <section class="view" id="v-story" role="tabpanel"></section>
   <section class="view" id="v-timeline" role="tabpanel"></section>
+  <section class="view" id="v-years" role="tabpanel"></section>
   <section class="view" id="v-tree" role="tabpanel"></section>
   <section class="view" id="v-people" role="tabpanel"></section>
   <section class="view" id="v-mysteries" role="tabpanel"></section>
@@ -386,6 +406,7 @@ let V = W;                                   // the episode we're viewing "as of
 let season = W + 1 < N ? EPS[Math.max(0, W + 1)].s : 3;
 let tab = W >= 0 ? "new" : "new";
 const photoMem = {};
+let yrSel = null;
 let curWorld = "A", showLoops = true, famFilter = "all", personFilter = "", worldShow = {A:true, B:true, O:true};
 
 // ---------- Helpers ----------
@@ -501,7 +522,7 @@ function renderSelector(){
 }
 
 // ---------- Tabs ----------
-const TABS = [["new","What's new"],["story","Story"],["timeline","Timeline"],["tree","Relationship tree"],["people","People"],["mysteries","Mysteries"],["travels","Time travel"],["recaps","Recaps"],["glossary","Glossary"]];
+const TABS = [["new","What's new"],["story","Story"],["timeline","Timeline"],["years","What year?"],["tree","Relationship tree"],["people","People"],["mysteries","Mysteries"],["travels","Time travel"],["recaps","Recaps"],["glossary","Glossary"]];
 function renderTabs(){
   $("#tabrow").innerHTML = TABS.map(([k,l]) => `<button role="tab" data-tab="${k}" aria-selected="${tab===k}">${l}${k==="new" && W>=0 ? '<span class="dot"></span>':''}</button>`).join("");
   document.querySelectorAll("section.view").forEach(s => s.classList.toggle("on", s.id === "v-" + tab));
@@ -581,9 +602,70 @@ function renderTimeline(){
     </div>
     <div class="yearstrip">${allYears.map(y => `<button data-jump="y-${y.w}-${y.y}" class="${y.hasNew?"hasnew":""}">${y.y==="?"?"When?":y.y}${y.w==="B"?" ◐":y.w==="O"?" ○":""}</button>`).join("")}</div>
     ${groups.map(g => `<div class="world world-${g.w}">${worldsPresent.length>1?`<h3>${WN[g.w]}</h3>`:""}
-      ${g.years.map(y => `<div class="yeargroup" id="y-${g.w}-${y.y}"><div class="yr">${y.y==="?"?"?":y.y}</div><div class="evs">
+      ${g.years.map(y => `<div class="yeargroup" id="y-${g.w}-${y.y}"><div class="yr">${y.y==="?"?"?":y.y}${/^\d{4}$/.test(y.y)?`<button class="yrlink" data-yr="${g.w}|${y.y}">who's here →</button>`:""}</div><div class="evs">
         ${y.list.map(ev => evCard(ev)).join("")}</div></div>`).join("")}</div>`).join("")}
     ${evs.length ? "" : `<div class="empty">No events for this person yet.</div>`}`;
+}
+// ---------- What year am I in? ----------
+const yearOf = e => e.d ? e.d.slice(0,4) : null;
+function jYears(s){ return (String(s).match(/\d{4}/g) || []); }
+function jWorld(j, s){
+  if (/\(B\)/.test(s)) return "B"; if (/\(A\)/.test(s)) return "A";
+  const w = worldOf(j.who); return w === "C" ? "O" : w;
+}
+function renderYears(){
+  const el = $("#v-years");
+  if (W < 0) { el.innerHTML = lockedMsg("year lookup"); return; }
+  const evs = D.EVENTS.filter(e => vis(e) && e.d);
+  const worlds = ["A","B","O"].filter(w => evs.some(e => e.w === w));
+  const WN = {A:worldName("A"), B:worldName("B"), O:worldName("C")};
+  const yearsIn = w => [...new Set(evs.filter(e => e.w === w).map(yearOf))].sort();
+  const key = (w,y) => w + "|" + y;
+  // Years the episode being viewed spends time in, in the order they appear
+  const nowKeys = [...new Set(D.EVENTS.filter(e => isNew(e) && e.d).map(e => key(e.w, yearOf(e))))];
+  if (!yrSel || !evs.some(e => e.w === yrSel.w && yearOf(e) === yrSel.y)) {
+    if (nowKeys.length) { const [w,y] = nowKeys[0].split("|"); yrSel = {w, y}; }
+    else if (worlds.length) { const ys = yearsIn(worlds[0]); yrSel = {w:worlds[0], y:ys[ys.length-1]}; }
+    else { el.innerHTML = `<div class="vhead"><h2>What year am I in?</h2></div><div class="empty">No dated scenes yet.</div>`; return; }
+  }
+  const {w, y} = yrSel;
+  const here = evs.filter(e => e.w === w && yearOf(e) === y).sort(evSort);
+  // Everyone seen in this year, plus who arrived or left by time travel
+  const ppl = {};
+  const add = id => { if (!CH[id] || CH[id].ep > V) return null; return ppl[id] = ppl[id] || {id, n:0, isNew:false, arr:[], dep:[]}; };
+  here.forEach(e => e.who.forEach(id => { const p = add(id); if (p) { p.n++; if (isNew(e)) p.isNew = true; } }));
+  D.JOURNEYS.filter(vis).forEach(j => {
+    if (jYears(j.to).includes(y) && jWorld(j, j.to) === w) { const p = add(j.who); if (p) p.arr.push(j); }
+    if (jYears(j.from).includes(y) && jWorld(j, j.from) === w && ppl[j.who]) ppl[j.who].dep.push(j);
+  });
+  const seenAt = {};   // id -> other years they're seen in
+  evs.forEach(e => e.who.forEach(id => { if (!ppl[id]) return; const k = key(e.w, yearOf(e)); if (k !== key(w,y)) (seenAt[id] = seenAt[id] || new Set()).add(k); }));
+  const sameAs = id => D.LINKS.filter(l => l.type === "same" && vis(l) && !superseded(l) && (l.a === id || l.b === id))
+    .map(l => l.a === id ? l.b : l.a).filter(o => CH[o] && CH[o].ep <= V);
+  const list = Object.values(ppl).sort((a,b) => b.n - a.n || name(a.id).localeCompare(name(b.id)));
+  const yrBtn = k => { const [ww,yy] = k.split("|"); return `<button class="linkbtn mono" data-yr="${k}">${yy}${ww==="B"?" ◐":ww==="O"?" ○":""}</button>`; };
+  const card = p => {
+    const others = [...(seenAt[p.id] || [])].sort((a,b) => a.split("|")[1].localeCompare(b.split("|")[1]));
+    const same = sameAs(p.id);
+    return `<div role="button" tabindex="0" class="yp ${p.isNew?"new":""}" data-person="${p.id}">${avatar(p.id)}
+      <div><div class="nm">${esc(name(p.id))}</div>${jobOf(p.id) ? `<div class="jb">${esc(jobOf(p.id))}</div>` : ""}
+      <div class="sub">
+        ${p.arr.map(j => `<span class="tag">arrived from ${esc(j.from)}</span> `).join("")}
+        ${p.dep.map(j => `<span class="tag">leaves for ${esc(j.to)}</span> `).join("")}
+        ${same.length ? `<div>Same person as <b>${same.map(o => esc(name(o))).join(", ")}</b></div>` : ""}
+        ${others.length ? `<div>Also seen in ${others.map(yrBtn).join(" · ")}</div>` : (p.n ? `<div>Only seen in ${y} so far</div>` : "")}
+      </div></div></div>`;
+  };
+  el.innerHTML = `
+    <div class="vhead"><h2>What year am I in?</h2><p>Pick the year on screen to see who's around then and what you've seen happen there. Only scenes up to ${code(V)} count.</p></div>
+    ${nowKeys.length ? `<div class="yr-now"><span>${code(V)} spends time in</span>${nowKeys.map(k => { const [ww,yy] = k.split("|"); return `<button data-yr="${k}" class="${k===key(w,y)?"on":""}">${yy}${worlds.length>1?" · "+esc(WN[ww]):""}</button>`; }).join("")}</div>` : ""}
+    ${worlds.length > 1 ? `<div class="tl-tools">${worlds.map(ww => `<button class="toggle" data-yr="${key(ww, ww===w ? y : (yearsIn(ww).includes(y) ? y : yearsIn(ww).slice(-1)[0]))}" aria-pressed="${ww===w}">${esc(WN[ww])}</button>`).join("")}</div>` : ""}
+    <div class="yearstrip">${yearsIn(w).map(yy => `<button data-yr="${key(w,yy)}" class="${yy===y?"on":""} ${nowKeys.includes(key(w,yy))&&yy!==y?"hasnew":""}">${yy}</button>`).join("")}</div>
+    <div class="yr-title"><span class="big">${y}</span><span class="wn">${worlds.length>1 ? esc(WN[w]) + " · " : ""}${list.length} ${list.length===1?"person":"people"} · ${here.length} ${here.length===1?"event":"events"}</span></div>
+    <h3 style="font-size:17px;margin-top:14px">Who's here</h3>
+    <div class="ypeople">${list.map(card).join("") || `<div class="empty">No one you've met yet.</div>`}</div>
+    <h3 style="font-size:17px">What you've seen happen in ${y}</h3>
+    <div class="evs" style="margin-top:8px">${here.map(evCard).join("")}</div>`;
 }
 function evCard(ev){
   const sup = superseded(ev);
@@ -1134,7 +1216,7 @@ function openPerson(id){
         return `<button class="rel" data-person="${r.other}"><span class="kind ${sup?"struck":""}">${r.kind}</span>${avatar(r.other)}<span><span class="${sup?"struck":""}">${esc(name(r.other))}</span>${sup?` <span style="color:var(--thread);font-size:12px">· ${esc(l.later)} (${code(l.until)})</span>`:""} ${epBadge(l.ep)}${isNew(l)?' <span class="newtag">NEW</span>':""}</span></button>`; }).join("")}</div>` : ""}
     ${(() => { const xw = crossWorld(id).filter(x => x.kind === "Counterpart"); return xw.length ? `<h3>In other worlds</h3><div class="rels">${xw.map(x => `<button class="rel" data-person="${x.id}"><span class="kind">${esc(worldName(worldOf(x.id)))}</span>${avatar(x.id)}<span>${esc(name(x.id))}</span></button>`).join("")}</div>` : ""; })()}
     ${trips.length ? `<h3>Time travel</h3><div class="bio">${trips.map(t => `<div class="row">${epBadge(t.ep)}<span class="mono">${esc(t.from)} → ${esc(t.to)}</span><span style="color:var(--muted)">${esc(t.how)}</span></div>`).join("")}</div>` : ""}
-    ${evs.length ? `<h3>On the timeline</h3><div class="bio">${evs.map(e => `<div class="row"><span class="epb">${e.d ? e.d.slice(0,4) : "?"}${e.w==="B"?" ◐":e.w==="O"?" ○":""}</span><span class="${superseded(e)?"struck":""}">${esc(e.t)}</span></div>`).join("")}</div>` : ""}
+    ${evs.length ? `<h3>On the timeline</h3><div class="bio">${evs.map(e => `<div class="row">${e.d ? `<button class="epb" data-yr="${e.w}|${e.d.slice(0,4)}" title="Who's around in ${e.d.slice(0,4)}" style="cursor:pointer">${e.d.slice(0,4)}${e.w==="B"?" ◐":e.w==="O"?" ○":""}</button>` : `<span class="epb">?</span>`}<span class="${superseded(e)?"struck":""}">${esc(e.t)}</span></div>`).join("")}</div>` : ""}
   </div>`);
 }
 
@@ -1260,7 +1342,7 @@ function setWatched(i){
 function setV(i){ V = Math.max(0, Math.min(W, i)); renderAll(); }
 
 document.addEventListener("click", e => {
-  const t = e.target.closest("[data-season],[data-ep],[data-tab],[data-person],[data-close],[data-mark],[data-view],[data-goto],[data-fam],[data-world],[data-jump],[data-photo],[data-unphoto],[data-jumpch],[data-world-tab],#toLatest,#jumpNew,#scrim");
+  const t = e.target.closest("[data-season],[data-ep],[data-tab],[data-person],[data-close],[data-mark],[data-view],[data-goto],[data-fam],[data-world],[data-jump],[data-photo],[data-unphoto],[data-jumpch],[data-world-tab],[data-yr],#toLatest,#jumpNew,#scrim");
   if (!t) return;
   if (t.id === "scrim" || t.hasAttribute("data-close")) return closeSheet();
   if (t.dataset.season) { season = +t.dataset.season; renderSelector(); return; }
@@ -1273,6 +1355,7 @@ document.addEventListener("click", e => {
   if (t.dataset.fam) { famFilter = t.dataset.fam; renderTree(); return; }
   if (t.dataset.worldTab) { curWorld = t.dataset.worldTab; famFilter = "all"; renderTree(); requestAnimationFrame(() => fitTree()); return; }
   if (t.dataset.world) { worldShow[t.dataset.world] = !worldShow[t.dataset.world]; renderTimeline(); return; }
+  if (t.dataset.yr) { const [ww,yy] = t.dataset.yr.split("|"); yrSel = {w:ww, y:yy}; if (tab !== "years") { tab = "years"; renderTabs(); scrollToTabs(); } renderYears(); if (t.closest(".sheet")) closeSheet(); return; }
   if (t.dataset.jump) { const g = document.getElementById(t.dataset.jump); if (g) g.scrollIntoView({behavior:"smooth", block:"start"}); return; }
   if (t.id === "jumpNew") { const n = document.querySelector("#v-timeline .ev.new"); if (n) n.scrollIntoView({behavior:"smooth", block:"center"}); else toast("Nothing new on the timeline in " + code(V) + "."); return; }
   if (t.id === "toLatest") return setV(W);
@@ -1286,6 +1369,7 @@ document.addEventListener("click", e => {
 });
 document.addEventListener("change", e => { if (e.target.id === "personSel") { personFilter = e.target.value; renderTimeline(); } });
 document.addEventListener("keydown", e => { if (e.key === "Escape") closeSheet(); });
+document.addEventListener("keydown", e => { if ((e.key === "Enter" || e.key === " ") && e.target.classList && e.target.classList.contains("yp")) { e.preventDefault(); e.target.click(); } });
 $("#vRange").addEventListener("input", e => setV(+e.target.value));
 $("#epSel").addEventListener("change", e => {
   const v = +e.target.value;
@@ -1326,7 +1410,7 @@ document.addEventListener("keydown", e => { if (e.key === "Escape" && inPageFull
 
 function renderAll(){
   renderStatus(); renderSelector(); renderTabs(); updatePF();
-  renderNew(); renderStory(); renderTimeline(); renderTree(); renderPeople(); renderMysteries(); renderTravels(); renderRecaps(); renderGlossary();
+  renderNew(); renderStory(); renderTimeline(); renderYears(); renderTree(); renderPeople(); renderMysteries(); renderTravels(); renderRecaps(); renderGlossary();
 }
 renderAll();
 loadShared();
