@@ -638,8 +638,21 @@ function renderYears(){
     if (jYears(j.to).includes(y) && jWorld(j, j.to) === w) { const p = add(j.who); if (p) p.arr.push(j); }
     if (jYears(j.from).includes(y) && jWorld(j, j.from) === w && ppl[j.who]) ppl[j.who].dep.push(j);
   });
+  // Official sightings (dark.netflix.io timelines), only for years the show has already taken you to
+  const visited = new Set(evs.map(e => key(e.w, yearOf(e))));
+  const sights = D.SIGHTINGS.filter(s => s.ep <= V && CH[s.id] && CH[s.id].ep <= V && visited.has(key(s.w, s.y)));
+  sights.forEach(s => { if (s.w === w && s.y === y) add(s.id); });
   const seenAt = {};   // id -> other years they're seen in
-  evs.forEach(e => e.who.forEach(id => { if (!ppl[id]) return; const k = key(e.w, yearOf(e)); if (k !== key(w,y)) (seenAt[id] = seenAt[id] || new Set()).add(k); }));
+  const note = (id, k) => { if (ppl[id] && k !== key(w,y)) (seenAt[id] = seenAt[id] || new Set()).add(k); };
+  evs.forEach(e => e.who.forEach(id => note(id, key(e.w, yearOf(e)))));
+  sights.forEach(s => note(s.id, key(s.w, s.y)));
+  // Ages: only where Netflix's timeline puts the person in this year, and not for years past 2020
+  // or for people who don't age normally (time travellers whose birth year would mislead).
+  const NO_AGE = {noah:"*", noah_b:"*", mads:["2019"], mads_b:["2019"]};
+  const present = new Set(sights.filter(s => s.w === w && s.y === y).map(s => s.id));
+  const ageIn = id => { const b = D.BIRTHS[id]; if (!b || b.ep > V || !present.has(id) || +y > 2020) return "";
+    const na = NO_AGE[id]; if (na === "*" || (na && na.includes(y))) return ""; const a = +y - b.y;
+    if (a < 0) return ""; return a < 2 ? "Baby here" : a < 13 ? `Child here, about ${a}` : a < 20 ? `Teenager here, about ${a}` : `About ${a} here`; };
   const sameAs = id => D.LINKS.filter(l => l.type === "same" && vis(l) && !superseded(l) && (l.a === id || l.b === id))
     .map(l => l.a === id ? l.b : l.a).filter(o => CH[o] && CH[o].ep <= V);
   const list = Object.values(ppl).sort((a,b) => b.n - a.n || name(a.id).localeCompare(name(b.id)));
@@ -648,21 +661,21 @@ function renderYears(){
     const others = [...(seenAt[p.id] || [])].sort((a,b) => a.split("|")[1].localeCompare(b.split("|")[1]));
     const same = sameAs(p.id);
     return `<div role="button" tabindex="0" class="yp ${p.isNew?"new":""}" data-person="${p.id}">${avatar(p.id)}
-      <div><div class="nm">${esc(name(p.id))}</div>${jobOf(p.id) ? `<div class="jb">${esc(jobOf(p.id))}</div>` : ""}
+      <div><div class="nm">${esc(name(p.id))}</div>${ageIn(p.id) ? `<div class="jb">${ageIn(p.id)}</div>` : ""}
       <div class="sub">
         ${p.arr.map(j => `<span class="tag">arrived from ${esc(j.from)}</span> `).join("")}
         ${p.dep.map(j => `<span class="tag">leaves for ${esc(j.to)}</span> `).join("")}
         ${same.length ? `<div>Same person as <b>${same.map(o => esc(name(o))).join(", ")}</b></div>` : ""}
-        ${others.length ? `<div>Also seen in ${others.map(yrBtn).join(" · ")}</div>` : (p.n ? `<div>Only seen in ${y} so far</div>` : "")}
+        ${others.length ? `<div>Also seen in ${others.map(yrBtn).join(" · ")}</div>` : ""}
       </div></div></div>`;
   };
   el.innerHTML = `
-    <div class="vhead"><h2>What year am I in?</h2><p>Pick the year on screen to see who's around then and what you've seen happen there. Only scenes up to ${code(V)} count.</p></div>
+    <div class="vhead"><h2>What year am I in?</h2><p>Pick the year on screen to see who's around then and what you've seen happen there. Only scenes up to ${code(V)} count. Photos show each person at one age, so check the age line.</p></div>
     ${nowKeys.length ? `<div class="yr-now"><span>${code(V)} spends time in</span>${nowKeys.map(k => { const [ww,yy] = k.split("|"); return `<button data-yr="${k}" class="${k===key(w,y)?"on":""}">${yy}${worlds.length>1?" · "+esc(WN[ww]):""}</button>`; }).join("")}</div>` : ""}
     ${worlds.length > 1 ? `<div class="tl-tools">${worlds.map(ww => `<button class="toggle" data-yr="${key(ww, ww===w ? y : (yearsIn(ww).includes(y) ? y : yearsIn(ww).slice(-1)[0]))}" aria-pressed="${ww===w}">${esc(WN[ww])}</button>`).join("")}</div>` : ""}
     <div class="yearstrip">${yearsIn(w).map(yy => `<button data-yr="${key(w,yy)}" class="${yy===y?"on":""} ${nowKeys.includes(key(w,yy))&&yy!==y?"hasnew":""}">${yy}</button>`).join("")}</div>
     <div class="yr-title"><span class="big">${y}</span><span class="wn">${worlds.length>1 ? esc(WN[w]) + " · " : ""}${list.length} ${list.length===1?"person":"people"} · ${here.length} ${here.length===1?"event":"events"}</span></div>
-    <h3 style="font-size:17px;margin-top:14px">Who's here</h3>
+    <h3 style="font-size:17px;margin-top:14px">Who's in the ${y} scenes</h3>
     <div class="ypeople">${list.map(card).join("") || `<div class="empty">No one you've met yet.</div>`}</div>
     <h3 style="font-size:17px">What you've seen happen in ${y}</h3>
     <div class="evs" style="margin-top:8px">${here.map(evCard).join("")}</div>`;

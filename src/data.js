@@ -990,3 +990,9 @@ const STORY = {
 ]
 };
 module.exports.STORY = STORY;
+
+// Who is seen in which year (and when each birth year is shown), from the official
+// episode-gated timelines on dark.netflix.io. Used by the "What year?" tab.
+const _seen = require("./sightings.json");
+module.exports.SIGHTINGS = _seen.SIGHTINGS;   // [id, year, world A/B/O, episode that shows it]
+module.exports.BIRTHS = _seen.BIRTHS;         // id -> [birth year, episode that shows it]
