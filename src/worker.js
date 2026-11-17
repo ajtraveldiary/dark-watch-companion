@@ -18,8 +18,15 @@ const ID_RE = /^[a-z][a-z0-9_]{1,30}$/;
 const MAX_BYTES = 300 * 1024;
 const TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 
+// Security headers for everything the Worker itself returns (the static page gets its own from public/_headers).
+const SEC = {
+  "x-content-type-options": "nosniff",
+  "referrer-policy": "no-referrer",
+  "x-frame-options": "DENY",
+  "content-security-policy": "default-src 'none'; frame-ancestors 'none'; sandbox"
+};
 const json = (data, status = 200, extra = {}) =>
-  new Response(JSON.stringify(data), { status, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", ...extra } });
+  new Response(JSON.stringify(data), { status, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store", ...SEC, ...extra } });
 const err = (status, message) => json({ error: message }, status);
 
 async function sha(text) {
@@ -27,17 +34,30 @@ async function sha(text) {
   return [...new Uint8Array(buf)].slice(0, 12).map(b => b.toString(16).padStart(2, "0")).join("");
 }
 
-function sameKey(a, b) {
-  if (typeof a !== "string" || typeof b !== "string" || a.length !== b.length) return false;
+// Compare SHA-256 digests in constant time, so neither the key's content nor its length leaks through timing.
+async function sameKey(a, b) {
+  if (typeof a !== "string" || typeof b !== "string" || !a || !b) return false;
+  const enc = new TextEncoder();
+  const [x, y] = await Promise.all([crypto.subtle.digest("SHA-256", enc.encode(a)), crypto.subtle.digest("SHA-256", enc.encode(b))]);
+  const u = new Uint8Array(x), v = new Uint8Array(y);
   let diff = 0;
-  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  for (let i = 0; i < u.length; i++) diff |= u[i] ^ v[i];
   return diff === 0;
 }
 
-function isOwner(request, env) {
+async function isOwner(request, env) {
   const auth = request.headers.get("authorization") || "";
   const key = auth.startsWith("Bearer ") ? auth.slice(7) : "";
-  return !!env.ADMIN_KEY && sameKey(key, env.ADMIN_KEY);
+  return !!env.ADMIN_KEY && key.length <= 512 && sameKey(key, env.ADMIN_KEY);
+}
+
+// Check the file really is the image type it claims to be (magic bytes), not just its content-type header.
+function looksLike(type, buf) {
+  const b = new Uint8Array(buf.slice(0, 12));
+  if (type === "image/jpeg") return b[0] === 0xFF && b[1] === 0xD8 && b[2] === 0xFF;
+  if (type === "image/png") return b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4E && b[3] === 0x47;
+  if (type === "image/webp") return b[0] === 0x52 && b[1] === 0x49 && b[2] === 0x46 && b[3] === 0x46 && b[8] === 0x57 && b[9] === 0x45 && b[10] === 0x42 && b[11] === 0x50;
+  return false;
 }
 
 // ---------- Visitor counter ----------
@@ -149,7 +169,9 @@ export default {
 
     if (pathname === "/api/owner") {
       if (!env.ADMIN_KEY) return err(503, "Photo uploads aren't set up yet: the ADMIN_KEY secret is missing.");
-      return isOwner(request, env) ? new Response(null, { status: 204 }) : err(401, "That owner key isn't right.");
+      // Brute-force guard: a few key checks per minute per IP, before the key is even looked at.
+      if (await limited(env.OWNER_LIMIT, "o:" + clientIp(request))) return err(429, "Too many attempts. Wait a minute and try again.");
+      return (await isOwner(request, env)) ? new Response(null, { status: 204, headers: SEC }) : err(401, "That owner key isn't right.");
     }
 
     const api = pathname.match(/^\/api\/photos\/([^/]+)$/);
@@ -157,7 +179,10 @@ export default {
       const id = decodeURIComponent(api[1]);
       if (!ID_RE.test(id)) return err(400, "Unknown character id.");
       if (!env.ADMIN_KEY) return err(503, "Photo uploads aren't set up yet: the ADMIN_KEY secret is missing.");
-      if (!isOwner(request, env)) return err(401, "Only the site owner can change photos.");
+      if (request.method !== "PUT" && request.method !== "DELETE") return err(405, "Use PUT or DELETE.");
+      if (!sameSite(request, url)) return err(403, "Not allowed.");
+      if (await limited(env.OWNER_LIMIT, "o:" + clientIp(request))) return err(429, "Too many attempts. Wait a minute and try again.");
+      if (!(await isOwner(request, env))) return err(401, "Only the site owner can change photos.");
 
       if (request.method === "PUT") {
         const type = (request.headers.get("content-type") || "").split(";")[0].trim();
@@ -165,6 +190,7 @@ export default {
         const body = await request.arrayBuffer();
         if (!body.byteLength) return err(400, "The image is empty.");
         if (body.byteLength > MAX_BYTES) return err(413, "The image is too large (300 KB max).");
+        if (!looksLike(type, body)) return err(415, "That file isn't a real " + type.slice(6).toUpperCase() + " image.");
         const obj = await env.PHOTOS.put("p/" + id, body, { httpMetadata: { contentType: type } });
         return json({ id, h: await sha(id), v: obj.etag.slice(0, 10) });
       }
@@ -181,8 +207,10 @@ export default {
       if (!ID_RE.test(id)) return new Response("Not found", { status: 404 });
       const obj = await env.PHOTOS.get("p/" + id);
       if (!obj) return new Response("Not found", { status: 404 });
-      const headers = new Headers();
+      const headers = new Headers(SEC);
       obj.writeHttpMetadata(headers);
+      const ct = headers.get("content-type") || "";
+      if (!TYPES.has(ct)) headers.set("content-type", "application/octet-stream");   // never serve anything renderable
       headers.set("etag", obj.httpEtag);
       // The page adds ?v=<version> to the URL, so a cached copy is replaced as soon as the photo changes.
       headers.set("cache-control", url.searchParams.has("v") ? "public, max-age=31536000, immutable" : "public, max-age=60");

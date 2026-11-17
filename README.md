@@ -65,3 +65,15 @@ The footer shows total visitors and today's visitors. Counts live in one SQLite-
 using a salted hash of IP + browser + day (no IP addresses are stored). Floods are stopped before they reach
 storage: cross-site requests are refused, per-IP rate limits apply to both endpoints, the read endpoint is
 cached at the edge for 60 seconds, and the counter stops recording after 20,000 visitors in a day.
+
+## Security
+
+- **Page**: strict Content-Security-Policy (only the page's own script, identified by its hash, can run;
+  no external scripts, no framing), plus `nosniff`, `no-referrer` and `X-Frame-Options: DENY`.
+  `build.js` writes these to `public/_headers` on every build.
+- **Owner key**: compared in constant time; key checks and photo changes are rate-limited per IP
+  (60 a minute) and must come from the site itself. Use a long random key (20+ characters).
+- **Uploads**: owner only, JPEG/PNG/WebP up to 300 KB, and the file's bytes must match its type.
+  Photos are served with `nosniff` and a sandboxing CSP.
+- **Storage**: the R2 bucket and the visitor-counter Durable Object have no public access; the only way in
+  is through the Worker's endpoints above.

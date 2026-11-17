@@ -33,4 +33,29 @@ if (errs.length) { console.error(errs.join("\n")); process.exit(1); }
 const b64 = Buffer.from(JSON.stringify(out), "utf8").toString("base64");
 const html = fs.readFileSync("src/template.html", "utf8").replace("__DATA__", b64);
 fs.mkdirSync("public", {recursive:true}); fs.writeFileSync("public/index.html", html);
+// Security headers for the static page. The page's one inline script is allowed by its hash, so no other
+// script (injected or otherwise) can run. Inline style attributes are allowed; they can't run code.
+const scripts = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(m => m[1]);
+if (scripts.length !== 1) { console.error("expected exactly one inline script, found " + scripts.length); process.exit(1); }
+const hash = require("crypto").createHash("sha256").update(scripts[0], "utf8").digest("base64");
+const csp = [
+  "default-src 'none'",
+  `script-src 'sha256-${hash}'`,
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "font-src https://fonts.gstatic.com",
+  "img-src 'self' data: blob:",
+  "connect-src 'self'",
+  "base-uri 'none'",
+  "form-action 'none'",
+  "frame-ancestors 'none'",
+  "object-src 'none'"
+].join("; ");
+fs.writeFileSync("public/_headers", `/*
+  Content-Security-Policy: ${csp}
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: no-referrer
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
+  Cross-Origin-Opener-Policy: same-origin
+`);
 console.log("ok", html.length, "bytes;", out.CHARACTERS.length, "chars,", out.LINKS.length, "links,", out.EVENTS.length, "events");

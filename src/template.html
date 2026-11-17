@@ -417,7 +417,7 @@ let curWorld = "A", showLoops = true, famFilter = "all", personFilter = "", worl
 
 // ---------- Helpers ----------
 const $ = s => document.querySelector(s);
-const esc = s => String(s).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c]));
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
 const code = i => EPS[i] ? EPS[i].code : "";
 const vis = it => it.ep <= V;
 const isNew = it => it.ep === V;
@@ -426,9 +426,11 @@ function initials(name){
   const n = name.replace(/^The /,"").replace(/\(.*\)/,"").trim().split(/\s+/);
   return (n[0][0] + (n[1] ? n[1][0] : (n[0][1]||""))).toUpperCase();
 }
+// Only well-formed image data URLs are ever used as a photo, whatever is in browser storage.
+const SAFE_IMG = /^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+\/=]+$/;
 function localPhoto(id){
-  if (id in photoMem) return photoMem[id];
-  return photoMem[id] = store.get("dark.photo." + id, null);
+  if (!(id in photoMem)) { const v = store.get("dark.photo." + id, null); photoMem[id] = typeof v === "string" && SAFE_IMG.test(v) ? v : null; }
+  return photoMem[id];
 }
 function photo(id){ return localPhoto(id) || shared[id] || null; }
 
@@ -458,7 +460,13 @@ function dataUrlToBlob(u){
   return new Blob([a], {type: (head.match(/data:([^;]+)/)||[])[1] || "image/jpeg"});
 }
 async function ownerFetch(path, opts){
-  const r = await fetch(path, {...opts, headers:{...(opts.headers||{}), authorization:"Bearer " + ownerKey}});
+  let r;
+  for (let attempt = 0; ; attempt++) {     // the server allows a limited number of owner requests a minute
+    r = await fetch(path, {...opts, headers:{...(opts.headers||{}), authorization:"Bearer " + ownerKey}});
+    if (r.status !== 429 || attempt >= 4) break;
+    toast("Pausing briefly: the server limits uploads per minute…");
+    await new Promise(res => setTimeout(res, 20000));
+  }
   if (r.status === 401) { ownerKey = null; store.del("dark.ownerKey"); renderAll(); throw new Error("Your owner key didn't work, so you're signed out. Sign in again on the People tab."); }
   if (!r.ok) { let m = "Something went wrong saving the photo."; try { m = (await r.json()).error || m; } catch (e) {} throw new Error(m); }
   return r;
@@ -473,7 +481,7 @@ async function deleteShared(id){
 }
 function avatar(id, cls){
   const c = CH[id]; const col = FAM[c.fam].color; const p = photo(id);
-  return `<span class="av ${cls||""}" style="--c:${col}" aria-hidden="true">${p ? `<img src="${p}" alt="">` : esc(initials(c.name))}</span>`;
+  return `<span class="av ${cls||""}" style="--c:${col}" aria-hidden="true">${p ? `<img src="${esc(p)}" alt="">` : esc(initials(c.name))}</span>`;
 }
 function chip(id){
   if (!CH[id] || CH[id].ep > V) return "";
@@ -957,7 +965,7 @@ function renderTree(){
     const col = FAM[n.fam].color, ph = photo(n.id);
     const inner = `<rect class="halo" x="${-R-5}" y="${-R-5}" width="${2*R+10}" height="${2*R+10}" rx="10"/>
       <rect x="${-R}" y="${-R}" width="${2*R}" height="${2*R}" rx="7" fill="#0f1214" stroke="${col}" stroke-width="2.5"/>
-      ${ph ? `<image href="${ph}" x="-27" y="-27" width="54" height="54" clip-path="url(#clipc)" preserveAspectRatio="xMidYMid slice"/>` : `<text text-anchor="middle" dy="5" style="fill:${col};stroke-width:0;font-family:var(--font-mono);font-size:15px">${esc(initials(n.name))}</text>`}
+      ${ph ? `<image href="${esc(ph)}" x="-27" y="-27" width="54" height="54" clip-path="url(#clipc)" preserveAspectRatio="xMidYMid slice"/>` : `<text text-anchor="middle" dy="5" style="fill:${col};stroke-width:0;font-family:var(--font-mono);font-size:15px">${esc(initials(n.name))}</text>`}
       ${crossWorld(n.id).some(x => x.kind !== "Counterpart") ? `<g class="xw"><circle cx="${R-2}" cy="${-R+2}" r="9"/><text x="${R-2}" y="${-R+6}" text-anchor="middle">↔</text></g>` : ""}
       <text text-anchor="middle" y="${R+16}">${esc(n.name)}</text>
       ${jobOf(n.id) ? `<text class="job" text-anchor="middle" y="${R+30}">${esc(jobOf(n.id))}</text>` : ""}`;
