@@ -860,21 +860,38 @@ const ICONS = {
   bunker:`<path d="M-11 8 V0 C-11-7 11-7 11 0 V8 Z"/><rect x="-3" y="2" width="6" height="6" fill="#0c0e0f" stroke="none"/>`,
   wave:`<path d="M-11 0 C-7-5-4 5 0 0 C4-5 7 5 11 0" fill="none" stroke-width="2.5"/><path d="M-11 6 C-7 1-4 11 0 6 C4 1 7 11 11 6" fill="none" stroke-width="2.5"/>`
 };
-function mapBase(){
-  // forest blobs with tree marks, a river through town, roads and a lake: all invented, just for orientation
-  let trees = "";
-  for (let i = 0; i < 70; i++) { const x = 40 + (i * 53) % 380, y = 70 + ((i * 97) % 470); if (Math.hypot(x - 250, y - 300) < 240) trees += `<path d="M${x} ${y-7} l5 9 h-10 z"/>`; }
-  return `<rect width="1000" height="620" fill="#101416"/>
-    <path d="M30 80 C120 20 380 40 470 110 C520 200 470 300 430 380 C400 470 360 560 230 590 C110 600 40 520 30 420 Z" fill="#132019"/>
-    <g fill="#1d3326">${trees}</g>
-    <path d="M1000 40 C900 90 860 140 820 220 C780 300 760 360 780 430 C800 500 860 540 1000 560" fill="none" stroke="#1d3440" stroke-width="16"/>
-    <ellipse cx="905" cy="505" rx="80" ry="45" fill="#1a3040"/>
-    <g stroke="#2a3135" stroke-width="5" fill="none" stroke-linecap="round">
-      <path d="M285 135 C400 115 490 135 560 170"/>
-      <path d="M560 170 C610 230 630 290 640 330 C680 400 700 460 690 600"/>
-      <path d="M480 360 H860"/><path d="M500 460 C560 440 640 440 760 470"/><path d="M640 330 C690 340 720 360 735 385"/>
+function mapBase(towers){
+  // An invented layout for orientation. The town sits in a clearing; forest everywhere else.
+  const clear = [[600,420,250,165],[470,105,95,75]];               // town, plant site
+  const inClear = (x,y) => clear.some(([cx,cy,rx,ry]) => ((x-cx)/rx)**2 + ((y-cy)/ry)**2 < 1.15);
+  const nearRiverOrLake = (x,y) => Math.hypot(x-905,y-300) < 95;
+  let trees = "", seed = 7;
+  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  for (let i = 0; i < 520; i++) {
+    const x = rnd()*1000, y = 10 + rnd()*610;
+    if (inClear(x,y) || nearRiverOrLake(x,y)) continue;
+    const r = 4 + rnd()*4;
+    trees += `<path d="M${x.toFixed(0)} ${(y-r).toFixed(0)} l${(r*.7).toFixed(1)} ${(r*1.4).toFixed(1)} h${(-r*1.4).toFixed(1)} z"/>`;
+  }
+  const tower = (x) => `<path d="M${x-22} 128 C${x-14} 100 ${x-14} 86 ${x-19} 62 H${x+19} C${x+14} 86 ${x+14} 100 ${x+22} 128 Z" fill="#20272a" stroke="#2f383c" stroke-width="2"/>
+    <path d="M${x-10} 58 c-6-12 4-18 0-30 m10 30 c-6-12 4-18 0-30" fill="none" stroke="#2a3236" stroke-width="3" stroke-linecap="round" opacity=".8"/>`;
+  return `<rect width="1000" height="620" fill="#0f1a14"/>
+    <g fill="#1b3024">${trees}</g>
+    <ellipse cx="600" cy="420" rx="250" ry="165" fill="#121618"/>
+    <ellipse cx="470" cy="105" rx="95" ry="75" fill="#121618"/>
+    ${towers ? `<g opacity=".9">${tower(420)}${tower(520)}</g>` : ""}
+    <path d="M700 0 C690 80 720 150 700 230 C680 310 610 330 600 420 C590 500 640 560 620 620" fill="none" stroke="#1d3440" stroke-width="12"/>
+    <path d="M700 230 C760 250 820 280 860 295" fill="none" stroke="#1d3440" stroke-width="7"/>
+    <ellipse cx="905" cy="300" rx="62" ry="40" fill="#1a3040"/>
+    <g stroke="#2c3438" stroke-width="5" fill="none" stroke-linecap="round">
+      <path d="M560 620 C560 540 555 420 560 345 C565 260 500 200 470 150"/>
+      <path d="M380 420 H820"/><path d="M450 500 C540 480 640 480 760 500"/>
+      <path d="M665 315 C740 260 790 200 830 150"/><path d="M760 500 C820 490 860 470 890 455"/>
     </g>
-    <text x="300" y="590" class="map-area">FOREST</text><text x="660" y="555" class="map-area">WINDEN</text>`;
+    <path d="M548 280 C480 270 400 240 345 222" fill="none" stroke="#2c3438" stroke-width="3" stroke-dasharray="2 7" stroke-linecap="round"/>
+    <path d="M380 420 C330 470 340 490 370 500" fill="none" stroke="#2c3438" stroke-width="3" stroke-dasharray="2 7" stroke-linecap="round"/>
+    <text x="600" y="600" class="map-area" text-anchor="middle">WINDEN</text>
+    <text x="150" y="560" class="map-area" text-anchor="middle">FOREST</text>`;
 }
 function renderMap(){
   const el = $("#v-map");
@@ -886,13 +903,13 @@ function renderMap(){
   const marks = places.map(({p, st}) => `<g class="pl ${st}" data-place="${p.id}" transform="translate(${p.x} ${p.y})" tabindex="0" role="button" aria-label="${esc(placeLabel(p, mapYear))}">
       <rect x="-20" y="-20" width="40" height="40" rx="8" class="pl-box"/><g class="pl-ic">${ICONS[p.icon]}</g>
       <text y="36" text-anchor="middle" class="pl-name">${esc(placeLabel(p, mapYear))}</text></g>`).join("");
-  el.innerHTML = `<div class="vhead"><h2>Map of Winden</h2><p>An original sketch of the town, not an exact plan. Places appear once the show has taken you there. Tap one to see what's happened there so far.</p></div>
+  el.innerHTML = `<div class="vhead"><h2>Map of Winden</h2><p>An original sketch of the town, not an exact plan, laid out from what the show and the Dark Wiki describe. Places appear once the show has taken you there. Tap one to see what's happened there so far.</p></div>
     <div class="map-ctl">
       <label for="mapYr">Year</label>
       <input type="range" id="mapYr" min="0" max="${years.length}" value="${idx}" aria-valuetext="${mapYear === null ? "All years" : mapYear}">
       <span class="mono" id="mapYrLbl">${mapYear === null ? "All years" : mapYear}</span>
     </div>
-    <div class="map-wrap"><svg viewBox="0 0 1000 620" class="map" role="img" aria-label="Map of Winden">${mapBase()}${marks}</svg></div>
+    <div class="map-wrap"><svg viewBox="0 0 1000 620" class="map" role="img" aria-label="Map of Winden">${mapBase(placeState(D.PLACES.find(p => p.id === "plant"), mapYear) !== "hidden" && !(mapYear !== null && +mapYear < 1960))}${marks}</svg></div>
     <div class="treehint map-hint">Swipe sideways to see the whole map.</div>
     <div class="legend" style="margin-top:8px"><span><i class="lg lit"></i>${mapYear === null ? "Something on the timeline happens here" : "Something happens here in " + mapYear}</span><span><i class="lg dim"></i>Known place</span></div>`;
   $("#mapYr").addEventListener("input", ev => { const i = +ev.target.value; mapYear = i === 0 ? null : years[i-1]; renderMap(); const r = $("#mapYr"); if (r) r.focus(); });
