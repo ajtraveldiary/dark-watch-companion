@@ -897,10 +897,10 @@ function renderTree(){
   $("#famchips").innerHTML = `<button data-fam="all" style="--c:var(--ink)" aria-pressed="${famFilter==="all"}"><i></i>Everyone</button>` +
     famsVisible.map(f => `<button data-fam="${f}" style="--c:${FAM[f].color}" aria-pressed="${famFilter===f}"><i></i>${FAM[f].name}</button>`).join("");
   // eras
-  const GEN = ["Born c.1900s","Born c.1940s","Born c.1970s","Born c.2000s"];
+  const GEN = ["Generation 1","Generation 2","Generation 3","Generation 4"];   // no birth years: the show reveals those itself
   $("#eras").innerHTML = `<rect x="-${U*0.55}" y="-${RH*0.45}" width="${U*2.1}" height="${RH*4 - RH*0.1}" rx="18" class="limbo"/><text class="eralabel" x="${U*0.5}" y="-${RH*0.45 - 18}" text-anchor="middle">NOT YET PLACED</text>` +
     (() => { const minRow = Math.min(0, ...D.CHARACTERS.filter(c => vis(c) && inWorld(c)).map(n => nodePos(n).row)); const out = [];
-      for (let i = minRow; i <= 3; i++) out.push(`<line class="eraline" x1="${U*2}" x2="${U*22.3}" y1="${i*RH}" y2="${i*RH}"/><text class="eralabel" x="-${U*0.62}" y="${i*RH+4}" text-anchor="end">${i < 0 ? "Earlier" : GEN[i]}</text>`);
+      for (let i = minRow; i <= 3; i++) out.push(`<line class="eraline" x1="${U*2}" x2="${U*22.3}" y1="${i*RH}" y2="${i*RH}"/><text class="eralabel" x="-${U*0.62}" y="${i*RH+4}" text-anchor="end">${i < 0 ? "Earlier generations" : GEN[i]}</text>`);
       return out.join(""); })();
   // nodes & edges
   const nodes = D.CHARACTERS.filter(c => vis(c) && inWorld(c));
