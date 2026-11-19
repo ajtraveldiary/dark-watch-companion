@@ -320,6 +320,10 @@ svg.focusing .eg.hl .edge{opacity:1;stroke-width:3px}
 .recaps .card h3{font-size:18px;margin-bottom:6px}
 .notes{margin:10px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:6px}
 .notes li{font-size:14.5px;color:var(--muted);padding-left:12px;border-left:2px solid var(--line)}
+.notes li b{font-family:var(--font-mono);font-weight:500;font-size:12px;color:var(--accent);text-transform:uppercase;letter-spacing:.05em;margin-right:6px}
+.missed .newitem .k{width:84px}
+.missed .src{margin-top:10px;font-size:13px;color:var(--faint)}
+.missed .src a{color:var(--muted)}
 .notes li em{font-style:normal;font-family:var(--font-mono);font-size:12px;color:var(--faint)}
 
 /* Sheets & dialogs */
@@ -431,7 +435,7 @@ svg.focusing .eg.hl .edge{opacity:1;stroke-width:3px}
   </section>
 
   <div class="footer">
-    Built from episode synopses on the Dark Wiki and observations from r/DarK. Misdirections are shown as the show presents them until the episode that overturns them. Your progress is saved only in this browser.
+    Built from episode synopses on the <a href="https://dark-netflix.fandom.com/" target="_blank" rel="noopener">Dark Wiki</a> (text in our own words) and observations from r/DarK. Misdirections are shown as the show presents them until the episode that overturns them. Your progress is saved only in this browser.
     <p class="visits" id="visits" hidden></p>
     <p class="disclaimer">Unofficial fan project, not affiliated with Netflix. Contact us to request removal. Mail us at <a href="mailto:ajtraveldiary@proton.me">ajtraveldiary@proton.me</a></p>
   </div>
@@ -648,6 +652,7 @@ function renderNew(){
         ${raised.filter(m => !answered.some(([mm]) => mm===m)).map(m => `<div class="newitem"><span class="k" style="color:var(--thread)">New</span><span>${esc(m.q)}</span></div>`).join("")}
         </div></div>` : ""}
       ${trips.length ? `<div class="card"><h3>Time travel</h3><div class="newlist">${trips.map(t => `<div class="newitem"><span class="k">${esc(t.how)}</span><span><b>${esc(name(t.who))}</b> <span class="mono">${esc(t.from)} → ${esc(t.to)}</span>${t.note?` <span style="color:var(--muted)">(${esc(t.note)})</span>`:""}</span></div>`).join("")}</div></div>` : ""}
+      ${(D.NOTES[EPS[V].code]||[]).length ? `<div class="card missed"><h3>You might have missed</h3><div class="newlist">${D.NOTES[EPS[V].code].map(n => `<div class="newitem"><span class="k">${esc(n.k || "Detail")}</span><span>${esc(n.t)}</span></div>`).join("")}</div><div class="src">From the <a href="https://dark-netflix.fandom.com/" target="_blank" rel="noopener">Dark Wiki</a> and fan rewatch notes, in our words. Nothing past ${code(V)}.</div></div>` : ""}
       ${terms.length ? `<div class="card"><h3>New terms</h3><div class="newlist">${terms.map(g => `<div class="newitem"><span class="k">Term</span><span><b>${esc(g.term)}</b>: ${esc(g.t)}</span></div>`).join("")}</div></div>` : ""}
     </div>`;
 }
@@ -1283,7 +1288,7 @@ function renderRecaps(){
       <div style="color:var(--muted);font-size:14px">Previously: ${esc(D.RECAPS[EPS[V].code])}</div>
       ${openQs.length ? `<div style="margin-top:8px;font-size:14px">Open questions: ${openQs.slice(-4).map(m => esc(m.q)).join(" · ")}</div>` : ""}</div>` : ""}
     <div class="recaps">${list.map(e => `<div class="card ${e.i===V?"new":""}"><h3>${e.code} · ${esc(e.title)}</h3><div class="recap">${esc(D.RECAPS[e.code]||"")}</div>
-      ${(D.NOTES[e.code]||[]).length ? `<ul class="notes">${D.NOTES[e.code].map(n => `<li>${esc(n.t)} <em>· ${esc(n.src)}</em></li>`).join("")}</ul>` : ""}</div>`).join("")}</div>`;
+      ${(D.NOTES[e.code]||[]).length ? `<ul class="notes">${D.NOTES[e.code].map(n => `<li><b>${esc(n.k || "Detail")}</b> ${esc(n.t)}</li>`).join("")}</ul>` : ""}</div>`).join("")}</div>`;
 }
 
 // ---------- Glossary ----------
