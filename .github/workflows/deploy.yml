@@ -37,24 +37,6 @@ jobs:
             echo "ready=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Check the Cloudflare token (prints no secrets)
-        if: steps.secrets.outputs.ready == 'true'
-        env:
-          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: |
-          verify=$(curl -s -H "Authorization: Bearer $CF_TOKEN" https://api.cloudflare.com/client/v4/user/tokens/verify)
-          echo "Token valid: $(echo "$verify" | jq -r '.success') / status: $(echo "$verify" | jq -r '.result.status // "unknown"')"
-          accts=$(curl -s -H "Authorization: Bearer $CF_TOKEN" "https://api.cloudflare.com/client/v4/accounts?per_page=50")
-          echo "Accounts this token can see: $(echo "$accts" | jq '.result | length')"
-          if echo "$accts" | jq -e --arg id "$CF_ACCOUNT" '.result[] | select(.id == $id)' > /dev/null; then
-            echo "CLOUDFLARE_ACCOUNT_ID matches an account the token can access."
-          else
-            echo "::warning::CLOUDFLARE_ACCOUNT_ID is NOT one of the accounts this token can access."
-          fi
-          scripts=$(curl -s -H "Authorization: Bearer $CF_TOKEN" "https://api.cloudflare.com/client/v4/accounts/$CF_ACCOUNT/workers/scripts")
-          echo "Can list Workers in that account: $(echo "$scripts" | jq -r '.success') $(echo "$scripts" | jq -r '[.errors[]?.message] | join("; ")')"
-
       - name: Deploy
         if: steps.secrets.outputs.ready == 'true'
         env:
