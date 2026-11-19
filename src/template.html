@@ -192,6 +192,28 @@ select,input[type=search]{background:var(--surface-2);color:var(--ink);border:1p
 .rw-cols ul{margin:0;padding-left:18px;font-size:15px;line-height:1.5}
 .rw-cols li{margin:4px 0}
 .rw-src{margin:10px 0 0;font-size:13px;color:var(--faint)}
+.map-ctl{display:flex;align-items:center;gap:12px;margin:4px 0 10px}
+.map-ctl label{font-size:14px;color:var(--muted)}
+.map-ctl input{flex:1;accent-color:var(--accent)}
+.map-ctl .mono{min-width:78px;text-align:right;color:var(--ink)}
+.map-wrap{border:1px solid var(--line);border-radius:14px;overflow-x:auto;overflow-y:hidden;background:#101416;-webkit-overflow-scrolling:touch}
+@media (max-width:760px){.map{min-width:760px}.map-ctl .mono{min-width:0;font-size:13px}}
+.map{display:block;width:100%;height:auto}
+.map-area{fill:#2f3b33;font-family:var(--font-mono);font-size:22px;letter-spacing:.4em}
+.pl{cursor:pointer}
+.pl .pl-box{fill:#14181a;stroke:#3b4448;stroke-width:2}
+.pl .pl-ic{fill:#5d655f;stroke:#5d655f}
+.pl .pl-name{fill:var(--muted);font-size:14px;font-family:var(--font-body);paint-order:stroke;stroke:#0c0e0f;stroke-width:4px}
+.pl.lit .pl-box{stroke:var(--accent);fill:#1d1a10;filter:drop-shadow(0 0 8px rgba(227,180,60,.55))}
+.pl.lit .pl-ic{fill:var(--accent);stroke:var(--accent)}
+.pl.lit .pl-name{fill:var(--ink);font-weight:600}
+.pl:hover .pl-box,.pl:focus .pl-box{stroke:var(--ink)}
+.pl:focus{outline:none}
+.map-hint{display:none}
+@media (max-width:760px){.map-hint{display:block}}
+.lg{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px;border:2px solid #3b4448}
+.lg.lit{border-color:var(--accent);background:#1d1a10}
+.evs .hl .ev{border-color:var(--accent)}
 .yr-title{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin:6px 0 4px}
 .yr-title .big{font-family:var(--font-mono);font-size:40px;line-height:1;color:var(--ink)}
 .yr-title .wn{color:var(--muted);font-size:15px}
@@ -427,6 +449,7 @@ svg.focusing .eg.hl .edge{opacity:1;stroke-width:3px}
   <section class="view" id="v-story" role="tabpanel"></section>
   <section class="view" id="v-timeline" role="tabpanel"></section>
   <section class="view" id="v-years" role="tabpanel"></section>
+  <section class="view" id="v-map" role="tabpanel"></section>
   <section class="view" id="v-tree" role="tabpanel"></section>
   <section class="view" id="v-people" role="tabpanel"></section>
   <section class="view" id="v-mysteries" role="tabpanel"></section>
@@ -619,7 +642,7 @@ function renderSelector(){
 }
 
 // ---------- Tabs ----------
-const TABS = [["new","What's new"],["story","Story"],["timeline","Timeline"],["years","What year?"],["tree","Relationship tree"],["people","People"],["mysteries","Mysteries"],["travels","Time travel"],["recaps","Recaps"],["glossary","Glossary"]];
+const TABS = [["new","What's new"],["story","Story"],["timeline","Timeline"],["years","What year?"],["map","Map"],["tree","Relationship tree"],["people","People"],["mysteries","Mysteries"],["travels","Time travel"],["recaps","Recaps"],["glossary","Glossary"]];
 function renderTabs(){
   $("#tabrow").innerHTML = TABS.map(([k,l]) => `<button role="tab" data-tab="${k}" aria-selected="${tab===k}">${l}${k==="new" && W>=0 ? '<span class="dot"></span>':''}</button>`).join("");
   document.querySelectorAll("section.view").forEach(s => s.classList.toggle("on", s.id === "v-" + tab));
@@ -796,6 +819,86 @@ function evCard(ev){
     ${sup ? `<div class="turned"><b>TURNED OUT · ${code(ev.until)}</b> ${esc(ev.later)}</div>` : ""}
     ${ev.who.length ? `<div class="chips">${ev.who.map(chip).join("")}</div>` : ""}
   </div>`;
+}
+// ---------- Map of Winden ----------
+// An original, stylised map. Places appear once the show has taken you there; the year slider shows
+// which places events happen at in a given year (lit) and which are only known (faded).
+let mapYear = null;   // null = all years
+const placeRe = p => new RegExp(p.re, "i");
+function placeEvents(p){ const r = placeRe(p); return D.EVENTS.filter(e => vis(e) && r.test(e.t)); }
+function placeState(p, y){
+  if (p.ep > V) return "hidden";
+  const evs = placeEvents(p);
+  if (y === null) return evs.length ? "lit" : "dim";
+  const here = evs.some(e => e.d && e.d.slice(0,4) === y);
+  if (here) return "lit";
+  if (p.kind === "nature") return "dim";
+  const n = +y;
+  if (p.id === "plant" && n < 1953) return "hidden";
+  if (p.id === "plant") return n <= 2020 ? "dim" : "hidden";
+  return (n >= 1986 && n <= 2020) ? "dim" : "hidden";   // other buildings: only for the present-day town
+}
+function placeLabel(p, y){
+  if (p.id === "plant" && y !== null && +y >= 1953 && +y < 1960) return "Future plant site";
+  return p.name;
+}
+const ICONS = {
+  tree:`<path d="M0-11 L8 3 H-8 Z M0-4 L10 9 H-10 Z" /><rect x="-1.5" y="9" width="3" height="4"/>`,
+  cave:`<path d="M-11 8 C-11-8 11-8 11 8 Z" /><path d="M-5 8 C-5-1 5-1 5 8 Z" fill="#0c0e0f" stroke="none"/>`,
+  plant:`<path d="M-11 9 C-8 0-8-6-10-10 H-2 C-4-6-4 0-1 9 Z"/><path d="M1 9 C4 0 4-6 2-10 H10 C8-6 8 0 11 9 Z"/>`,
+  school:`<path d="M-11-2 L0-10 L11-2 Z"/><rect x="-9" y="-2" width="18" height="11"/><rect x="-2" y="3" width="4" height="6" fill="#0c0e0f" stroke="none"/>`,
+  badge:`<path d="M0-11 L9-6 V2 C9 7 4 10 0 11 C-4 10-9 7-9 2 V-6 Z"/>`,
+  bed:`<rect x="-11" y="-1" width="22" height="7"/><rect x="-11" y="-6" width="7" height="5"/><rect x="-11" y="6" width="2" height="4"/><rect x="9" y="6" width="2" height="4"/>`,
+  house:`<path d="M-10 0 L0-10 L10 0 Z"/><rect x="-8" y="0" width="16" height="10"/>`,
+  cross:`<rect x="-2" y="-11" width="4" height="22"/><rect x="-8" y="-5" width="16" height="4"/>`,
+  plus:`<rect x="-3" y="-10" width="6" height="20"/><rect x="-10" y="-3" width="20" height="6"/>`,
+  clock:`<circle r="10"/><path d="M0-6 V0 L5 3" fill="none" stroke="#0c0e0f" stroke-width="2"/>`,
+  tower:`<path d="M-7 11 L-3-6 H3 L7 11 Z" fill="none" stroke-width="2"/><rect x="-6" y="-11" width="12" height="5"/>`,
+  bunker:`<path d="M-11 8 V0 C-11-7 11-7 11 0 V8 Z"/><rect x="-3" y="2" width="6" height="6" fill="#0c0e0f" stroke="none"/>`,
+  wave:`<path d="M-11 0 C-7-5-4 5 0 0 C4-5 7 5 11 0" fill="none" stroke-width="2.5"/><path d="M-11 6 C-7 1-4 11 0 6 C4 1 7 11 11 6" fill="none" stroke-width="2.5"/>`
+};
+function mapBase(){
+  // forest blobs with tree marks, a river through town, roads and a lake: all invented, just for orientation
+  let trees = "";
+  for (let i = 0; i < 70; i++) { const x = 40 + (i * 53) % 380, y = 70 + ((i * 97) % 470); if (Math.hypot(x - 250, y - 300) < 240) trees += `<path d="M${x} ${y-7} l5 9 h-10 z"/>`; }
+  return `<rect width="1000" height="620" fill="#101416"/>
+    <path d="M30 80 C120 20 380 40 470 110 C520 200 470 300 430 380 C400 470 360 560 230 590 C110 600 40 520 30 420 Z" fill="#132019"/>
+    <g fill="#1d3326">${trees}</g>
+    <path d="M1000 40 C900 90 860 140 820 220 C780 300 760 360 780 430 C800 500 860 540 1000 560" fill="none" stroke="#1d3440" stroke-width="16"/>
+    <ellipse cx="905" cy="505" rx="80" ry="45" fill="#1a3040"/>
+    <g stroke="#2a3135" stroke-width="5" fill="none" stroke-linecap="round">
+      <path d="M430 175 C520 200 600 250 640 330 C680 400 700 460 690 600"/>
+      <path d="M480 360 H860"/><path d="M500 460 C560 440 640 440 760 470"/><path d="M790 135 C760 220 750 300 735 385"/>
+    </g>
+    <text x="300" y="590" class="map-area">FOREST</text><text x="660" y="555" class="map-area">WINDEN</text>`;
+}
+function renderMap(){
+  const el = $("#v-map");
+  if (W < 0) { el.innerHTML = lockedMsg("map"); return; }
+  const years = [...new Set(D.EVENTS.filter(e => vis(e) && e.d && e.w === "A").map(e => e.d.slice(0,4)))].sort();
+  if (mapYear !== null && !years.includes(mapYear)) mapYear = null;
+  const idx = mapYear === null ? 0 : years.indexOf(mapYear) + 1;
+  const places = D.PLACES.map(p => ({p, st: placeState(p, mapYear)})).filter(x => x.st !== "hidden");
+  const marks = places.map(({p, st}) => `<g class="pl ${st}" data-place="${p.id}" transform="translate(${p.x} ${p.y})" tabindex="0" role="button" aria-label="${esc(placeLabel(p, mapYear))}">
+      <rect x="-20" y="-20" width="40" height="40" rx="8" class="pl-box"/><g class="pl-ic">${ICONS[p.icon]}</g>
+      <text y="36" text-anchor="middle" class="pl-name">${esc(placeLabel(p, mapYear))}</text></g>`).join("");
+  el.innerHTML = `<div class="vhead"><h2>Map of Winden</h2><p>An original sketch of the town, not an exact plan. Places appear once the show has taken you there. Tap one to see what's happened there so far.</p></div>
+    <div class="map-ctl">
+      <label for="mapYr">Year</label>
+      <input type="range" id="mapYr" min="0" max="${years.length}" value="${idx}" aria-valuetext="${mapYear === null ? "All years" : mapYear}">
+      <span class="mono" id="mapYrLbl">${mapYear === null ? "All years" : mapYear}</span>
+    </div>
+    <div class="map-wrap"><svg viewBox="0 0 1000 620" class="map" role="img" aria-label="Map of Winden">${mapBase()}${marks}</svg></div>
+    <div class="treehint map-hint">Swipe sideways to see the whole map.</div>
+    <div class="legend" style="margin-top:8px"><span><i class="lg lit"></i>${mapYear === null ? "Something on the timeline happens here" : "Something happens here in " + mapYear}</span><span><i class="lg dim"></i>Known place</span></div>`;
+  $("#mapYr").addEventListener("input", ev => { const i = +ev.target.value; mapYear = i === 0 ? null : years[i-1]; renderMap(); const r = $("#mapYr"); if (r) r.focus(); });
+}
+function openPlace(id){
+  const p = D.PLACES.find(x => x.id === id); if (!p || p.ep > V) return;
+  const evs = placeEvents(p).sort(evSort);
+  openSheet(`<h2 id="sheetTitle">${esc(p.name)}</h2>
+    <p style="color:var(--muted);margin-top:4px">${evs.length ? `What you've seen happen here, up to ${code(V)}.` : `Nothing on the timeline is tied to this place yet.`}</p>
+    <div class="evs" style="margin-top:10px">${evs.map(ev => `<div class="${mapYear && ev.d && ev.d.slice(0,4) === mapYear ? "hl" : ""}">${evCard(ev)}</div>`).join("")}</div>`);
 }
 function lockedMsg(what){ return `<div class="vhead"><h2>${what[0].toUpperCase()+what.slice(1)}</h2></div><div class="empty">Mark S1E1 as watched to start the ${what}.</div>`; }
 
@@ -1504,7 +1607,7 @@ function setWatched(i){
 function setV(i){ V = Math.max(0, Math.min(W, i)); renderAll(); }
 
 document.addEventListener("click", e => {
-  const t = e.target.closest("[data-season],[data-ep],[data-tab],[data-person],[data-close],[data-mark],[data-view],[data-goto],[data-fam],[data-world],[data-jump],[data-photo],[data-unphoto],[data-jumpch],[data-world-tab],[data-yr],#toLatest,#jumpNew,#scrim");
+  const t = e.target.closest("[data-season],[data-ep],[data-tab],[data-person],[data-close],[data-mark],[data-view],[data-goto],[data-fam],[data-world],[data-jump],[data-photo],[data-unphoto],[data-jumpch],[data-world-tab],[data-yr],[data-place],#toLatest,#jumpNew,#scrim");
   if (!t) return;
   if (t.id === "scrim" || t.hasAttribute("data-close")) return closeSheet();
   if (t.dataset.season) { season = +t.dataset.season; renderSelector(); return; }
@@ -1517,6 +1620,7 @@ document.addEventListener("click", e => {
   if (t.dataset.fam) { famFilter = t.dataset.fam; renderTree(); return; }
   if (t.dataset.worldTab) { curWorld = t.dataset.worldTab; famFilter = "all"; renderTree(); requestAnimationFrame(() => fitTree()); return; }
   if (t.dataset.world) { worldShow[t.dataset.world] = !worldShow[t.dataset.world]; renderTimeline(); return; }
+  if (t.dataset.place) { openPlace(t.dataset.place); return; }
   if (t.dataset.yr) { const [ww,yy] = t.dataset.yr.split("|"); yrSel = {w:ww, y:yy}; if (tab !== "years") { tab = "years"; renderTabs(); scrollToTabs(); } renderYears(); if (t.closest(".sheet")) closeSheet(); return; }
   if (t.dataset.jump) { const g = document.getElementById(t.dataset.jump); if (g) g.scrollIntoView({behavior:"smooth", block:"start"}); return; }
   if (t.id === "jumpNew") { const n = document.querySelector("#v-timeline .ev.new"); if (n) n.scrollIntoView({behavior:"smooth", block:"center"}); else toast("Nothing new on the timeline in " + code(V) + "."); return; }
@@ -1531,7 +1635,8 @@ document.addEventListener("click", e => {
 });
 document.addEventListener("change", e => { if (e.target.id === "personSel") { personFilter = e.target.value; renderTimeline(); } });
 document.addEventListener("keydown", e => { if (e.key === "Escape") closeSheet(); });
-document.addEventListener("keydown", e => { if ((e.key === "Enter" || e.key === " ") && e.target.classList && e.target.classList.contains("yp")) { e.preventDefault(); e.target.click(); } });
+document.addEventListener("keydown", e => { if ((e.key === "Enter" || e.key === " ") && e.target.classList && e.target.classList.contains("yp")) { e.preventDefault(); e.target.click(); }
+  if ((e.key === "Enter" || e.key === " ") && e.target.dataset && e.target.dataset.place) { e.preventDefault(); openPlace(e.target.dataset.place); } });
 $("#vRange").addEventListener("input", e => setV(+e.target.value));
 $("#epSel").addEventListener("change", e => {
   const v = +e.target.value;
@@ -1572,7 +1677,7 @@ document.addEventListener("keydown", e => { if (e.key === "Escape" && inPageFull
 
 function renderAll(){
   renderStatus(); renderSelector(); renderTabs(); updatePF();
-  renderNew(); renderStory(); renderTimeline(); renderYears(); renderTree(); renderPeople(); renderMysteries(); renderTravels(); renderRecaps(); renderGlossary();
+  renderNew(); renderStory(); renderTimeline(); renderYears(); renderMap(); renderTree(); renderPeople(); renderMysteries(); renderTravels(); renderRecaps(); renderGlossary();
 }
 renderAll();
 loadBaked().then(loadShared);

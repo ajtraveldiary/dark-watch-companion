@@ -1067,3 +1067,25 @@ module.exports.REALWORLD = {
       "Germany's last nuclear reactors were still scheduled to close by the end of 2022 (the final three actually shut in April 2023)."],
     world: ["The pandemic shut down much of the world for months."] }
 };
+
+// ---------- Map of Winden (an original, stylised impression, not an exact plan) ----------
+// ep: the episode where a place is first clearly on screen (erring later when unsure).
+// re: words that tie timeline events to the place. nature places exist in every year; buildings are only
+// drawn for 1986-2020 (the present-day town); the plant site also shows from 1953, unless an event puts them elsewhere.
+module.exports.PLACES = [
+  { id:"forest",   name:"Winden forest",     ep:"1.1", x:250, y:300, kind:"nature",   icon:"tree",  re:"forest|woods" },
+  { id:"caves",    name:"The caves",         ep:"1.1", x:205, y:370, kind:"nature",   icon:"cave",  re:"cave" },
+  { id:"plant",    name:"Power plant",       ep:"1.1", x:790, y:135, kind:"building", icon:"plant", re:"power plant|\\bplant\\b|reactor" },
+  { id:"school",   name:"School",            ep:"1.1", x:640, y:330, kind:"building", icon:"school",re:"school|classroom" },
+  { id:"police",   name:"Police station",    ep:"1.1", x:735, y:385, kind:"building", icon:"badge", re:"police station|\\bcell\\b|interrogat" },
+  { id:"hotel",    name:"Waldhotel",         ep:"1.1", x:420, y:175, kind:"building", icon:"bed",   re:"hotel|room 8" },
+  { id:"kahnwald", name:"Kahnwald house",    ep:"1.1", x:500, y:360, kind:"building", icon:"house", re:"kahnwald (house|home)|jonas's (house|home)" },
+  { id:"nielsen",  name:"Nielsen house",     ep:"1.1", x:560, y:505, kind:"building", icon:"house", re:"nielsen (house|home)|nielsens' (house|home)" },
+  { id:"doppler",  name:"Doppler house",     ep:"1.1", x:440, y:520, kind:"building", icon:"house", re:"doppler (house|home)|dopplers' (house|home)" },
+  { id:"church",   name:"Church",            ep:"1.5", x:735, y:505, kind:"building", icon:"cross", re:"church|sermon" },
+  { id:"hospital", name:"Hospital",          ep:"1.5", x:840, y:330, kind:"building", icon:"plus",  re:"hospital|\\bward\\b" },
+  { id:"shop",     name:"Clockmaker's shop", ep:"1.3", x:640, y:415, kind:"building", icon:"clock", re:"clockmaker|watchmaker|tannhaus's shop|the shop" },
+  { id:"tower",    name:"Forest watchtower", ep:"1.7", x:150, y:200, kind:"nature",   icon:"tower", re:"watchtower" },
+  { id:"bunker",   name:"Bunker",            ep:"1.7", x:310, y:430, kind:"nature",   icon:"bunker",re:"bunker" },
+  { id:"lake",     name:"The lake",          ep:"2.6", x:900, y:500, kind:"nature",   icon:"wave",  re:"\\blake\\b|beach|shore" }
+];

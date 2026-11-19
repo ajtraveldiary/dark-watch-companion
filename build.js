@@ -17,6 +17,7 @@ const out = {
   SIGHTINGS: D.SIGHTINGS.filter(r => r[0] in Object.fromEntries(D.CHARACTERS.map(c => [c.id,1]))).map(([id,y,w,ep]) => ({id, y, w, ep:Math.max(E(ep), E(D.CHARACTERS.find(c => c.id === id).ep))})),
   BIRTHS: Object.fromEntries(Object.entries(D.BIRTHS).map(([id,[y,ep]]) => [id, {y, ep:Math.max(E(ep), E(D.CHARACTERS.find(c => c.id === id).ep))}])),
   REALWORLD: D.REALWORLD,
+  PLACES: D.PLACES.map(p => ({...p, ep:E(p.ep)})),
   NOTES: Object.fromEntries(Object.entries(D.NOTES).map(([k,v]) => { const [s,n]=k.split("."); return [`S${s}E${n}`, v]; }))
 };
 // integrity checks
