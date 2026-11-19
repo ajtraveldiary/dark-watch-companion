@@ -810,9 +810,24 @@ function sampleC(a, c1, c2, b, k){ const out = []; for (let i = 1; i < k; i++){ 
   out.push([u*u*u*a[0]+3*u*u*t*c1[0]+3*u*t*t*c2[0]+t*t*t*b[0], u*u*u*a[1]+3*u*u*t*c1[1]+3*u*t*t*c2[1]+t*t*t*b[1]]); } return out; }
 function trim(p, toward, by){ const dx = toward[0]-p[0], dy = toward[1]-p[1], L = Math.hypot(dx,dy) || 1; return [p[0]+dx/L*by, p[1]+dy/L*by]; }
 const f1 = v => Math.round(v*10)/10;
-function routeEdge(a, b, arrow, obs, R, nth, side){
+// Running alongside a line that's already drawn (not just crossing it) makes two links look like one.
+function overlapCost(pts, routed){
+  let cost = 0;
+  for (const other of routed) {
+    let run = 0, worst = 0;
+    for (const p of pts) {
+      let near = false;
+      for (const q of other) if ((p[0]-q[0])**2 + (p[1]-q[1])**2 < 196) { near = true; break; }   // within 14px
+      run = near ? run + 1 : 0; if (run > worst) worst = run;
+    }
+    if (worst >= 6) cost += 5;          // ~50px side by side counts as overlapping; a crossing doesn't
+  }
+  return cost;
+}
+function routeEdge(a, b, arrow, obs, R, nth, side, routed){
   const A = [a.x, a.y], B = [b.x, b.y], endGap = R + (arrow ? 4 : 1);
   const dx = B[0]-A[0], dy = B[1]-A[1], L = Math.hypot(dx,dy) || 1, nx = -dy/L, ny = dx/L;
+  const K = Math.max(36, Math.ceil(L / 8));   // sample every ~8px so long lines can't skip over a tile or another line
   const cands = [];
   // 1) Parent lines: the familiar vertical S-curve
   if (arrow && Math.abs(dy) > 10) {
@@ -821,30 +836,35 @@ function routeEdge(a, b, arrow, obs, R, nth, side){
   }
   // 2) Quadratic arcs bowing out to either side, wider and wider
   const base = nth > 1 ? (nth-1) * 34 : 0;
-  const offs = [0, 26, 48, 72, 100, 135, 175, 220, 270, 330, 400];
+  const offs = [0, 26, 48, 72, 100, 135, 175, 220, 270, 330, 400, 480, 570].concat(L > 900 ? [L*0.28, L*0.36] : []).map(Math.round);
   offs.forEach(o => { const v = o + base; if (v === 0) cands.push({o:0}); else { cands.push({o:v*side}); cands.push({o:-v*side}); } });
+  // 3) Long links between people on the same row: leave the tile vertically and run along the gap
+  //    between rows (above the row, or below its name labels), instead of arcing across other tiles.
+  if (Math.abs(dy) < 10) {
+    [-0.46, 0.54, -0.38, 0.62].forEach(t => { const cy = A[1] + t * RH / 0.75; cands.push({c1:[A[0], cy], c2:[B[0], cy]}); });
+  }
   let best = null;
   for (const c of cands) {
     let pts, d;
     if (c.c1) {
       const s0 = trim(A, c.c1, R), e0 = trim(B, c.c2, endGap);
-      pts = sampleC(s0, c.c1, c.c2, e0, 36);
+      pts = sampleC(s0, c.c1, c.c2, e0, K);
       d = `M${f1(s0[0])},${f1(s0[1])} C${f1(c.c1[0])},${f1(c.c1[1])} ${f1(c.c2[0])},${f1(c.c2[1])} ${f1(e0[0])},${f1(e0[1])}`;
     } else if (c.o === 0) {
       const s0 = trim(A, B, R), e0 = trim(B, A, endGap);
-      pts = sampleQ(s0, [(s0[0]+e0[0])/2, (s0[1]+e0[1])/2], e0, 36);
+      pts = sampleQ(s0, [(s0[0]+e0[0])/2, (s0[1]+e0[1])/2], e0, K);
       d = `M${f1(s0[0])},${f1(s0[1])} L${f1(e0[0])},${f1(e0[1])}`;
     } else {
       const ctrl = [(A[0]+B[0])/2 + nx*c.o*2, (A[1]+B[1])/2 + ny*c.o*2];  // curve peaks at ~c.o from the straight line
       const s0 = trim(A, ctrl, R), e0 = trim(B, ctrl, endGap);
-      pts = sampleQ(s0, ctrl, e0, 40);
+      pts = sampleQ(s0, ctrl, e0, K);
       d = `M${f1(s0[0])},${f1(s0[1])} Q${f1(ctrl[0])},${f1(ctrl[1])} ${f1(e0[0])},${f1(e0[1])}`;
     }
-    const h = hits(pts, obs);
-    if (h === 0) return d;
-    if (!best || h < best.h) best = {h, d};
+    const h = hits(pts, obs) + overlapCost(pts, routed || []);
+    if (h === 0) return {d, pts};
+    if (!best || h < best.h) best = {h, d, pts};
   }
-  return best.d;
+  return best;
 }
 let edgeTips = [], tipG = null;
 const TIPKIND = {parent:"Parent → child", adoptive:"Adoptive", raised:"Grandparent", married:"Married", partner:"Couple", affair:"Affair", sibling:"Siblings", same:"Same person", counterpart:"Other-world version"};
@@ -936,7 +956,7 @@ function renderTree(){
   const R = 30;   // half the size of a square portrait tile
   // Obstacles: every visible circle plus its name label. Curved links are routed around them.
   const OB = nodes.map(n => { const p = P[n.id], hw = Math.max(18, n.name.length * 3.15 + 4);
-    return {id:n.id, x:p.x, y:p.y, r:R * 1.42 + 4, lx0:p.x - hw, lx1:p.x + hw, ly0:p.y + R + 3, ly1:p.y + R + (jobOf(n.id) ? 32 : 19)}; });
+    return {id:n.id, x:p.x, y:p.y, r:R * 1.42 + 6, lx0:p.x - hw, lx1:p.x + hw, ly0:p.y + R + 3, ly1:p.y + R + (jobOf(n.id) ? 32 : 19)}; });
   edgeTips = []; hideTip();
   const parts = [];
   const tipOf = (l) => ({a:l.a, b:l.b, txt:relLabel(l), ep:l.ep, type:l.type});
@@ -1010,11 +1030,12 @@ function renderTree(){
     });
   });
   // 3) Everything the time loop won't let sit in a normal tree: identities, cross-generation parents, other-world links.
-  const pair = {};
+  const pair = {}, routed = [];
   edges.filter(l => !treeEdge.has(l)).forEach(l => {
     const s2 = REL[l.type]; const a2 = P[l.a], b2 = P[l.b];
     const key = [l.a,l.b].sort().join("|"); const nth = pair[key] = (pair[key] || 0) + 1;
-    const d = routeEdge(a2, b2, s2.arrow, OB.filter(o => o.id !== l.a && o.id !== l.b), R, nth, l.a < l.b ? 1 : -1);
+    const r = routeEdge(a2, b2, s2.arrow, OB.filter(o => o.id !== l.a && o.id !== l.b), R, nth, l.a < l.b ? 1 : -1, routed);
+    routed.push(r.pts); const d = r.d;
     pushSeg(d, s2, tipOf(l), [l.a,l.b], isNew(l), isDim([l.a,l.b]), "x");
   });
   $("#edges").innerHTML = parts.filter(p => p.layer === "t").map(p => p.html).join("");
