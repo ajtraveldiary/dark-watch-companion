@@ -1042,11 +1042,11 @@ module.exports.REALWORLD = {
 // drawn for 1986-2020 (the present-day town); the plant site also shows from 1953, unless an event puts them elsewhere.
 module.exports.PLACES = [
   { id:"forest",   name:"Winden forest",     ep:"1.1", x:250, y:300, kind:"nature",   icon:"tree",  re:"forest|woods" },
-  { id:"caves",    name:"The caves",         ep:"1.1", x:205, y:370, kind:"nature",   icon:"cave",  re:"cave" },
-  { id:"plant",    name:"Power plant",       ep:"1.1", x:790, y:135, kind:"building", icon:"plant", re:"power plant|\\bplant\\b|reactor" },
+  { id:"caves",    name:"The caves",         ep:"1.1", x:415, y:235, kind:"nature",   icon:"cave",  re:"cave" },
+  { id:"plant",    name:"Power plant",       ep:"1.1", x:560, y:170, kind:"building", icon:"plant", re:"power plant|\\bplant\\b|reactor" },
   { id:"school",   name:"School",            ep:"1.1", x:640, y:330, kind:"building", icon:"school",re:"school|classroom" },
   { id:"police",   name:"Police station",    ep:"1.1", x:735, y:385, kind:"building", icon:"badge", re:"police station|\\bcell\\b|interrogat" },
-  { id:"hotel",    name:"Waldhotel",         ep:"1.1", x:420, y:175, kind:"building", icon:"bed",   re:"hotel|room 8" },
+  { id:"hotel",    name:"Waldhotel",         ep:"1.1", x:285, y:135, kind:"building", icon:"bed",   re:"hotel|room 8" },
   { id:"kahnwald", name:"Kahnwald house",    ep:"1.1", x:500, y:360, kind:"building", icon:"house", re:"kahnwald (house|home)|jonas's (house|home)" },
   { id:"nielsen",  name:"Nielsen house",     ep:"1.1", x:560, y:505, kind:"building", icon:"house", re:"nielsen (house|home)|nielsens' (house|home)" },
   { id:"doppler",  name:"Doppler house",     ep:"1.1", x:440, y:520, kind:"building", icon:"house", re:"doppler (house|home)|dopplers' (house|home)" },
