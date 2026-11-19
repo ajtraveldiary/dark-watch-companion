@@ -350,6 +350,8 @@ svg.focusing .eg.hl .edge{opacity:1;stroke-width:3px}
 .footer .visits{margin-top:10px;color:var(--muted);font-family:var(--font-mono);font-size:12px}
 .footer .visits b{color:var(--accent);font-weight:500}
 .footer a{color:var(--accent)}
+/* Phones: keep the top of the page for the episode picker only. */
+@media (max-width:760px){.hdr-actions{display:none!important}}
 @media (max-width:520px){
   .brand h1{font-size:24px}
   .eps{grid-template-columns:repeat(2,1fr)}
