@@ -21,12 +21,11 @@ Website: https://dark-watch-companion.workdesk.workers.dev/
 ## Sections of the site
 
 - What's new: everything the latest watched episode revealed.
-- Story: a narrated, in-order summary of what has happened so far.
+- Story & recaps: a narrated, in-order summary of each episode watched, with a one-line recap and details worth noticing.
 - Timeline: events seen so far, ordered by date.
 - Relationship tree: a family tree of the four families that grows episode by episode, with photos and roles.
 - People: every character met so far, with a short spoiler-safe note.
 - Mysteries: open questions raised so far, and answers once the show gives them.
-- Recaps: a short recap per episode.
 - Glossary: terms and places as the show introduces them.
 
 ## About the show (spoiler-free)

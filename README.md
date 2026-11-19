@@ -5,7 +5,7 @@ A spoiler-safe companion for watching the Netflix series *Dark*. Mark the latest
 - **Story** – the plot narrated chapter by chapter, in airing order
 - **Timeline** – events by in-world year, across all three worlds
 - **Relationship tree** – generations, couples and family lines, plus the time-loop and identity links, with hover help and full screen
-- **People, Mysteries, Time travel, Recaps, Glossary**
+- **People, Mysteries, Time travel, Glossary**
 - A replay slider to see the story as it stood after any earlier episode
 
 Misdirections are shown the way the show presents them until the episode that overturns them. Viewing progress is stored in each visitor's browser.

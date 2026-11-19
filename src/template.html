@@ -347,6 +347,10 @@ svg.focusing .eg.hl .edge{opacity:1;stroke-width:3px}
 .chapter p{font-size:17px;line-height:1.7;margin:0 0 14px;color:var(--ink)}
 .chapter p:first-of-type::first-letter{font-family:var(--font-display);font-size:3.1em;float:left;line-height:.9;padding:4px 8px 0 0;color:var(--accent)}
 .chapter.latest h3{color:var(--accent)}
+.chapter .ch-recap{font-size:15px;line-height:1.55;color:var(--muted);border-left:3px solid var(--accent);padding:6px 0 6px 12px;margin:0 0 16px}
+.chapter .ch-recap b{color:var(--ink);font-weight:700;margin-right:4px}
+.chapter .ch-notes{background:var(--card,#14181a);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:4px 0 14px}
+.chapter .ch-notes h4{font-size:14px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
 .seasonbreak{font-family:var(--font-display);font-size:16px;letter-spacing:.3em;text-transform:uppercase;color:var(--muted);text-align:center;margin:30px 0 8px}
 .storytools{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
 /* Recaps */
@@ -454,7 +458,6 @@ svg.focusing .eg.hl .edge{opacity:1;stroke-width:3px}
   <section class="view" id="v-people" role="tabpanel"></section>
   <section class="view" id="v-mysteries" role="tabpanel"></section>
   <section class="view" id="v-travels" role="tabpanel"></section>
-  <section class="view" id="v-recaps" role="tabpanel"></section>
   <section class="view" id="v-glossary" role="tabpanel"></section>
   </div>
 
@@ -642,7 +645,7 @@ function renderSelector(){
 }
 
 // ---------- Tabs ----------
-const TABS = [["new","What's new"],["story","Story"],["timeline","Timeline"],["years","What year?"],["map","Map"],["tree","Relationship tree"],["people","People"],["mysteries","Mysteries"],["travels","Time travel"],["recaps","Recaps"],["glossary","Glossary"]];
+const TABS = [["new","What's new"],["story","Story & recaps"],["timeline","Timeline"],["years","What year?"],["map","Map"],["tree","Relationship tree"],["people","People"],["mysteries","Mysteries"],["travels","Time travel"],["glossary","Glossary"]];
 function renderTabs(){
   $("#tabrow").innerHTML = TABS.map(([k,l]) => `<button role="tab" data-tab="${k}" aria-selected="${tab===k}">${l}${k==="new" && W>=0 ? '<span class="dot"></span>':''}</button>`).join("");
   document.querySelectorAll("section.view").forEach(s => s.classList.toggle("on", s.id === "v-" + tab));
@@ -1388,32 +1391,28 @@ function renderTravels(){
 // ---------- Recaps ----------
 function renderStory(){
   const el = $("#v-story");
-  if (W < 0) { el.innerHTML = lockedMsg("story"); return; }
+  if (W < 0) { el.innerHTML = lockedMsg("story and recaps"); return; }
   const eps = EPS.filter(e => e.i <= V);
+  const nxt = V + 1 < N ? EPS[V+1] : null;
+  const openQs = D.MYSTERIES.filter(m => vis(m) && !m.a.some(a => a.ep <= V));
   let lastS = 0;
   const html = eps.map(e => {
     const brk = e.s !== lastS ? `<div class="seasonbreak">Season ${e.s}</div>` : ""; lastS = e.s;
     const paras = D.STORY[e.code] || [];
+    const recap = D.RECAPS[e.code];
+    const notes = D.NOTES[e.code] || [];
     return brk + `<article class="chapter ${e.i===V?"latest":""}" id="ch-${e.i}">
       <div class="ch-head"><span class="ch-num">${e.code}</span><h3>${esc(e.title)}</h3>${e.i===V?'<span class="newtag">LATEST</span>':""}</div>
-      ${paras.map(p => `<p>${esc(p)}</p>`).join("")}</article>`;
+      ${recap ? `<div class="ch-recap"><b>In short</b> ${esc(recap)}</div>` : ""}
+      ${paras.map(p => `<p>${esc(p)}</p>`).join("")}
+      ${notes.length ? `<div class="ch-notes"><h4>Worth noticing</h4><ul class="notes">${notes.map(n => `<li><b>${esc(n.k || "Detail")}</b> ${esc(n.t)}</li>`).join("")}</ul></div>` : ""}</article>`;
   }).join("");
-  el.innerHTML = `<div class="vhead"><h2>The story so far</h2><p>Everything that's happened, told in the order the series shows it. One chapter per episode you've watched.</p></div>
+  el.innerHTML = `<div class="vhead"><h2>The story so far</h2><p>One chapter per episode you've watched: a one-line recap, the full story in the order the series shows it, and details worth noticing.</p></div>
+    ${nxt && V === W ? `<div class="card" style="border-color:var(--accent);margin-bottom:12px"><h3 style="font-size:18px;margin-bottom:6px">Before you press play on ${nxt.code}</h3>
+      <div style="color:var(--muted);font-size:15px">Previously: ${esc(D.RECAPS[EPS[V].code])}</div>
+      ${openQs.length ? `<div style="margin-top:8px;font-size:15px">Open questions: ${openQs.slice(-4).map(m => esc(m.q)).join(" · ")}</div>` : ""}</div>` : ""}
     <div class="storytools">${eps.length > 1 ? `<button class="btn" data-jumpch="${V}">Jump to ${code(V)}</button>` : ""}</div>
     <div class="story">${html}</div>`;
-}
-function renderRecaps(){
-  const el = $("#v-recaps");
-  if (W < 0) { el.innerHTML = lockedMsg("recaps"); return; }
-  const list = EPS.filter(e => e.i <= V).reverse();
-  const nxt = V + 1 < N ? EPS[V+1] : null;
-  const openQs = D.MYSTERIES.filter(m => vis(m) && !m.a.some(a => a.ep <= V));
-  el.innerHTML = `<div class="vhead"><h2>Recaps</h2><p>Short summaries of what you've watched, plus details worth noticing.</p></div>
-    ${nxt && V === W ? `<div class="card" style="border-color:var(--accent);margin-bottom:12px"><h3 style="font-size:18px;margin-bottom:6px">Before you press play on ${nxt.code}</h3>
-      <div style="color:var(--muted);font-size:14px">Previously: ${esc(D.RECAPS[EPS[V].code])}</div>
-      ${openQs.length ? `<div style="margin-top:8px;font-size:14px">Open questions: ${openQs.slice(-4).map(m => esc(m.q)).join(" · ")}</div>` : ""}</div>` : ""}
-    <div class="recaps">${list.map(e => `<div class="card ${e.i===V?"new":""}"><h3>${e.code} · ${esc(e.title)}</h3><div class="recap">${esc(D.RECAPS[e.code]||"")}</div>
-      ${(D.NOTES[e.code]||[]).length ? `<ul class="notes">${D.NOTES[e.code].map(n => `<li><b>${esc(n.k || "Detail")}</b> ${esc(n.t)}</li>`).join("")}</ul>` : ""}</div>`).join("")}</div>`;
 }
 
 // ---------- Glossary ----------
@@ -1677,7 +1676,7 @@ document.addEventListener("keydown", e => { if (e.key === "Escape" && inPageFull
 
 function renderAll(){
   renderStatus(); renderSelector(); renderTabs(); updatePF();
-  renderNew(); renderStory(); renderTimeline(); renderYears(); renderMap(); renderTree(); renderPeople(); renderMysteries(); renderTravels(); renderRecaps(); renderGlossary();
+  renderNew(); renderStory(); renderTimeline(); renderYears(); renderMap(); renderTree(); renderPeople(); renderMysteries(); renderTravels(); renderGlossary();
 }
 renderAll();
 loadBaked().then(loadShared);
