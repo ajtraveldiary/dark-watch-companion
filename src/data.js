@@ -994,12 +994,12 @@ const STORY = {
 module.exports.STORY = STORY;
 
 // Who is seen in which year (and when each birth year is shown), from the official
-// episode-gated timelines on dark.netflix.io. Used by the "What year?" tab.
+// episode-gated timelines on dark.netflix.io. (Kept for reference; the "What year?" tab was removed.)
 const _seen = require("./sightings.json");
 module.exports.SIGHTINGS = _seen.SIGHTINGS;   // [id, year, world A/B/O, episode that shows it]
 module.exports.BIRTHS = _seen.BIRTHS;         // id -> [birth year, episode that shows it]
 
-// ---------- Meanwhile in the real world (shown in the "What year?" tab for years the show has visited) ----------
+// ---------- Meanwhile in the real world (shown under the map when a year is picked) ----------
 // Historical facts only, written in our own words. "here" notes link a year to things the show has already
 // shown on screen (the power plant, the divided Germany of the 20th century), never to plot developments.
 module.exports.REALWORLD = {

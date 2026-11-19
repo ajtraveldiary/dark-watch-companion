@@ -454,7 +454,6 @@ svg.focusing .eg.hl .edge{opacity:1;stroke-width:3px}
   <section class="view" id="v-new" role="tabpanel"></section>
   <section class="view" id="v-story" role="tabpanel"></section>
   <section class="view" id="v-timeline" role="tabpanel"></section>
-  <section class="view" id="v-years" role="tabpanel"></section>
   <section class="view" id="v-map" role="tabpanel"></section>
   <section class="view" id="v-tree" role="tabpanel"></section>
   <section class="view" id="v-people" role="tabpanel"></section>
@@ -513,7 +512,6 @@ let V = W;                                   // the episode we're viewing "as of
 let season = W + 1 < N ? EPS[Math.max(0, W + 1)].s : 3;
 let tab = W >= 0 ? "new" : "new";
 const photoMem = {};
-let yrSel = null;
 let curWorld = "A", showLoops = true, famFilter = "all", personFilter = "", worldShow = {A:true, B:true, O:true};
 
 // ---------- Helpers ----------
@@ -647,7 +645,7 @@ function renderSelector(){
 }
 
 // ---------- Tabs ----------
-const TABS = [["new","What's new"],["story","Story & recaps"],["timeline","Timeline"],["years","What year?"],["map","Map"],["tree","Relationship tree"],["people","People"],["mysteries","Mysteries"],["travels","Time travel"],["glossary","Glossary"]];
+const TABS = [["new","What's new"],["story","Story & recaps"],["timeline","Timeline"],["map","Map"],["tree","Relationship tree"],["people","People"],["mysteries","Mysteries"],["travels","Time travel"],["glossary","Glossary"]];
 function renderTabs(){
   $("#tabrow").innerHTML = TABS.map(([k,l]) => `<button role="tab" data-tab="${k}" aria-selected="${tab===k}">${l}${k==="new" && W>=0 ? '<span class="dot"></span>':''}</button>`).join("");
   document.querySelectorAll("section.view").forEach(s => s.classList.toggle("on", s.id === "v-" + tab));
@@ -728,7 +726,7 @@ function renderTimeline(){
     </div>
     <div class="yearstrip">${allYears.map(y => `<button data-jump="y-${y.w}-${y.y}" class="${y.hasNew?"hasnew":""}">${y.y==="?"?"When?":y.y}${y.w==="B"?" ◐":y.w==="O"?" ○":""}</button>`).join("")}</div>
     ${groups.map(g => `<div class="world world-${g.w}">${worldsPresent.length>1?`<h3>${WN[g.w]}</h3>`:""}
-      ${g.years.map(y => `<div class="yeargroup" id="y-${g.w}-${y.y}"><div class="yr">${y.y==="?"?"?":y.y}${/^\d{4}$/.test(y.y)?`<button class="yrlink" data-yr="${g.w}|${y.y}">who's here →</button>`:""}</div><div class="evs">
+      ${g.years.map(y => `<div class="yeargroup" id="y-${g.w}-${y.y}"><div class="yr">${y.y==="?"?"?":y.y}</div><div class="evs">
         ${y.list.map(ev => evCard(ev)).join("")}</div></div>`).join("")}</div>`).join("")}
     ${evs.length ? "" : `<div class="empty">No events for this person yet.</div>`}`;
 }
@@ -747,74 +745,6 @@ function realWorld(y){
     ${r.here ? `<p class="rw-here">${esc(r.here)}</p>` : ""}
     <div class="rw-cols">${r.de && r.de.length ? `<div><h4>In Germany</h4><ul>${li(r.de)}</ul></div>` : ""}${r.world && r.world.length ? `<div><h4>Around the world</h4><ul>${li(r.world)}</ul></div>` : ""}</div>
     <p class="rw-src">Real events, not from the show. Checked against encyclopaedias and news archives.</p></details>`;
-}
-function renderYears(){
-  const el = $("#v-years");
-  if (W < 0) { el.innerHTML = lockedMsg("year lookup"); return; }
-  const evs = D.EVENTS.filter(e => vis(e) && e.d);
-  const worlds = ["A","B","O"].filter(w => evs.some(e => e.w === w));
-  const WN = {A:worldName("A"), B:worldName("B"), O:worldName("C")};
-  const yearsIn = w => [...new Set(evs.filter(e => e.w === w).map(yearOf))].sort();
-  const key = (w,y) => w + "|" + y;
-  // Years the episode being viewed spends time in, in the order they appear
-  const nowKeys = [...new Set(D.EVENTS.filter(e => isNew(e) && e.d).map(e => key(e.w, yearOf(e))))];
-  if (!yrSel || !evs.some(e => e.w === yrSel.w && yearOf(e) === yrSel.y)) {
-    if (nowKeys.length) { const [w,y] = nowKeys[0].split("|"); yrSel = {w, y}; }
-    else if (worlds.length) { const ys = yearsIn(worlds[0]); yrSel = {w:worlds[0], y:ys[ys.length-1]}; }
-    else { el.innerHTML = `<div class="vhead"><h2>What year am I in?</h2></div><div class="empty">No dated scenes yet.</div>`; return; }
-  }
-  const {w, y} = yrSel;
-  const here = evs.filter(e => e.w === w && yearOf(e) === y).sort(evSort);
-  // Everyone seen in this year, plus who arrived or left by time travel
-  const ppl = {};
-  const add = id => { if (!CH[id] || CH[id].ep > V) return null; return ppl[id] = ppl[id] || {id, n:0, isNew:false, arr:[], dep:[]}; };
-  here.forEach(e => e.who.forEach(id => { const p = add(id); if (p) { p.n++; if (isNew(e)) p.isNew = true; } }));
-  D.JOURNEYS.filter(vis).forEach(j => {
-    if (jYears(j.to).includes(y) && jWorld(j, j.to) === w) { const p = add(j.who); if (p) p.arr.push(j); }
-    if (jYears(j.from).includes(y) && jWorld(j, j.from) === w && ppl[j.who]) ppl[j.who].dep.push(j);
-  });
-  // Official sightings (dark.netflix.io timelines), only for years the show has already taken you to
-  const visited = new Set(evs.map(e => key(e.w, yearOf(e))));
-  const sights = D.SIGHTINGS.filter(s => s.ep <= V && CH[s.id] && CH[s.id].ep <= V && visited.has(key(s.w, s.y)));
-  sights.forEach(s => { if (s.w === w && s.y === y) add(s.id); });
-  const seenAt = {};   // id -> other years they're seen in
-  const note = (id, k) => { if (ppl[id] && k !== key(w,y)) (seenAt[id] = seenAt[id] || new Set()).add(k); };
-  evs.forEach(e => e.who.forEach(id => note(id, key(e.w, yearOf(e)))));
-  sights.forEach(s => note(s.id, key(s.w, s.y)));
-  // Ages: only where Netflix's timeline puts the person in this year, and not for years past 2020
-  // or for people who don't age normally (time travellers whose birth year would mislead).
-  const NO_AGE = {noah:"*", noah_b:"*", mads:["2019"], mads_b:["2019"]};
-  const present = new Set(sights.filter(s => s.w === w && s.y === y).map(s => s.id));
-  const ageIn = id => { const b = D.BIRTHS[id]; if (!b || b.ep > V || !present.has(id) || +y > 2020) return "";
-    const na = NO_AGE[id]; if (na === "*" || (na && na.includes(y))) return ""; const a = +y - b.y;
-    if (a < 0) return ""; return a < 2 ? "Baby here" : a < 13 ? `Child here, about ${a}` : a < 20 ? `Teenager here, about ${a}` : `About ${a} here`; };
-  const sameAs = id => D.LINKS.filter(l => l.type === "same" && vis(l) && !superseded(l) && (l.a === id || l.b === id))
-    .map(l => l.a === id ? l.b : l.a).filter(o => CH[o] && CH[o].ep <= V);
-  const list = Object.values(ppl).sort((a,b) => b.n - a.n || name(a.id).localeCompare(name(b.id)));
-  const yrBtn = k => { const [ww,yy] = k.split("|"); return `<button class="linkbtn mono" data-yr="${k}">${yy}${ww==="B"?" ◐":ww==="O"?" ○":""}</button>`; };
-  const card = p => {
-    const others = [...(seenAt[p.id] || [])].sort((a,b) => a.split("|")[1].localeCompare(b.split("|")[1]));
-    const same = sameAs(p.id);
-    return `<div role="button" tabindex="0" class="yp ${p.isNew?"new":""}" data-person="${p.id}">${avatar(p.id)}
-      <div><div class="nm">${esc(name(p.id))}</div>
-      <div class="sub">
-        ${p.arr.map(j => `<span class="tag">arrived from ${esc(j.from)}</span> `).join("")}
-        ${p.dep.map(j => `<span class="tag">leaves for ${esc(j.to)}</span> `).join("")}
-        ${same.length ? `<div>Same person as <b>${same.map(o => esc(name(o))).join(", ")}</b></div>` : ""}
-        ${others.length ? `<div>Also seen in ${others.map(yrBtn).join(" · ")}</div>` : ""}
-      </div></div></div>`;
-  };
-  el.innerHTML = `
-    <div class="vhead"><h2>What year am I in?</h2><p>Pick the year on screen to see who's around then and what you've seen happen there. Only scenes up to ${code(V)} count. Photos show each person at one age.</p></div>
-    ${nowKeys.length ? `<div class="yr-now"><span>${code(V)} spends time in</span>${nowKeys.map(k => { const [ww,yy] = k.split("|"); return `<button data-yr="${k}" class="${k===key(w,y)?"on":""}">${yy}${worlds.length>1?" · "+esc(WN[ww]):""}</button>`; }).join("")}</div>` : ""}
-    ${worlds.length > 1 ? `<div class="tl-tools">${worlds.map(ww => `<button class="toggle" data-yr="${key(ww, ww===w ? y : (yearsIn(ww).includes(y) ? y : yearsIn(ww).slice(-1)[0]))}" aria-pressed="${ww===w}">${esc(WN[ww])}</button>`).join("")}</div>` : ""}
-    <div class="yearstrip">${yearsIn(w).map(yy => `<button data-yr="${key(w,yy)}" class="${yy===y?"on":""} ${nowKeys.includes(key(w,yy))&&yy!==y?"hasnew":""}">${yy}</button>`).join("")}</div>
-    <div class="yr-title"><span class="big">${y}</span><span class="wn">${worlds.length>1 ? esc(WN[w]) + " · " : ""}${list.length} ${list.length===1?"person":"people"} · ${here.length} ${here.length===1?"event":"events"}</span></div>
-    ${realWorld(y)}
-    <h3 style="font-size:17px;margin-top:14px">Who's in the ${y} scenes</h3>
-    <div class="ypeople">${list.map(card).join("") || `<div class="empty">No one you've met yet.</div>`}</div>
-    <h3 style="font-size:17px">What you've seen happen in ${y}</h3>
-    <div class="evs" style="margin-top:8px">${here.map(evCard).join("")}</div>`;
 }
 function evCard(ev){
   const sup = superseded(ev);
@@ -946,6 +876,7 @@ function renderMap(){
     <div class="map-wrap"><svg viewBox="160 0 840 900" class="map" role="img" aria-label="Map of Winden">${mapBase(placeState(D.PLACES.find(p => p.id === "plant"), mapYear) !== "hidden" && !(mapYear !== null && +mapYear < 1960))}${marks}</svg></div>
     <div class="treehint map-hint">Swipe sideways to see the whole map.</div>
     <div class="legend" style="margin-top:8px"><span><i class="lg lit"></i>${mapYear === null ? "Something on the timeline happens here" : "Something happens here in " + mapYear}</span><span><i class="lg dim"></i>Known place</span></div>
+    ${mapYear !== null ? realWorld(mapYear) : `<p class="treehint">Pick a year on the slider to also see what was happening in the real world back then.</p>`}
     <p class="treehint">Winden is fictional and never placed exactly. The Dark Wiki notes clues that put it in former West Germany, likely central Hesse: a small, dense town you can cross on foot or by bike, ringed by forest, with the power plant's cooling towers looming over everything.</p>`;
   $("#mapYr").addEventListener("input", ev => { const i = +ev.target.value; mapYear = i === 0 ? null : years[i-1]; renderMap(); const r = $("#mapYr"); if (r) r.focus(); });
 }
@@ -1533,7 +1464,7 @@ function openPerson(id){
         return `<button class="rel" data-person="${r.other}"><span class="kind ${sup?"struck":""}">${r.kind}</span>${avatar(r.other)}<span><span class="${sup?"struck":""}">${esc(name(r.other))}</span>${sup?` <span style="color:var(--thread);font-size:12px">· ${esc(l.later)} (${code(l.until)})</span>`:""} ${epBadge(l.ep)}${isNew(l)?' <span class="newtag">NEW</span>':""}</span></button>`; }).join("")}</div>` : ""}
     ${(() => { const xw = crossWorld(id).filter(x => x.kind === "Counterpart"); return xw.length ? `<h3>In other worlds</h3><div class="rels">${xw.map(x => `<button class="rel" data-person="${x.id}"><span class="kind">${esc(worldName(worldOf(x.id)))}</span>${avatar(x.id)}<span>${esc(name(x.id))}</span></button>`).join("")}</div>` : ""; })()}
     ${trips.length ? `<h3>Time travel</h3><div class="bio">${trips.map(t => `<div class="row">${epBadge(t.ep)}<span class="mono">${esc(t.from)} → ${esc(t.to)}</span><span style="color:var(--muted)">${esc(t.how)}</span></div>`).join("")}</div>` : ""}
-    ${evs.length ? `<h3>On the timeline</h3><div class="bio">${evs.map(e => `<div class="row">${e.d ? `<button class="epb" data-yr="${e.w}|${e.d.slice(0,4)}" title="Who's around in ${e.d.slice(0,4)}" style="cursor:pointer;background:none;font:inherit;font-family:var(--font-mono);font-size:11px;color:var(--accent);border-color:var(--accent)">${e.d.slice(0,4)}${e.w==="B"?" ◐":e.w==="O"?" ○":""}</button>` : `<span class="epb">?</span>`}<span class="${superseded(e)?"struck":""}">${esc(e.t)}</span></div>`).join("")}</div>` : ""}
+    ${evs.length ? `<h3>On the timeline</h3><div class="bio">${evs.map(e => `<div class="row">${e.d ? `<button class="epb" data-yr="${e.w}|${e.d.slice(0,4)}" title="See ${e.d.slice(0,4)} on the timeline" style="cursor:pointer;background:none;font:inherit;font-family:var(--font-mono);font-size:11px;color:var(--accent);border-color:var(--accent)">${e.d.slice(0,4)}${e.w==="B"?" ◐":e.w==="O"?" ○":""}</button>` : `<span class="epb">?</span>`}<span class="${superseded(e)?"struck":""}">${esc(e.t)}</span></div>`).join("")}</div>` : ""}
   </div>`);
 }
 
@@ -1673,7 +1604,8 @@ document.addEventListener("click", e => {
   if (t.dataset.worldTab) { curWorld = t.dataset.worldTab; famFilter = "all"; renderTree(); requestAnimationFrame(() => fitTree()); return; }
   if (t.dataset.world) { worldShow[t.dataset.world] = !worldShow[t.dataset.world]; renderTimeline(); return; }
   if (t.dataset.place) { openPlace(t.dataset.place); return; }
-  if (t.dataset.yr) { const [ww,yy] = t.dataset.yr.split("|"); yrSel = {w:ww, y:yy}; if (tab !== "years") { tab = "years"; renderTabs(); scrollToTabs(); } renderYears(); if (t.closest(".sheet")) closeSheet(); return; }
+  if (t.dataset.yr) { const [ww,yy] = t.dataset.yr.split("|"); if (t.closest(".sheet")) closeSheet(); if (tab !== "timeline") { tab = "timeline"; renderTabs(); }
+    const g = document.getElementById(`y-${ww}-${yy}`); if (g) setTimeout(() => g.scrollIntoView({behavior:"smooth", block:"start"}), 60); return; }
   if (t.dataset.jump) { const g = document.getElementById(t.dataset.jump); if (g) g.scrollIntoView({behavior:"smooth", block:"start"}); return; }
   if (t.id === "jumpNew") { const n = document.querySelector("#v-timeline .ev.new"); if (n) n.scrollIntoView({behavior:"smooth", block:"center"}); else toast("Nothing new on the timeline in " + code(V) + "."); return; }
   if (t.id === "toLatest") return setV(W);
@@ -1729,7 +1661,7 @@ document.addEventListener("keydown", e => { if (e.key === "Escape" && inPageFull
 
 function renderAll(){
   renderStatus(); renderSelector(); renderTabs(); updatePF();
-  renderNew(); renderStory(); renderTimeline(); renderYears(); renderMap(); renderTree(); renderPeople(); renderMysteries(); renderTravels(); renderGlossary();
+  renderNew(); renderStory(); renderTimeline(); renderMap(); renderTree(); renderPeople(); renderMysteries(); renderTravels(); renderGlossary();
 }
 renderAll();
 loadBaked().then(loadShared);
