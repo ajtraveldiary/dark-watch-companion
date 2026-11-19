@@ -715,7 +715,7 @@ const JOURNEYS = [
   {ep:"1.6", who:"jonas",   from:"2019", to:"1986", how:"Caves"},
   {ep:"1.7", who:"helge",   from:"1986", to:"2019", how:"Bunker passage", note:"to take boys"},
   {ep:"1.8", who:"ulrich",  from:"2019", to:"1953", how:"Caves"},
-  {ep:"1.8", who:"stranger",from:"The future", to:"2019", how:"Device", note:"by his own account"},
+  {ep:"1.8", who:"stranger",from:"The future (his claim)", to:"2019", how:"Not shown yet", note:"he tells Tannhaus this in 1986; he was in 2019 before his trip to 1986, so this trip came first"},
   {ep:"1.9", who:"noah",    from:"1953", to:"2019", how:"Unknown", note:"seen unaged in 1953, 1986, 2019"},
   {ep:"1.10",who:"helge",   from:"2019", to:"1986", how:"Caves", note:"old Helge"},
   {ep:"1.10",who:"jonas",   from:"1986", to:"2052", how:"Wormhole"},
