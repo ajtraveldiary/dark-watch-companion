@@ -199,6 +199,7 @@ select,input[type=search]{background:var(--surface-2);color:var(--ink);border:1p
 .map-wrap{border:1px solid var(--line);border-radius:14px;overflow-x:auto;overflow-y:hidden;background:#101416;-webkit-overflow-scrolling:touch}
 @media (max-width:760px){.map{min-width:760px}.map-ctl .mono{min-width:0;font-size:13px}}
 .map{display:block;width:100%;height:auto}
+.map-road{fill:#4a5458;font-family:var(--font-mono);font-size:11px;letter-spacing:.2em;dominant-baseline:text-after-edge}
 .map-area{fill:#2f3b33;font-family:var(--font-mono);font-size:22px;letter-spacing:.4em}
 .pl{cursor:pointer}
 .pl .pl-box{fill:#14181a;stroke:#3b4448;stroke-width:2}
@@ -839,6 +840,7 @@ function placeState(p, y){
   const n = +y;
   if (p.id === "plant" && n < 1953) return "hidden";
   if (p.id === "plant") return n <= 2020 ? "dim" : "hidden";
+  if (p.id === "cabin") return (n >= 1953 && n <= 2020) ? "dim" : "hidden";
   return (n >= 1986 && n <= 2020) ? "dim" : "hidden";   // other buildings: only for the present-day town
 }
 function placeLabel(p, y){
@@ -873,13 +875,13 @@ function mapBase(towers){
     const r = 4 + rnd()*4;
     trees += `<path d="M${x.toFixed(0)} ${(y-r).toFixed(0)} l${(r*.7).toFixed(1)} ${(r*1.4).toFixed(1)} h${(-r*1.4).toFixed(1)} z"/>`;
   }
-  const tower = (x) => `<path d="M${x-22} 128 C${x-14} 100 ${x-14} 86 ${x-19} 62 H${x+19} C${x+14} 86 ${x+14} 100 ${x+22} 128 Z" fill="#20272a" stroke="#2f383c" stroke-width="2"/>
-    <path d="M${x-10} 58 c-6-12 4-18 0-30 m10 30 c-6-12 4-18 0-30" fill="none" stroke="#2a3236" stroke-width="3" stroke-linecap="round" opacity=".8"/>`;
+  const tower = (x) => `<path d="M${x-30} 150 C${x-19} 108 ${x-19} 84 ${x-25} 44 H${x+25} C${x+19} 84 ${x+19} 108 ${x+30} 150 Z" fill="#232b2e" stroke="#36403f" stroke-width="2"/>
+    <path d="M${x-12} 38 c-8-14 6-20 0-34 m12 34 c-8-14 6-20 0-34 m12 34 c-8-14 6-20 0-34" fill="none" stroke="#2c3538" stroke-width="3" stroke-linecap="round" opacity=".8"/>`;
   return `<rect width="1000" height="620" fill="#0f1a14"/>
     <g fill="#1b3024">${trees}</g>
     <ellipse cx="600" cy="420" rx="250" ry="165" fill="#121618"/>
     <ellipse cx="470" cy="105" rx="95" ry="75" fill="#121618"/>
-    ${towers ? `<g opacity=".9">${tower(420)}${tower(520)}</g>` : ""}
+    ${towers ? `<g opacity=".95">${tower(405)}${tower(535)}</g>` : ""}
     <path d="M700 0 C690 80 720 150 700 230 C680 310 610 330 600 420 C590 500 640 560 620 620" fill="none" stroke="#1d3440" stroke-width="12"/>
     <path d="M700 230 C760 250 820 280 860 295" fill="none" stroke="#1d3440" stroke-width="7"/>
     <ellipse cx="905" cy="300" rx="62" ry="40" fill="#1a3040"/>
@@ -888,7 +890,9 @@ function mapBase(towers){
       <path d="M380 420 H820"/><path d="M450 500 C540 480 640 480 760 500"/>
       <path d="M665 315 C740 260 790 200 830 150"/><path d="M760 500 C820 490 860 470 890 455"/>
     </g>
-    <path d="M548 280 C480 270 400 240 345 222" fill="none" stroke="#2c3438" stroke-width="3" stroke-dasharray="2 7" stroke-linecap="round"/>
+    <path id="ftrack" d="M380 425 C310 420 250 400 225 360 C200 315 210 270 260 245 C300 228 330 222 360 222 C430 220 490 240 540 268" fill="none" stroke="#2c3438" stroke-width="3.5" stroke-linecap="round"/>
+    <text class="map-road"><textPath href="#ftrack" startOffset="78%">FOREST TRACK</textPath></text>
+    <text class="map-road" x="575" y="250" transform="rotate(68 575 250)">ROAD TO THE PLANT</text>
     <path d="M380 420 C330 470 340 490 370 500" fill="none" stroke="#2c3438" stroke-width="3" stroke-dasharray="2 7" stroke-linecap="round"/>
     <text x="600" y="600" class="map-area" text-anchor="middle">WINDEN</text>
     <text x="150" y="560" class="map-area" text-anchor="middle">FOREST</text>`;
@@ -911,7 +915,8 @@ function renderMap(){
     </div>
     <div class="map-wrap"><svg viewBox="0 0 1000 620" class="map" role="img" aria-label="Map of Winden">${mapBase(placeState(D.PLACES.find(p => p.id === "plant"), mapYear) !== "hidden" && !(mapYear !== null && +mapYear < 1960))}${marks}</svg></div>
     <div class="treehint map-hint">Swipe sideways to see the whole map.</div>
-    <div class="legend" style="margin-top:8px"><span><i class="lg lit"></i>${mapYear === null ? "Something on the timeline happens here" : "Something happens here in " + mapYear}</span><span><i class="lg dim"></i>Known place</span></div>`;
+    <div class="legend" style="margin-top:8px"><span><i class="lg lit"></i>${mapYear === null ? "Something on the timeline happens here" : "Something happens here in " + mapYear}</span><span><i class="lg dim"></i>Known place</span></div>
+    <p class="treehint">Winden is fictional and never placed exactly. The Dark Wiki notes clues that put it in former West Germany, likely central Hesse: a small, dense town you can cross on foot or by bike, ringed by forest, with the power plant's cooling towers looming over everything.</p>`;
   $("#mapYr").addEventListener("input", ev => { const i = +ev.target.value; mapYear = i === 0 ? null : years[i-1]; renderMap(); const r = $("#mapYr"); if (r) r.focus(); });
 }
 function openPlace(id){

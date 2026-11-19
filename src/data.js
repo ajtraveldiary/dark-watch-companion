@@ -1047,7 +1047,7 @@ module.exports.PLACES = [
   { id:"forest",   name:"Winden forest",     ep:"1.1", x:140, y:430, kind:"nature",   icon:"tree",  re:"forest|woods" },
   { id:"caves",    name:"The caves",         ep:"1.1", x:330, y:215, kind:"nature",   icon:"cave",  re:"cave" },
   { id:"plant",    name:"Power plant",       ep:"1.1", x:470, y:110, kind:"building", icon:"plant", re:"power plant|\\bplant\\b|reactor" },
-  { id:"school",   name:"School",            ep:"1.1", x:560, y:345, kind:"building", icon:"school",re:"school|classroom" },
+  { id:"school",   name:"High school",       ep:"1.1", x:560, y:345, kind:"building", icon:"school",re:"school|classroom" },
   { id:"police",   name:"Police station",    ep:"1.1", x:665, y:315, kind:"building", icon:"badge", re:"police station|\\bcell\\b|interrogat" },
   { id:"hotel",    name:"Waldhotel",         ep:"1.1", x:830, y:150, kind:"building", icon:"bed",   re:"hotel|room 8" },
   { id:"kahnwald", name:"Kahnwald house",    ep:"1.1", x:455, y:420, kind:"building", icon:"house", re:"kahnwald (house|home)|jonas's (house|home)" },
@@ -1058,6 +1058,7 @@ module.exports.PLACES = [
   { id:"hospital", name:"Hospital",          ep:"1.5", x:745, y:400, kind:"building", icon:"plus",  re:"hospital|\\bward\\b" },
   { id:"shop",     name:"Clockmaker's shop", ep:"1.3", x:600, y:430, kind:"building", icon:"clock", re:"clockmaker|watchmaker|tannhaus's shop|the shop" },
   { id:"tower",    name:"Forest watchtower", ep:"1.7", x:130, y:180, kind:"nature",   icon:"tower", re:"watchtower" },
-  { id:"bunker",   name:"Bunker",            ep:"1.7", x:235, y:300, kind:"nature",   icon:"bunker",re:"bunker" },
+  { id:"bunker",   name:"Bunker",            ep:"1.7", x:255, y:345, kind:"nature",   icon:"bunker",re:"bunker" },
+  { id:"cabin",    name:"Doppler cabin",     ep:"1.7", x:175, y:300, kind:"building", icon:"house", re:"doppler cabin" },
   { id:"lake",     name:"The lake",          ep:"2.6", x:905, y:300, kind:"nature",   icon:"wave",  re:"\\blake\\b|beach|shore" }
 ];
