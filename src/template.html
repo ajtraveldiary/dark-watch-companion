@@ -740,7 +740,7 @@ function realWorld(y){
   const li = a => (a || []).map(t => `<li>${esc(t)}</li>`).join("");
   return `<details class="card realworld" open><summary><h3>Meanwhile in the real world · ${esc(y)}</h3></summary>
     ${r.here ? `<p class="rw-here">${esc(r.here)}</p>` : ""}
-    <div class="rw-cols"><div><h4>In Germany</h4><ul>${li(r.de)}</ul></div>${r.world && r.world.length ? `<div><h4>Around the world</h4><ul>${li(r.world)}</ul></div>` : ""}</div>
+    <div class="rw-cols">${r.de && r.de.length ? `<div><h4>In Germany</h4><ul>${li(r.de)}</ul></div>` : ""}${r.world && r.world.length ? `<div><h4>Around the world</h4><ul>${li(r.world)}</ul></div>` : ""}</div>
     <p class="rw-src">Real events, not from the show. Checked against encyclopaedias and news archives.</p></details>`;
 }
 function renderYears(){
