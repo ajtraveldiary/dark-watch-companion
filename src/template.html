@@ -477,16 +477,26 @@ function localPhoto(id){
 }
 function photo(id){ return localPhoto(id) || shared[id] || null; }
 
-// ---------- Shared photos (only on the Cloudflare site, where /api/photos exists) ----------
+// ---------- Shared photos ----------
+// Everyone gets the owner's photos as static files baked into the site at deploy time (/img/…), which
+// costs no Worker requests or storage reads. Only the owner, when signed in, loads the live list from
+// /api/photos, so their new uploads show straight away; everyone else sees them after the next update.
 const shared = {};                       // character id -> image URL everyone sees
-let apiOK = false;                       // true once the photo API answers
+let apiOK = false;                       // true on the Cloudflare site (the server API answers)
 let ownerKey = store.get("dark.ownerKey", null);
 const isOwnerMode = () => apiOK && !!ownerKey;
 async function hashId(id){
   const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode("dark-photo:" + id));
   return [...new Uint8Array(b)].slice(0, 12).map(x => x.toString(16).padStart(2, "0")).join("");
 }
+async function loadBaked(){
+  if (!D.PHOTOS || !D.PHOTOS.length) return;
+  const byH = {}; for (const c of D.CHARACTERS) byH[await hashId(c.id)] = c.id;
+  D.PHOTOS.forEach(p => { const id = byH[p.h]; if (id && /^[0-9a-f]+-[0-9a-f]+\.(jpg|png|webp)$/.test(p.f)) shared[id] = "/img/" + p.f; });
+  renderAll();
+}
 async function loadShared(){
+  if (!ownerKey) return;                 // visitors use the baked-in photos only
   try {
     const r = await fetch("/api/photos", {cache:"no-store"});
     if (!r.ok || !(r.headers.get("content-type")||"").includes("json")) return;
@@ -1197,8 +1207,8 @@ function renderPeople(){
     return `<div class="famhead" style="--c:${FAM[f].color}"><i></i>${FAM[f].name}</div>` + list.map(c =>
       `<button class="person ${isNew(c)?"new":""}" data-person="${c.id}">${avatar(c.id)}<span><span class="nm">${esc(c.name)} ${isNew(c)?'<span class="newtag">NEW</span>':""}</span><span class="rl">${esc(roleOf(c.id))}</span><span class="ln">${esc(latestBio(c))}</span></span></button>`).join("");
   }).join("")).join("");
-  el.innerHTML = `<div class="vhead"><h2>People</h2><p>Tap anyone for their file. ${apiOK ? "Photos the site owner adds appear for everyone. Photos you add yourself stay in this browser only and take priority for you." : "Add one photo from a file, or import a whole folder of your own photos at once. Photos stay in this browser only."}</p></div>
-    <div class="btnrow" style="margin:-4px 0 14px"><button class="btn" id="bulkPhotos">${isOwnerMode() ? "Import photos for everyone…" : "Import photos…"}</button>${apiOK ? (isOwnerMode() ? `<button class="btn" id="ownerOut">Owner mode on · Sign out</button>` : `<button class="btn" id="ownerIn">Owner sign-in</button>`) : ""}${Object.keys(photoMem).some(k => photoMem[k]) || hasAnyPhoto() ? `<button class="btn warn" id="clearPhotos">Remove my local photos</button>` : ""}</div>
+  el.innerHTML = `<div class="vhead"><h2>People</h2><p>Tap anyone for their file. You can add your own photo for anyone (tap them), or import a folder of photos at once. Your photos are saved only in this browser, aren't uploaded anywhere, and replace the site's photo for you.</p></div>
+    <div class="btnrow" style="margin:-4px 0 14px"><button class="btn" id="bulkPhotos">${isOwnerMode() ? "Import photos for everyone…" : "Add my own photos…"}</button>${apiOK ? (isOwnerMode() ? `<button class="btn" id="ownerOut">Owner mode on · Sign out</button>` : `<button class="btn" id="ownerIn">Owner sign-in</button>`) : ""}${Object.keys(photoMem).some(k => photoMem[k]) || hasAnyPhoto() ? `<button class="btn warn" id="clearPhotos">Remove my local photos</button>` : ""}</div>
     <div class="people">${html}</div>`;
 }
 
@@ -1374,7 +1384,7 @@ $("#bulkInput").addEventListener("change", async ev => {
     } catch (e) { failed++; if (/owner key/.test(e.message || "")) { toast(e.message); break; } }
   }
   renderAll();
-  toast(`${isOwnerMode() ? "Shared" : "Added"} ${ok} photo${ok===1?"":"s"}${skipped ? `, skipped ${skipped} file${skipped===1?"":"s"} with no matching character` : ""}${failed ? `. ${failed} couldn't be saved in this browser` : ""}.`);
+  toast(`${isOwnerMode() ? "Shared (visible to visitors after the next site update)" : "Added"} ${ok} photo${ok===1?"":"s"}${skipped ? `, skipped ${skipped} file${skipped===1?"":"s"} with no matching character` : ""}${failed ? `. ${failed} couldn't be saved in this browser` : ""}.`);
 });
 function openOwnerSignIn(){
   openSheet(`<h2 id="sheetTitle">Owner sign-in</h2>
@@ -1394,7 +1404,7 @@ document.addEventListener("submit", async e => {
   if (!key) { msg.textContent = "Enter your owner key."; return; }
   try {
     const r = await fetch("/api/owner", {headers:{authorization:"Bearer " + key}, cache:"no-store"});
-    if (r.status === 204) { ownerKey = key; store.set("dark.ownerKey", key); closeSheet(); renderAll(); toast("Owner mode on. Photos you add now are shared with everyone."); }
+    if (r.status === 204) { ownerKey = key; store.set("dark.ownerKey", key); closeSheet(); renderAll(); loadShared(); toast("Owner mode on. Photos you add now are shared with everyone after the next site update."); }
     else { let m = "That key didn't work."; try { m = (await r.json()).error || m; } catch (x) {} msg.textContent = m; }
   } catch (x) { msg.textContent = "Couldn't reach the site. Check your connection and try again."; }
 });
@@ -1420,7 +1430,7 @@ $("#photoInput").addEventListener("change", ev => {
     const id = photoTarget; photoTarget = null;
     if (isOwnerMode()) {
       toast("Uploading…");
-      uploadShared(id, data).then(() => { toast("Photo saved for everyone: " + name(id) + "."); renderAll(); openPerson(id); })
+      uploadShared(id, data).then(() => { toast("Saved: " + name(id) + ". Visitors will see it after the next site update."); renderAll(); openPerson(id); })
         .catch(e => toast(e.message));
       return;
     }
@@ -1474,7 +1484,7 @@ document.addEventListener("click", e => {
   if (t.dataset.photo) { photoTarget = t.dataset.photo; $("#photoInput").click(); return; }
   if (t.dataset.unphoto) {
     const id = t.dataset.unphoto;
-    if (isOwnerMode() && shared[id]) { deleteShared(id).then(() => { toast("Removed for everyone."); renderAll(); openPerson(id); }).catch(e2 => toast(e2.message)); return; }
+    if (isOwnerMode() && shared[id]) { deleteShared(id).then(() => { toast("Removed. Visitors stop seeing it after the next site update."); renderAll(); openPerson(id); }).catch(e2 => toast(e2.message)); return; }
     store.del("dark.photo." + id); photoMem[id] = null; renderAll(); openPerson(id); return;
   }
 });
@@ -1524,7 +1534,7 @@ function renderAll(){
   renderNew(); renderStory(); renderTimeline(); renderYears(); renderTree(); renderPeople(); renderMysteries(); renderTravels(); renderRecaps(); renderGlossary();
 }
 renderAll();
-loadShared();
+loadBaked().then(loadShared);
 countVisit();
 
 // ---------- Visitor counter (only on the Cloudflare site) ----------
@@ -1540,6 +1550,7 @@ async function countVisit(){
     if (!r.ok || !(r.headers.get("content-type") || "").includes("json")) return;
     const j = await r.json();
     if (typeof j.total !== "number") return;
+    if (!apiOK) { apiOK = true; renderPeople(); }   // shows the owner sign-in button
     const el = $("#visits");
     el.innerHTML = `<b>${j.total.toLocaleString()}</b> ${j.total === 1 ? "visitor" : "visitors"} so far · <b>${(j.today||0).toLocaleString()}</b> today`;
     el.hidden = false;

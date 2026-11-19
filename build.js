@@ -30,6 +30,9 @@ out.CHARACTERS.forEach(c => c.bio.forEach(b => { if (b.ep < c.ep) errs.push(`bio
 out.CHARACTERS.forEach(c => { if (!c.role.length || c.role[0].ep > c.ep) errs.push('role missing at first appearance: ' + c.id); c.role.forEach(r => { if (r.ep < c.ep) errs.push('role before char ' + c.id); }); c.job.forEach(r => { if (r.ep < c.ep) errs.push('job before char ' + c.id); }); });
 out.MYSTERIES.forEach(m => m.a.forEach(a => { if (a.ep < m.ep) errs.push("answer before question: " + m.q); }));
 if (errs.length) { console.error(errs.join("\n")); process.exit(1); }
+// Shared photos bundled as static files (see scripts/fetch-photos.mjs); [] when building locally.
+const PHOTO_MANIFEST = fs.existsSync(".photos/manifest.json") ? JSON.parse(fs.readFileSync(".photos/manifest.json", "utf8")) : [];
+out.PHOTOS = PHOTO_MANIFEST.map(p => ({ h: p.h, f: p.f }));
 const b64 = Buffer.from(JSON.stringify(out), "utf8").toString("base64");
 const SITE = "https://dark-watch-companion.workdesk.workers.dev";
 const today = new Date().toISOString().slice(0, 10);
@@ -77,6 +80,13 @@ const csp = [
 ].join("; ");
 // ---------- Discoverability: static files, robots, sitemap, llms.txt, 404 ----------
 for (const f of fs.readdirSync("static")) fs.copyFileSync("static/" + f, "public/" + f);
+// Shared photos fetched by scripts/fetch-photos.mjs (in CI) become static files under /img/.
+fs.rmSync("public/img", { recursive: true, force: true });
+if (PHOTO_MANIFEST.length) {
+  fs.mkdirSync("public/img", { recursive: true });
+  for (const p of PHOTO_MANIFEST) fs.copyFileSync(".photos/" + p.f, "public/img/" + p.f);
+}
+fs.writeFileSync("public/photo-manifest.json", JSON.stringify(PHOTO_MANIFEST));
 fs.writeFileSync("public/robots.txt", `# Everyone, including search engines and AI assistants, is welcome to read this site.
 User-agent: *
 Allow: /
@@ -163,5 +173,8 @@ fs.writeFileSync("public/_headers", `/*
   Referrer-Policy: no-referrer
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
   Cross-Origin-Opener-Policy: same-origin
+
+/img/*
+  Cache-Control: public, max-age=31536000, immutable
 `);
 console.log("ok", html.length, "bytes;", out.CHARACTERS.length, "chars,", out.LINKS.length, "links,", out.EVENTS.length, "events");

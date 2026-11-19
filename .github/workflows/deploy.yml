@@ -22,6 +22,11 @@ jobs:
 
       - run: npm ci
 
+      # The owner's shared photos become static files in the build (free to serve, no storage reads).
+      # Run this workflow from the Actions tab ("Run workflow") after adding or removing photos.
+      - name: Bundle the owner's shared photos as static files
+        run: node scripts/fetch-photos.mjs
+
       - run: npm run build
 
       - name: Check Cloudflare secrets

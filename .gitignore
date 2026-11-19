@@ -1,3 +1,7 @@
 node_modules/
 .wrangler/
 .dev.vars
+# Shared photos are fetched into the build at deploy time; they're never committed to the repo.
+.photos/
+public/img/
+public/photo-manifest.json
