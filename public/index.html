@@ -655,8 +655,8 @@ function renderTabs(){
 function renderNew(){
   const el = $("#v-new");
   if (W < 0) {
-    el.innerHTML = `<div class="vhead"><h2>Start here</h2><p>Everything opens up as you watch.</p></div>
-      <div class="card recap">Watch <b>Season 1, Episode 1: Secrets</b>, then tap <b>✓ S1E1</b> above (or pick the latest episode you've seen from the list). The timeline, relationship tree and everything else will fill in with what that episode showed you, and nothing more. Each later episode adds to it, and new pieces glow yellow.</div>`;
+    el.innerHTML = `<div class="vhead"><h2>Start here</h2></div>
+      <div class="card recap">Watched <b>S1E1</b>? Tap <b>✓ S1E1</b> above.</div>`;
     return;
   }
   const people = D.CHARACTERS.filter(isNew);
@@ -671,7 +671,7 @@ function renderNew(){
   const e = EPS[V];
   const relTxt = l => relLabel(l);
   el.innerHTML = `
-    <div class="vhead"><h2>${e.code} · ${esc(e.title)}</h2><p>What this episode added to the story.</p></div>
+    <div class="vhead"><h2>${e.code} · ${esc(e.title)}</h2></div>
     <div class="card recap">${esc(D.RECAPS[e.code] || "")}
       <div class="counts"><span><b>${people.length}</b> people</span><span><b>${links.length}</b> connections</span><span><b>${events.length}</b> events</span><span><b>${answered.length}</b> answers</span></div>
     </div>
@@ -718,7 +718,7 @@ function renderTimeline(){
   const allYears = [];
   groups.forEach(g => g.years.forEach(y => allYears.push({w:g.w, y:y.y, hasNew:y.list.some(isNew)})));
   el.innerHTML = `
-    <div class="vhead"><h2>Timeline</h2><p>Events in story order, by year. Events from ${code(V)} glow. Something the show later overturns is struck through, starting with the episode that overturns it.</p></div>
+    <div class="vhead"><h2>Timeline</h2></div>
     <div class="tl-tools">
       <select id="personSel" aria-label="Filter by person"><option value="">Everyone</option>${peopleOpts.map(c => `<option value="${c.id}" ${c.id===personFilter?"selected":""}>${esc(c.name)}</option>`).join("")}</select>
       ${worldsPresent.length > 1 ? worldsPresent.map(w => `<button class="toggle" data-world="${w}" aria-pressed="${worldShow[w]}">${WN[w]}</button>`).join("") : ""}
@@ -867,24 +867,23 @@ function renderMap(){
       <rect x="-18" y="-18" width="36" height="36" fill="transparent"/>
       <rect x="-12" y="-12" width="24" height="24" rx="5" class="pl-box"/><g class="pl-ic" transform="scale(.62)">${ICONS[p.icon]}</g>
       <text x="${p.lx || 0}" y="${p.ly == null ? 30 : p.ly}" text-anchor="${p.la || "middle"}" class="pl-name">${esc(placeLabel(p, mapYear))}</text></g>`).join("");
-  el.innerHTML = `<div class="vhead"><h2>Map of Winden</h2><p>Our own drawing of the town, not to scale. It started from a fan map shared on r/DarK and was corrected with the Dark Wiki and fans' comments. Places appear once the show has taken you there. Tap one to see what's happened there so far.</p></div>
+  el.innerHTML = `<div class="vhead"><h2>Map of Winden</h2></div>
     <div class="map-ctl">
       <label for="mapYr">Year</label>
       <input type="range" id="mapYr" min="0" max="${years.length}" value="${idx}" aria-valuetext="${mapYear === null ? "All years" : mapYear}">
       <span class="mono" id="mapYrLbl">${mapYear === null ? "All years" : mapYear}</span>
     </div>
     <div class="map-wrap"><svg viewBox="160 0 840 900" class="map" role="img" aria-label="Map of Winden">${mapBase(placeState(D.PLACES.find(p => p.id === "plant"), mapYear) !== "hidden" && !(mapYear !== null && +mapYear < 1960))}${marks}</svg></div>
-    <div class="treehint map-hint">Swipe sideways to see the whole map.</div>
     <div class="legend" style="margin-top:8px"><span><i class="lg lit"></i>${mapYear === null ? "Something on the timeline happens here" : "Something happens here in " + mapYear}</span><span><i class="lg dim"></i>Known place</span></div>
-    ${mapYear !== null ? realWorld(mapYear) : `<p class="treehint">Pick a year on the slider to also see what was happening in the real world back then.</p>`}
-    <p class="treehint">Winden is fictional and never placed exactly. The Dark Wiki notes clues that put it in former West Germany, likely central Hesse: a small, dense town you can cross on foot or by bike, ringed by forest, with the power plant's cooling towers looming over everything.</p>`;
+    ${mapYear !== null ? realWorld(mapYear) : ""}
+    <p class="treehint">Map based on a fan map from r/DarK and the Dark Wiki.</p>`;
   $("#mapYr").addEventListener("input", ev => { const i = +ev.target.value; mapYear = i === 0 ? null : years[i-1]; renderMap(); const r = $("#mapYr"); if (r) r.focus(); });
 }
 function openPlace(id){
   const p = D.PLACES.find(x => x.id === id); if (!p || p.ep > V) return;
   const evs = placeEvents(p).sort(evSort);
   openSheet(`<h2 id="sheetTitle">${esc(p.name)}</h2>
-    <p style="color:var(--muted);margin-top:4px">${evs.length ? `What you've seen happen here, up to ${code(V)}.` : `Nothing on the timeline is tied to this place yet.`}</p>
+    ${evs.length ? "" : `<p style="color:var(--muted);margin-top:4px">Nothing here yet.</p>`}
     <div class="evs" style="margin-top:10px">${evs.map(ev => `<div class="${mapYear && ev.d && ev.d.slice(0,4) === mapYear ? "hl" : ""}">${evCard(ev)}</div>`).join("")}</div>`);
 }
 function lockedMsg(what){ return `<div class="vhead"><h2>${what[0].toUpperCase()+what.slice(1)}</h2></div><div class="empty">Mark S1E1 as watched to start the ${what}.</div>`; }
@@ -1040,7 +1039,7 @@ function renderTree(){
   if (W < 0) { el.innerHTML = lockedMsg("tree"); treeBuilt = false; return; }
   if (!treeBuilt) {
     el.innerHTML = `
-      <div class="vhead"><h2>Relationship tree</h2><p>Read it like a family tree: each row is a generation (as far as the show has told you), couples sit side by side, and children hang from the line below their parents. Curved lines are the links the time loop won't let fit a normal tree. Hover over or tap any line to see the relationship; hover over a person to light up their links, tap them for their file. Lines from ${code(V)} glow.</p></div>
+      <div class="vhead"><h2>Relationship tree</h2></div>
       <div class="treewrap" id="treewrap">
       <div class="fullhead"><h2>Relationship tree <span class="mono" id="fullep"></span></h2><button class="btn sm" id="zexit">✕ Exit</button></div>
       <div class="worldtabs" id="worldtabs" role="tablist" aria-label="World"></div>
@@ -1338,7 +1337,7 @@ function renderPeople(){
     return `<div class="famhead" style="--c:${FAM[f].color}"><i></i>${FAM[f].name}</div>` + list.map(c =>
       `<button class="person ${isNew(c)?"new":""}" data-person="${c.id}">${avatar(c.id)}<span><span class="nm">${esc(c.name)} ${isNew(c)?'<span class="newtag">NEW</span>':""}</span><span class="rl">${esc(roleOf(c.id))}</span><span class="ln">${esc(latestBio(c))}</span></span></button>`).join("");
   }).join("")).join("");
-  el.innerHTML = `<div class="vhead"><h2>People</h2><p>Tap anyone for their file. You can add your own photo for anyone (tap them), or import a folder of photos at once. Your photos are saved only in this browser, aren't uploaded anywhere, and replace the site's photo for you.</p></div>
+  el.innerHTML = `<div class="vhead"><h2>People</h2></div>
     <div class="btnrow" style="margin:-4px 0 14px"><button class="btn" id="bulkPhotos">${isOwnerMode() ? "Import photos for everyone…" : "Add my own photos…"}</button>${apiOK ? (isOwnerMode() ? `<button class="btn" id="ownerOut">Owner mode on · Sign out</button>` : `<button class="btn" id="ownerIn">Owner sign-in</button>`) : ""}${Object.keys(photoMem).some(k => photoMem[k]) || hasAnyPhoto() ? `<button class="btn warn" id="clearPhotos">Remove my local photos</button>` : ""}</div>
     <div class="people">${html}</div>`;
 }
@@ -1354,7 +1353,7 @@ function renderMysteries(){
     <div class="mq">${esc(x.m.q)}</div>
     ${x.ans.map(a => `<div class="ans">${epBadge(a.ep)}<span>${isNew(a)?'<span class="newtag">NEW</span> ':""}${esc(a.t)}</span></div>`).join("")}
   </div>`;
-  el.innerHTML = `<div class="vhead"><h2>Mysteries</h2><p>Questions the show has raised so far. An answer appears only after the episode that gives it.</p></div>
+  el.innerHTML = `<div class="vhead"><h2>Mysteries</h2></div>
     <h3 style="font-size:18px;margin:4px 0 10px">Still open · ${open.length}</h3>
     <div class="mgrid">${open.map(card).join("") || `<div class="empty">Nothing open right now.</div>`}</div>
     <h3 style="font-size:18px;margin:22px 0 10px">Answered so far · ${part.length}</h3>
@@ -1366,7 +1365,7 @@ function renderTravels(){
   const el = $("#v-travels");
   if (W < 0) { el.innerHTML = lockedMsg("travel log"); return; }
   const js = D.JOURNEYS.filter(vis);
-  el.innerHTML = `<div class="vhead"><h2>Time travel log</h2><p>Every crossing the show has shown or confirmed so far, in the order you saw them.</p></div>
+  el.innerHTML = `<div class="vhead"><h2>Time travel log</h2></div>
     <div class="trips">${js.map(t => `<div class="card trip ${isNew(t)?"new":""}">${avatar(t.who)}
       <div><div class="who">${esc(name(t.who))}</div><div class="route"><span>${esc(t.from)}</span><span class="arrow">→</span><span>${esc(t.to)}</span></div><div class="how">${esc(t.how)}${t.note?" · "+esc(t.note):""}</div></div>
       <div>${epBadge(t.ep)}</div></div>`).join("") || `<div class="empty">No one has travelled yet. As far as you know.</div>`}</div>`;
@@ -1391,7 +1390,7 @@ function renderStory(){
       ${paras.map(p => `<p>${esc(p)}</p>`).join("")}
       ${notes.length ? `<div class="ch-notes"><h4>Worth noticing</h4><ul class="notes">${notes.map(n => `<li><b>${esc(n.k || "Detail")}</b> ${esc(n.t)}</li>`).join("")}</ul></div>` : ""}</article>`;
   }).join("");
-  el.innerHTML = `<div class="vhead"><h2>The story so far</h2><p>One chapter per episode you've watched: a one-line recap, the full story in the order the series shows it, and details worth noticing.</p></div>
+  el.innerHTML = `<div class="vhead"><h2>The story so far</h2></div>
     ${nxt && V === W ? `<div class="card" style="border-color:var(--accent);margin-bottom:12px"><h3 style="font-size:18px;margin-bottom:6px">Before you press play on ${nxt.code}</h3>
       <div style="color:var(--muted);font-size:15px">Previously: ${esc(D.RECAPS[EPS[V].code])}</div>
       ${openQs.length ? `<div style="margin-top:8px;font-size:15px">Open questions: ${openQs.slice(-4).map(m => esc(m.q)).join(" · ")}</div>` : ""}</div>` : ""}
@@ -1404,7 +1403,7 @@ function renderGlossary(){
   const el = $("#v-glossary");
   if (W < 0) { el.innerHTML = lockedMsg("glossary"); return; }
   const g = D.GLOSSARY.filter(vis);
-  el.innerHTML = `<div class="vhead"><h2>Glossary</h2><p>Terms the show has introduced so far, explained only as far as you've seen.</p></div>
+  el.innerHTML = `<div class="vhead"><h2>Glossary</h2></div>
     <dl class="gloss">${g.map(x => `<div class="card ${isNew(x)?"new":""}"><dt>${esc(x.term)} ${epBadge(x.ep)}</dt><dd>${esc(x.t)}</dd></div>`).join("") || `<div class="empty">No terms yet.</div>`}</dl>`;
 }
 
@@ -1422,12 +1421,10 @@ function openEpisode(i){
   let body = `<h2 id="sheetTitle">${e.code}${i <= W + 1 ? " · " + esc(e.title) : ""}</h2>`;
   if (i > W) {
     const skip = i - W - 1;
-    body += `<p style="color:var(--muted)">Mark this episode as watched to unlock everything up to and including it.</p>
-      ${skip > 0 ? `<div class="warnbox">This also unlocks ${skip} episode${skip>1?"s":""} you haven't marked: ${code(W+1)}${skip>1?" to "+code(i-1):""}. Only continue if you've watched ${skip>1?"them":"it"}.</div>` : ""}
+    body += `      ${skip > 0 ? `<div class="warnbox">This also unlocks ${skip} episode${skip>1?"s":""} you haven't marked: ${code(W+1)}${skip>1?" to "+code(i-1):""}. Only continue if you've watched ${skip>1?"them":"it"}.</div>` : ""}
       <div class="btnrow"><button class="btn primary" data-mark="${i}">I've watched ${e.code}</button><button class="btn" data-close>Not yet</button></div>`;
   } else {
-    body += `<p style="color:var(--muted)">${i === W ? "This is the last episode you've marked." : "You've watched this one."}</p>
-      <div class="card recap" style="margin-top:8px">${esc(D.RECAPS[e.code]||"")}</div>
+    body += `      <div class="card recap" style="margin-top:8px">${esc(D.RECAPS[e.code]||"")}</div>
       <div class="btnrow">
         <button class="btn" data-view="${i}">Show the story as of ${e.code}</button>
         ${i === W ? (i > 0 ? `<button class="btn warn" data-mark="${i-1}">Unmark (back to ${code(i-1)})</button>` : `<button class="btn warn" data-mark="-1">Unmark</button>`) : `<button class="btn warn" data-mark="${i}">Set progress back to ${e.code}</button>`}
@@ -1721,7 +1718,7 @@ function shareText(){
 }
 let shareBlob = null, shareUrl = null;
 async function openShare(){
-  openSheet(`<h2 id="sheetTitle">Share my progress</h2><p style="color:var(--muted);margin-top:4px">The card only shows how far you are and a few counts. No names, relationships or plot, so it's safe to share with people who haven't watched.</p><div id="sharePrev" style="text-align:center;color:var(--muted);padding:30px 0">Making your card…</div>`);
+  openSheet(`<h2 id="sheetTitle">Share my progress</h2><div id="sharePrev" style="text-align:center;color:var(--muted);padding:30px 0">Making your card…</div>`);
   shareBlob = await progressCard();
   if (shareUrl) URL.revokeObjectURL(shareUrl);
   shareUrl = URL.createObjectURL(shareBlob);
@@ -1761,8 +1758,7 @@ if (isIOS && !standalone() && "serviceWorker" in navigator) $("#installBtn").hid
 async function openInstall(){
   if (installEvt) { installEvt.prompt(); const r = await installEvt.userChoice; installEvt = null; if (r.outcome === "accepted") $("#installBtn").hidden = true; return; }
   openSheet(`<h2 id="sheetTitle">Install on your ${/ipad/i.test(navigator.userAgent) ? "iPad" : "iPhone"}</h2>
-    <ol class="steps-ios"><li>Tap the <b>Share</b> button in Safari (the square with an arrow).</li><li>Choose <b>Add to Home Screen</b>, then <b>Add</b>.</li></ol>
-    <p style="color:var(--muted);margin-top:12px">It opens full-screen and works offline once loaded. On iPhone and iPad, the app keeps its own progress, separate from Safari, so mark your last episode again the first time you open it.</p>`);
+    <ol class="steps-ios"><li>Tap the <b>Share</b> button in Safari (the square with an arrow).</li><li>Choose <b>Add to Home Screen</b>, then <b>Add</b>.</li></ol>`);
 }
 $("#shareBtn").addEventListener("click", openShare);
 $("#installBtn").addEventListener("click", openInstall);
