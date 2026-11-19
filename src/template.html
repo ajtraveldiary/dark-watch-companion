@@ -197,14 +197,15 @@ select,input[type=search]{background:var(--surface-2);color:var(--ink);border:1p
 .map-ctl input{flex:1;accent-color:var(--accent)}
 .map-ctl .mono{min-width:78px;text-align:right;color:var(--ink)}
 .map-wrap{border:1px solid var(--line);border-radius:14px;overflow-x:auto;overflow-y:hidden;background:#101416;-webkit-overflow-scrolling:touch}
-@media (max-width:760px){.map{min-width:760px}.map-ctl .mono{min-width:0;font-size:13px}}
+@media (max-width:760px){.map{min-width:820px}.map-ctl .mono{min-width:0;font-size:13px}}
 .map{display:block;width:100%;height:auto}
+.map-wrap{max-width:900px;margin:0 auto}
 .map-road{fill:#4a5458;font-family:var(--font-mono);font-size:11px;letter-spacing:.2em;dominant-baseline:text-after-edge}
 .map-area{fill:#2f3b33;font-family:var(--font-mono);font-size:22px;letter-spacing:.4em}
 .pl{cursor:pointer}
 .pl .pl-box{fill:#14181a;stroke:#3b4448;stroke-width:2}
 .pl .pl-ic{fill:#5d655f;stroke:#5d655f}
-.pl .pl-name{fill:var(--muted);font-size:14px;font-family:var(--font-body);paint-order:stroke;stroke:#0c0e0f;stroke-width:4px}
+.pl .pl-name{fill:var(--muted);font-size:13px;font-family:var(--font-body);paint-order:stroke;stroke:#0c0e0f;stroke-width:4px}
 .pl.lit .pl-box{stroke:var(--accent);fill:#1d1a10;filter:drop-shadow(0 0 8px rgba(227,180,60,.55))}
 .pl.lit .pl-ic{fill:var(--accent);stroke:var(--accent)}
 .pl.lit .pl-name{fill:var(--ink);font-weight:600}
@@ -860,42 +861,72 @@ const ICONS = {
   clock:`<circle r="10"/><path d="M0-6 V0 L5 3" fill="none" stroke="#0c0e0f" stroke-width="2"/>`,
   tower:`<path d="M-7 11 L-3-6 H3 L7 11 Z" fill="none" stroke-width="2"/><rect x="-6" y="-11" width="12" height="5"/>`,
   bunker:`<path d="M-11 8 V0 C-11-7 11-7 11 0 V8 Z"/><rect x="-3" y="2" width="6" height="6" fill="#0c0e0f" stroke="none"/>`,
+  rail:`<rect x="-11" y="-3" width="22" height="4"/><rect x="-9" y="1" width="3" height="9"/><rect x="6" y="1" width="3" height="9"/><path d="M-11-8 H11" fill="none" stroke-width="2"/>`,
+  book:`<path d="M-11-8 C-6-10-2-9 0-6 C2-9 6-10 11-8 V9 C6 7 2 8 0 10 C-2 8-6 7-11 9 Z"/><path d="M0-6 V10" fill="none" stroke="#0c0e0f" stroke-width="1.5"/>`,
   wave:`<path d="M-11 0 C-7-5-4 5 0 0 C4-5 7 5 11 0" fill="none" stroke-width="2.5"/><path d="M-11 6 C-7 1-4 11 0 6 C4 1 7 11 11 6" fill="none" stroke-width="2.5"/>`
 };
 function mapBase(towers){
-  // An invented layout for orientation. The town sits in a clearing; forest everywhere else.
-  const clear = [[600,420,250,165],[470,105,95,75]];               // town, plant site
-  const inClear = (x,y) => clear.some(([cx,cy,rx,ry]) => ((x-cx)/rx)**2 + ((y-cy)/ry)**2 < 1.15);
-  const nearRiverOrLake = (x,y) => Math.hypot(x-905,y-300) < 95;
-  let trees = "", seed = 7;
-  const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-  for (let i = 0; i < 520; i++) {
-    const x = rnd()*1000, y = 10 + rnd()*610;
-    if (inClear(x,y) || nearRiverOrLake(x,y)) continue;
-    const r = 4 + rnd()*4;
-    trees += `<path d="M${x.toFixed(0)} ${(y-r).toFixed(0)} l${(r*.7).toFixed(1)} ${(r*1.4).toFixed(1)} h${(-r*1.4).toFixed(1)} z"/>`;
+  // Our own drawing, laid out after a fan reference map. Grid: x 160-1000, y 0-900, north up, not to scale.
+  const TOWN = [[518,393],[549,383],[585,399],[621,393],[652,373],[673,378],[652,414],[631,455],[611,487],[595,518],[621,549],[611,590],
+    [652,621],[652,663],[621,673],[595,689],[569,704],[569,735],[549,745],[512,756],[497,776],[487,807],[466,807],[455,766],[430,745],
+    [424,673],[445,652],[466,611],[471,585],[492,559],[487,518],[497,466],[507,435]];
+  const FIELDS = [
+    [[471,248],[559,254],[621,233],[683,290],[688,373],[652,383],[518,393],[497,424],[445,430],[352,414],[362,362],[414,321],[414,290]],
+    [[631,440],[700,430],[732,470],[725,515],[660,520],[625,500]],
+    [[336,714],[420,706],[430,745],[425,795],[340,792]]];
+  const LAKE = "M760 812 C760 790 790 780 805 795 C815 778 850 778 858 800 C872 820 860 850 830 852 C810 862 790 870 770 860 C745 852 742 828 760 812 Z";
+  const inPoly = (x, y, P) => { let c = false; for (let a = 0, b = P.length - 1; a < P.length; b = a++) { const [xa,ya] = P[a], [xb,yb] = P[b]; if ((ya > y) !== (yb > y) && x < (xb - xa) * (y - ya) / (yb - ya) + xa) c = !c; } return c; };
+  const pts = P => P.map(q => q.join(",")).join(" ");
+  const clear = (x, y) => inPoly(x,y,TOWN) || FIELDS.some(F => inPoly(x,y,F)) || ((x-808)/70)**2 + ((y-825)/52)**2 < 1
+    || ((x-765)/78)**2 + ((y-262)/62)**2 < 1 || Math.hypot(x-568, y-142) < 34;
+  let seed = 11; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  // trees grow in clumps, like real forest
+  let trees = "";
+  for (let c = 0; c < 260; c++) {
+    const cx = 160 + rnd()*840, cy = rnd()*900, n = 4 + Math.floor(rnd()*9);
+    for (let k = 0; k < n; k++) {
+      const x = cx + (rnd()-.5)*46, y = cy + (rnd()-.5)*40;
+      if (x < 160 || clear(x, y)) continue;
+      const r = 3.5 + rnd()*2.5;
+      trees += `<path d="M${x.toFixed(0)} ${(y-r).toFixed(0)}l${(r*.8).toFixed(1)} ${(r*1.5).toFixed(1)}h${(-r*1.6).toFixed(1)}z"/>`;
+    }
   }
-  const tower = (x) => `<path d="M${x-30} 150 C${x-19} 108 ${x-19} 84 ${x-25} 44 H${x+25} C${x+19} 84 ${x+19} 108 ${x+30} 150 Z" fill="#232b2e" stroke="#36403f" stroke-width="2"/>
-    <path d="M${x-12} 38 c-8-14 6-20 0-34 m12 34 c-8-14 6-20 0-34 m12 34 c-8-14 6-20 0-34" fill="none" stroke="#2c3538" stroke-width="3" stroke-linecap="round" opacity=".8"/>`;
-  return `<rect width="1000" height="620" fill="#0f1a14"/>
-    <g fill="#1b3024">${trees}</g>
-    <ellipse cx="600" cy="420" rx="250" ry="165" fill="#121618"/>
-    <ellipse cx="470" cy="105" rx="95" ry="75" fill="#121618"/>
-    ${towers ? `<g opacity=".95">${tower(405)}${tower(535)}</g>` : ""}
-    <path d="M700 0 C690 80 720 150 700 230 C680 310 610 330 600 420 C590 500 640 560 620 620" fill="none" stroke="#1d3440" stroke-width="12"/>
-    <path d="M700 230 C760 250 820 280 860 295" fill="none" stroke="#1d3440" stroke-width="7"/>
-    <ellipse cx="905" cy="300" rx="62" ry="40" fill="#1a3040"/>
-    <g stroke="#2c3438" stroke-width="5" fill="none" stroke-linecap="round">
-      <path d="M560 620 C560 540 555 420 560 345 C565 260 500 200 470 150"/>
-      <path d="M380 420 H820"/><path d="M450 500 C540 480 640 480 760 500"/>
-      <path d="M665 315 C740 260 790 200 830 150"/><path d="M760 500 C820 490 860 470 890 455"/>
-    </g>
-    <path id="ftrack" d="M380 425 C310 420 250 400 225 360 C200 315 210 270 260 245 C300 228 330 222 360 222 C430 220 490 240 540 268" fill="none" stroke="#2c3438" stroke-width="3.5" stroke-linecap="round"/>
-    <text class="map-road"><textPath href="#ftrack" startOffset="78%">FOREST TRACK</textPath></text>
-    <text class="map-road" x="575" y="250" transform="rotate(68 575 250)">ROAD TO THE PLANT</text>
-    <path d="M380 420 C330 470 340 490 370 500" fill="none" stroke="#2c3438" stroke-width="3" stroke-dasharray="2 7" stroke-linecap="round"/>
-    <text x="600" y="600" class="map-area" text-anchor="middle">WINDEN</text>
-    <text x="150" y="560" class="map-area" text-anchor="middle">FOREST</text>`;
+  let blocks = ""; seed = 5;
+  for (let k = 0; k < 1400; k++) {
+    const x = 420 + rnd()*260, y = 370 + rnd()*440;
+    if (!inPoly(x,y,TOWN)) continue;
+    const w = 5 + rnd()*9, h = 4 + rnd()*8;
+    blocks += `<rect x="${x.toFixed(0)}" y="${y.toFixed(0)}" width="${w.toFixed(0)}" height="${h.toFixed(0)}" transform="rotate(${(rnd()*40-20).toFixed(0)} ${x.toFixed(0)} ${y.toFixed(0)})"/>`;
+  }
+  const tower = (x, y) => `<path d="M${x-15} ${y+28} C${x-9} ${y+8} ${x-9} ${y-4} ${x-12} ${y-22} H${x+12} C${x+9} ${y-4} ${x+9} ${y+8} ${x+15} ${y+28} Z" fill="#232b2e" stroke="#3a4446" stroke-width="1.5"/>
+    <path d="M${x-5} ${y-26} c-5-8 4-12 0-20 m7 20 c-5-8 4-12 0-20" fill="none" stroke="#2f383b" stroke-width="2" stroke-linecap="round"/>`;
+  const road = (d, w = 4, c = "#343d41") => `<path d="${d}" fill="none" stroke="${c}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"/>`;
+  return `<defs><pattern id="fieldHatch" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(32)"><rect width="7" height="7" fill="#151b18"/><path d="M0 3.5H7" stroke="#222c25" stroke-width="1.6"/></pattern></defs>
+    <rect x="160" width="840" height="900" fill="#0f1713"/>
+    <g fill="#1d3226">${trees}</g>
+    ${FIELDS.map(F => `<polygon points="${pts(F)}" fill="url(#fieldHatch)"/>`).join("")}
+    <polygon points="${pts(TOWN)}" fill="#151a1b" stroke="#20282a" stroke-width="1.5"/>
+    <g fill="#222a2d">${blocks}</g>
+    <ellipse cx="765" cy="262" rx="74" ry="58" fill="#131719"/>
+    <rect x="740" y="250" width="52" height="22" rx="2" fill="#1c2326" stroke="#2f383b" transform="rotate(10 766 261)"/>
+    ${towers ? `${tower(722, 250)}${tower(810, 250)}` : ""}
+    <path d="${LAKE}" fill="#1a3040" stroke="#24404f" stroke-width="1.5"/>
+    ${road("M336 331 C360 345 380 355 393 362 C420 377 445 388 466 399 C480 408 492 414 500 422 C508 432 514 440 518 450 C522 465 525 478 528 492 C534 515 540 540 543 559 C540 572 536 584 533 595 C530 607 528 616 525 626 C510 645 495 660 481 678 C478 720 477 760 476 797 C470 806 462 815 455 823 C448 832 442 840 435 849", 4.5)}
+    ${road("M655 380 C668 374 678 369 688 367 C698 367 706 367 714 367 C726 364 734 360 740 352 C750 335 756 312 760 290")}
+    ${road("M655 380 C643 400 632 420 621 440 C611 457 600 474 590 490 C576 510 562 530 549 549", 3.5)}
+    ${road("M642 673 C665 698 688 722 709 745 C725 760 742 776 760 792", 3.5)}
+    ${road("M500 466 C540 470 580 475 615 485", 2.5, "#2a3235")}${road("M466 611 C510 606 560 604 615 600", 2.5, "#2a3235")}${road("M445 690 C490 690 540 692 590 690", 2.5, "#2a3235")}
+    ${road("M426 505 C450 510 470 516 492 525", 2.5, "#2a3235")}
+    <path id="ftrack" d="M340 292 C380 250 430 215 490 200 C530 190 560 188 600 196 C660 208 710 228 745 250" fill="none" stroke="#343d41" stroke-width="2.5" stroke-dasharray="7 4" stroke-linecap="round"/>
+    <path d="M568 158 L566 192" stroke="#343d41" stroke-width="2" stroke-dasharray="3 4"/>
+    <path d="M400 800 C420 812 437 820 450 828 C470 838 485 845 500 851 C520 861 540 872 560 886" fill="none" stroke="#454d50" stroke-width="2"/>
+    <path d="M400 800 C420 812 437 820 450 828 C470 838 485 845 500 851 C520 861 540 872 560 886" fill="none" stroke="#0f1713" stroke-width="1" stroke-dasharray="3 5"/>
+    <text class="map-road"><textPath href="#ftrack" startOffset="28%">FOREST TRACK</textPath></text>
+    <text class="map-road" x="694" y="360" transform="rotate(-12 694 360)">ROAD TO THE PLANT</text>
+    <text class="map-road" x="502" y="872" transform="rotate(26 502 872)">RAILWAY</text>
+    <text x="740" y="600" class="map-area" text-anchor="middle">WINDEN</text>
+    <text x="250" y="560" class="map-area" text-anchor="middle" style="font-size:15px">FOREST</text>
+    <text x="545" y="330" class="map-area" text-anchor="middle" style="font-size:12px">FIELDS</text>`;
 }
 function renderMap(){
   const el = $("#v-map");
@@ -905,15 +936,16 @@ function renderMap(){
   const idx = mapYear === null ? 0 : years.indexOf(mapYear) + 1;
   const places = D.PLACES.map(p => ({p, st: placeState(p, mapYear)})).filter(x => x.st !== "hidden");
   const marks = places.map(({p, st}) => `<g class="pl ${st}" data-place="${p.id}" transform="translate(${p.x} ${p.y})" tabindex="0" role="button" aria-label="${esc(placeLabel(p, mapYear))}">
-      <rect x="-20" y="-20" width="40" height="40" rx="8" class="pl-box"/><g class="pl-ic">${ICONS[p.icon]}</g>
-      <text y="36" text-anchor="middle" class="pl-name">${esc(placeLabel(p, mapYear))}</text></g>`).join("");
-  el.innerHTML = `<div class="vhead"><h2>Map of Winden</h2><p>An original sketch of the town, not an exact plan, laid out from what the show and the Dark Wiki describe. Places appear once the show has taken you there. Tap one to see what's happened there so far.</p></div>
+      <rect x="-18" y="-18" width="36" height="36" fill="transparent"/>
+      <rect x="-12" y="-12" width="24" height="24" rx="5" class="pl-box"/><g class="pl-ic" transform="scale(.62)">${ICONS[p.icon]}</g>
+      <text x="${p.lx || 0}" y="${p.ly == null ? 30 : p.ly}" text-anchor="${p.la || "middle"}" class="pl-name">${esc(placeLabel(p, mapYear))}</text></g>`).join("");
+  el.innerHTML = `<div class="vhead"><h2>Map of Winden</h2><p>Our own drawing of the town, not to scale, laid out after a fan map shared on r/DarK and the Dark Wiki. Places appear once the show has taken you there. Tap one to see what's happened there so far.</p></div>
     <div class="map-ctl">
       <label for="mapYr">Year</label>
       <input type="range" id="mapYr" min="0" max="${years.length}" value="${idx}" aria-valuetext="${mapYear === null ? "All years" : mapYear}">
       <span class="mono" id="mapYrLbl">${mapYear === null ? "All years" : mapYear}</span>
     </div>
-    <div class="map-wrap"><svg viewBox="0 0 1000 620" class="map" role="img" aria-label="Map of Winden">${mapBase(placeState(D.PLACES.find(p => p.id === "plant"), mapYear) !== "hidden" && !(mapYear !== null && +mapYear < 1960))}${marks}</svg></div>
+    <div class="map-wrap"><svg viewBox="160 0 840 900" class="map" role="img" aria-label="Map of Winden">${mapBase(placeState(D.PLACES.find(p => p.id === "plant"), mapYear) !== "hidden" && !(mapYear !== null && +mapYear < 1960))}${marks}</svg></div>
     <div class="treehint map-hint">Swipe sideways to see the whole map.</div>
     <div class="legend" style="margin-top:8px"><span><i class="lg lit"></i>${mapYear === null ? "Something on the timeline happens here" : "Something happens here in " + mapYear}</span><span><i class="lg dim"></i>Known place</span></div>
     <p class="treehint">Winden is fictional and never placed exactly. The Dark Wiki notes clues that put it in former West Germany, likely central Hesse: a small, dense town you can cross on foot or by bike, ringed by forest, with the power plant's cooling towers looming over everything.</p>`;

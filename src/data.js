@@ -1037,28 +1037,30 @@ module.exports.REALWORLD = {
 };
 
 // ---------- Map of Winden (an original, stylised impression, not an exact plan) ----------
-// Layout follows the Dark Wiki: a small, dense town in a clearing, surrounded by forest; the power plant,
-// also ringed by forest, towers over it; the caves lie in the woods close to the plant, the bunker nearby;
-// the church and the Waldhotel stand among the trees.
-// ep: the episode where a place is first clearly on screen (erring later when unsure).
-// re: words that tie timeline events to the place. nature places exist in every year; buildings are only
-// drawn for 1986-2020 (the present-day town); the plant site also shows from 1953, unless an event puts them elsewhere.
+// Layout: relative positions follow a fan map shared on r/DarK ("Winden city area map v0.1") and the Dark Wiki's
+// episode pages: a long, narrow town with fields to the north and forest all round; the caves in the forest north
+// of town; the plant to the north-east; bunker and Doppler cabin to the north-west on the forest track; the church
+// at the west edge; the lake to the south-east; the railway bridge at the south end. Drawn from scratch in our style.
+// ep: first episode a place is clearly on screen (erring later when unsure). re: words tying timeline events to it.
 module.exports.PLACES = [
-  { id:"forest",   name:"Winden forest",     ep:"1.1", x:140, y:430, kind:"nature",   icon:"tree",  re:"forest|woods" },
-  { id:"caves",    name:"The caves",         ep:"1.1", x:330, y:215, kind:"nature",   icon:"cave",  re:"cave" },
-  { id:"plant",    name:"Power plant",       ep:"1.1", x:470, y:110, kind:"building", icon:"plant", re:"power plant|\\bplant\\b|reactor" },
-  { id:"school",   name:"High school",       ep:"1.1", x:560, y:345, kind:"building", icon:"school",re:"school|classroom" },
-  { id:"police",   name:"Police station",    ep:"1.1", x:665, y:315, kind:"building", icon:"badge", re:"police station|\\bcell\\b|interrogat" },
-  { id:"hotel",    name:"Waldhotel",         ep:"1.1", x:830, y:150, kind:"building", icon:"bed",   re:"hotel|room 8" },
-  { id:"kahnwald", name:"Kahnwald house",    ep:"1.1", x:455, y:420, kind:"building", icon:"house", re:"kahnwald (house|home)|jonas's (house|home)" },
-  { id:"nielsen",  name:"Nielsen house",     ep:"1.1", x:545, y:500, kind:"building", icon:"house", re:"nielsen (house|home)|nielsens' (house|home)" },
-  { id:"doppler",  name:"Doppler house",     ep:"1.1", x:650, y:505, kind:"building", icon:"house", re:"doppler (house|home)|dopplers' (house|home)" },
-  { id:"resthome", name:"Care home",        ep:"1.1", x:370, y:500, kind:"building", icon:"house", re:"care home|rest home" },
-  { id:"church",   name:"Church",            ep:"1.5", x:890, y:455, kind:"building", icon:"cross", re:"church|sermon" },
-  { id:"hospital", name:"Hospital",          ep:"1.5", x:745, y:400, kind:"building", icon:"plus",  re:"hospital|\\bward\\b" },
-  { id:"shop",     name:"Clockmaker's shop", ep:"1.3", x:600, y:430, kind:"building", icon:"clock", re:"clockmaker|watchmaker|tannhaus's shop|the shop" },
-  { id:"tower",    name:"Forest watchtower", ep:"1.7", x:130, y:180, kind:"nature",   icon:"tower", re:"watchtower" },
-  { id:"bunker",   name:"Bunker",            ep:"1.7", x:255, y:345, kind:"nature",   icon:"bunker",re:"bunker" },
-  { id:"cabin",    name:"Doppler cabin",     ep:"1.7", x:175, y:300, kind:"building", icon:"house", re:"doppler cabin" },
-  { id:"lake",     name:"The lake",          ep:"2.6", x:905, y:300, kind:"nature",   icon:"wave",  re:"\\blake\\b|beach|shore" }
+  { id:"forest",   name:"Winden forest",     ep:"1.1", x:702, y:52,  lx:18,  ly:5,   la:"start",  kind:"nature",   icon:"tree",  re:"forest|woods" },
+  { id:"caves",    name:"The caves",         ep:"1.1", x:568, y:142, lx:0,   ly:30,  la:"middle", kind:"nature",   icon:"cave",  re:"cave" },
+  { id:"plant",    name:"Power plant",       ep:"1.1", x:765, y:262, lx:0,   ly:58,  la:"middle", kind:"building", icon:"plant", re:"power plant|\\bplant\\b|reactor" },
+  { id:"resthome", name:"Care home",         ep:"1.1", x:582, y:411, lx:18,  ly:5,   la:"start",  kind:"building", icon:"house", re:"care home|rest home" },
+  { id:"police",   name:"Police station",    ep:"1.1", x:541, y:477, lx:-18, ly:5,   la:"end",    kind:"building", icon:"badge", re:"police station|\\bcell\\b|interrogat" },
+  { id:"school",   name:"High school",       ep:"1.1", x:571, y:551, lx:18,  ly:5,   la:"start",  kind:"building", icon:"school",re:"school|classroom" },
+  { id:"hotel",    name:"Waldhotel",         ep:"1.1", x:479, y:593, lx:-18, ly:5,   la:"end",    kind:"building", icon:"bed",   re:"hotel|room 8" },
+  { id:"nielsen",  name:"Nielsen house",     ep:"1.1", x:528, y:628, lx:-18, ly:16,  la:"end",    kind:"building", icon:"house", re:"nielsen (house|home)|nielsens' (house|home)" },
+  { id:"kahnwald", name:"Kahnwald house",    ep:"1.1", x:436, y:687, lx:-18, ly:5,   la:"end",    kind:"building", icon:"house", re:"kahnwald (house|home)|jonas's (house|home)" },
+  { id:"doppler",  name:"Doppler house",     ep:"1.1", x:496, y:716, lx:18,  ly:5,   la:"start",  kind:"building", icon:"house", re:"doppler (house|home)|dopplers' (house|home)" },
+  { id:"tiedemann",name:"Tiedemann house",   ep:"1.2", x:616, y:463, lx:18,  ly:5,   la:"start",  kind:"building", icon:"house", re:"tiedemann (house|home)|tiedemanns' (house|home)" },
+  { id:"shop",     name:"Clockmaker's shop", ep:"1.3", x:512, y:533, lx:-18, ly:5,   la:"end",    kind:"building", icon:"clock", re:"clockmaker|watchmaker|tannhaus's shop|the shop" },
+  { id:"bridge",   name:"Railway bridge",    ep:"1.4", x:450, y:823, lx:-18, ly:5,   la:"end",    kind:"building", icon:"rail",  re:"railway bridge|railroad bridge|\\bbridge\\b" },
+  { id:"church",   name:"Church",            ep:"1.5", x:425, y:500, lx:-18, ly:5,   la:"end",    kind:"building", icon:"cross", re:"church|sermon" },
+  { id:"hospital", name:"Hospital",          ep:"1.5", x:592, y:614, lx:18,  ly:5,   la:"start",  kind:"building", icon:"plus",  re:"hospital|\\bward\\b" },
+  { id:"tower",    name:"Forest watchtower", ep:"1.7", x:430, y:175, lx:0,   ly:-20, la:"middle", kind:"nature",   icon:"tower", re:"watchtower" },
+  { id:"bunker",   name:"Bunker",            ep:"1.7", x:340, y:292, lx:18,  ly:5,   la:"start",  kind:"nature",   icon:"bunker",re:"bunker" },
+  { id:"cabin",    name:"Doppler cabin",     ep:"1.7", x:305, y:322, lx:-18, ly:5,   la:"end",    kind:"building", icon:"house", re:"doppler cabin" },
+  { id:"lake",     name:"The lake",          ep:"2.1", x:805, y:828, lx:0,   ly:52,  la:"middle", kind:"nature",   icon:"wave",  re:"\\blake\\b|beach|shore" },
+  { id:"library",  name:"Library",           ep:"2.4", x:556, y:660, lx:18,  ly:5,   la:"start",  kind:"building", icon:"book",  re:"library" }
 ];
