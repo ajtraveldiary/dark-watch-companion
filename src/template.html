@@ -766,9 +766,29 @@ function relLabel(l){
   return {parent:"is a parent of", adoptive:"adopted", married:"is married to", partner:"is with", affair:"is having an affair with", sibling:"is a sibling of", same:"is the same person as", counterpart:"has an other-world version:"}[l.type] || l.type;
 }
 const U = 130, RH = 225;   // column width, generation row height
-function nodePos(c){
+function rawPos(c){
   let p = c.pos;
   (c.posFrom || []).forEach(o => { if (o.ep <= V) p = o.pos; });
+  return p;
+}
+// People the show hasn't identified yet sit in the "not yet placed" column. They're stacked in the order
+// you met them, between the generation lines, so their position says nothing about when they were born.
+let limboCache = {key:null, slots:{}};
+function limboSlot(c){
+  if (limboCache.key !== V) {
+    const list = D.CHARACTERS.filter(x => vis(x) && rawPos(x)[0] < 1.6)
+      .sort((a,b) => a.ep - b.ep || (a.pos[1] - b.pos[1]) || (a.pos[0] - b.pos[0]));
+    limboCache = {key:V, slots:Object.fromEntries(list.map((x,i) => [x.id, i]))};
+  }
+  return limboCache.slots[c.id];
+}
+function limboCount(){ limboSlot({id:""}); return Object.keys(limboCache.slots).length; }
+function nodePos(c){
+  const p = rawPos(c);
+  if (p[0] < 1.6) {
+    const i = limboSlot(c) ?? 0;
+    return {x:(i % 2) * U, y:(Math.floor(i / 2) + 0.5) * RH, row:0.5 + Math.floor(i / 2)};
+  }
   return {x:p[0]*U, y:p[1]*RH, row:p[1]};
 }
 // ---- Edge routing: try a few curve shapes and keep the first that clears every other circle and name ----
@@ -897,10 +917,10 @@ function renderTree(){
   $("#famchips").innerHTML = `<button data-fam="all" style="--c:var(--ink)" aria-pressed="${famFilter==="all"}"><i></i>Everyone</button>` +
     famsVisible.map(f => `<button data-fam="${f}" style="--c:${FAM[f].color}" aria-pressed="${famFilter===f}"><i></i>${FAM[f].name}</button>`).join("");
   // eras
-  const GEN = ["Generation 1","Generation 2","Generation 3","Generation 4"];   // no birth years: the show reveals those itself
-  $("#eras").innerHTML = `<rect x="-${U*0.55}" y="-${RH*0.45}" width="${U*2.1}" height="${RH*4 - RH*0.1}" rx="18" class="limbo"/><text class="eralabel" x="${U*0.5}" y="-${RH*0.45 - 18}" text-anchor="middle">NOT YET PLACED</text>` +
+  const GEN = ["Born c.1900s","Born c.1940s","Born c.1970s","Born c.2000s"];
+  $("#eras").innerHTML = `<rect x="-${U*0.55}" y="-${RH*0.45}" width="${U*2.1}" height="${RH*Math.max(4.35, Math.ceil(limboCount()/2) + 0.6)}" rx="18" class="limbo"/><text class="eralabel" x="${U*0.5}" y="-${RH*0.45 - 18}" text-anchor="middle">NOT YET PLACED</text>` +
     (() => { const minRow = Math.min(0, ...D.CHARACTERS.filter(c => vis(c) && inWorld(c)).map(n => nodePos(n).row)); const out = [];
-      for (let i = minRow; i <= 3; i++) out.push(`<line class="eraline" x1="${U*2}" x2="${U*22.3}" y1="${i*RH}" y2="${i*RH}"/><text class="eralabel" x="-${U*0.62}" y="${i*RH+4}" text-anchor="end">${i < 0 ? "Earlier generations" : GEN[i]}</text>`);
+      for (let i = minRow; i <= 3; i++) out.push(`<line class="eraline" x1="${U*2}" x2="${U*22.3}" y1="${i*RH}" y2="${i*RH}"/><text class="eralabel" x="${U*2.05}" y="${i*RH-8}" text-anchor="start">${i < 0 ? "Earlier" : GEN[i]}</text>`);
       return out.join(""); })();
   // nodes & edges
   const nodes = D.CHARACTERS.filter(c => vis(c) && inWorld(c));
