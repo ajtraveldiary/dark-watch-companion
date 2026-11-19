@@ -1003,21 +1003,30 @@ module.exports.BIRTHS = _seen.BIRTHS;         // id -> [birth year, episode that
 // Historical facts only, written in our own words. "here" notes link a year to things the show has already
 // shown on screen (the power plant, the divided Germany of the 20th century), never to plot developments.
 module.exports.REALWORLD = {
-  // Only real events that tie into Dark's themes: nuclear power and its fears, and the physics of time.
+  // Only real events that tie into Dark's themes: nuclear power and its fears, the physics of time,
+  // and how the two world wars shaped the Germany the characters live in.
   "1921": { de: [
+      "The First World War had ended less than three years earlier. About two million German soldiers had died, and many who came home were wounded or traumatised.",
+      "The Treaty of Versailles blamed Germany for the war, took away land and set a reparations bill of 132 billion gold marks. Anger at it fed the political violence of the next years.",
       "Einstein's tower observatory opened in Potsdam, built to test his theory of relativity, and Albert Einstein won the 1921 Nobel Prize in Physics."],
     here: "Einstein's relativity, the idea that time can stretch and bend, is the science Dark's time travel leans on." },
   "1953": { de: [
-      "West Germany was still banned by the Allies from nuclear research. The ban was lifted two years later."],
+      "The Second World War had ended eight years earlier. Towns were still rebuilding, and nearly every adult had lived through the war, many as soldiers.",
+      "Millions of Germans had fled or been expelled from the east and had to be housed in towns across the West.",
+      "Because of the war, Germany was split in two: the democratic West and the communist East.",
+      "Also because of the war, West Germany was still banned by the Allies from nuclear research. The ban was lifted two years later."],
     world: ["In December, US President Eisenhower's \"Atoms for Peace\" speech launched the push for civilian nuclear power."],
     here: "Nuclear power for civilian use was a brand-new idea in 1953, the same year the show says plans for Winden's power plant began." },
-  "1954": { world: [
+  "1954": { de: [
+      "The Paris Agreements set out the end of the Allied occupation that had followed the Second World War."],
+    world: [
       "The first nuclear power plant to feed an electricity grid opened at Obninsk in the Soviet Union in June."],
     here: "Nuclear power stations like the one planned for Winden were just becoming real." },
   "1986": { de: [
       "The Chernobyl disaster in April sent radioactive fallout over West Germany. Families were warned about milk, vegetables and children's sandpits.",
       "Six weeks later, Germany created its first federal environment ministry in response.",
-      "Protests against nuclear power grew, with clashes at the planned reprocessing plant at Wackersdorf in Bavaria."],
+      "Protests against nuclear power grew, with clashes at the planned reprocessing plant at Wackersdorf in Bavaria.",
+      "Germany was still divided by the Berlin Wall, a legacy of the Second World War, and both sides were front lines of the Cold War."],
     here: "Chernobyl made nuclear power the fear of the year in Germany, with power plants like Winden's under new suspicion." },
   "2019": { de: [
       "Germany was in the middle of shutting down nuclear power: a 2011 decision, after Fukushima, set the end of 2022 for its last reactors."],
