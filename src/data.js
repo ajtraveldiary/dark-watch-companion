@@ -998,3 +998,72 @@ module.exports.STORY = STORY;
 const _seen = require("./sightings.json");
 module.exports.SIGHTINGS = _seen.SIGHTINGS;   // [id, year, world A/B/O, episode that shows it]
 module.exports.BIRTHS = _seen.BIRTHS;         // id -> [birth year, episode that shows it]
+
+// ---------- Meanwhile in the real world (shown in the "What year?" tab for years the show has visited) ----------
+// Historical facts only, written in our own words. "here" notes link a year to things the show has already
+// shown on screen (the power plant, the divided Germany of the 20th century), never to plot developments.
+module.exports.REALWORLD = {
+  "1888": { de: [
+      "The \"Year of the Three Emperors\": Wilhelm I died in March, his son Frederick III reigned for just 99 days, and 29-year-old Wilhelm II took the throne in June.",
+      "Bertha Benz drove her husband's motor car about 100 km from Mannheim to Pforzheim, the first long-distance car journey.",
+      "In Karlsruhe, Heinrich Hertz proved that electromagnetic waves exist, the basis of radio."],
+    world: ["Germany was a young empire, unified only in 1871, and Europe's great powers were racing for colonies."] },
+  "1890": { de: [
+      "Wilhelm II dismissed Otto von Bismarck, the chancellor who had unified Germany.",
+      "Germany let its secret treaty with Russia lapse, and swapped claims in East Africa for the North Sea island of Heligoland.",
+      "The anti-socialist laws expired, and the Social Democrats became the biggest party by votes."],
+    world: ["Europe's alliances began to shift into the blocs that would face each other in 1914."] },
+  "1910": { de: [
+      "Germany was an empire under Wilhelm II, in a costly naval arms race with Britain.",
+      "Mass protests in Prussia demanded an end to its three-class voting system, which gave the rich far more say."],
+    world: ["Halley's Comet passed close to Earth in May. Newspapers spread fears about its tail's gases, and \"comet pills\" sold well."] },
+  "1921": { de: [
+      "The young Weimar Republic was given a reparations bill of 132 billion gold marks for the First World War.",
+      "Paying it helped push inflation that would turn into hyperinflation by 1923.",
+      "Political violence was common: former finance minister Matthias Erzberger, who had signed the 1918 armistice, was murdered in August.",
+      "Einstein's tower observatory opened in Potsdam, and Albert Einstein won the 1921 Nobel Prize in Physics."],
+    world: ["Europe was still redrawing borders after the war; a vote in Upper Silesia split the region between Germany and Poland."] },
+  "1953": { de: [
+      "Germany was divided: the democratic West (capital Bonn, Chancellor Konrad Adenauer) and the communist East.",
+      "On 17 June, an uprising in East Germany was crushed by Soviet tanks.",
+      "The London Debt Agreement cut West Germany's foreign debt roughly in half, helping its \"economic miracle\".",
+      "A German-Austrian expedition made the first ascent of Nanga Parbat, the \"killer mountain\"."],
+    world: ["Stalin died in March and the Korean War ended in an armistice in July.",
+      "In December, US President Eisenhower's \"Atoms for Peace\" speech launched the push for civilian nuclear power."],
+    here: "Nuclear power for civilian use was a brand-new idea in 1953, the same year the show says plans for Winden's power plant began." },
+  "1954": { de: [
+      "West Germany won the football World Cup in Bern, beating favourites Hungary 3–2. Germans still call it the \"Miracle of Bern\".",
+      "The Paris Agreements set out the end of the Allied occupation and West Germany's entry into NATO."],
+    world: ["The Cold War was hardening into two armed camps in Europe."] },
+  "1971": { de: [
+      "Chancellor Willy Brandt won the Nobel Peace Prize for his opening to the East (\"Ostpolitik\").",
+      "The Four Power Agreement on Berlin made it easier for families on both sides of the divided city to visit each other.",
+      "In East Germany, Erich Honecker replaced Walter Ulbricht as leader."],
+    world: ["Détente: the US and the Soviet Union were easing Cold War tensions."] },
+  "1986": { de: [
+      "The Chernobyl disaster in April sent radioactive fallout over West Germany. Families were warned about milk, vegetables and children's sandpits.",
+      "Six weeks later, Germany created its first federal environment ministry in response.",
+      "Protests against nuclear power grew, with clashes at the planned reprocessing plant at Wackersdorf in Bavaria.",
+      "In November, a fire at the Sandoz chemical warehouse near Basel poisoned the Rhine.",
+      "Germany was still divided, with Helmut Kohl as West German chancellor, and the Berlin Wall still stood."],
+    world: ["In the Soviet Union, Mikhail Gorbachev began his reforms, and he met Ronald Reagan in Reykjavik in October.",
+      "The Space Shuttle Challenger broke apart after launch in January."],
+    here: "Chernobyl made nuclear power the fear of the year in Germany, with power plants like Winden's under new suspicion." },
+  "1987": { de: [
+      "Erich Honecker became the first and only East German leader to visit West Germany.",
+      "In West Berlin, Ronald Reagan called on Gorbachev to \"tear down this wall\".",
+      "A teenage West German pilot, Mathias Rust, landed a small plane next to Moscow's Red Square."],
+    world: ["The US and the Soviet Union signed the INF Treaty, removing a whole class of nuclear missiles from Europe."] },
+  "2019": { de: [
+      "Germany was in the middle of shutting down nuclear power: a 2011 decision, after Fukushima, set the end of 2022 for its last reactors.",
+      "In January, a government commission proposed phasing out coal power by 2038.",
+      "On 20 September, about 1.4 million people joined Fridays for Future climate strikes across Germany.",
+      "9 November marked 30 years since the fall of the Berlin Wall.",
+      "In October, a far-right attack on the synagogue in Halle killed two people."],
+    world: ["Angela Merkel was in her final term as chancellor, and Brexit dominated European politics."],
+    here: "With Germany's reactors being switched off, Winden's power plant is shown as due to close in 2020." },
+  "2020": { de: [
+      "Germany's first COVID-19 case was confirmed in Bavaria on 27 January, and a nationwide contact ban followed on 22 March.",
+      "Germany's last nuclear reactors were still scheduled to close by the end of 2022 (the final three actually shut in April 2023)."],
+    world: ["The pandemic shut down much of the world for months."] }
+};

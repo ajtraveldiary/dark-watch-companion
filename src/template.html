@@ -180,6 +180,18 @@ select,input[type=search]{background:var(--surface-2);color:var(--ink);border:1p
 .yr-now{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-bottom:12px;font-size:14px;color:var(--muted)}
 .yr-now button{font-family:var(--font-mono);font-size:13.5px;background:var(--surface-2);border:1px solid var(--accent);color:var(--accent);border-radius:999px;padding:3px 10px;cursor:pointer}
 .yr-now button.on{background:var(--accent);color:var(--bg)}
+.realworld{margin:12px 0 4px}
+.realworld summary{cursor:pointer;list-style:none}
+.realworld summary::-webkit-details-marker{display:none}
+.realworld summary h3{font-size:17px;display:inline}
+.realworld summary::after{content:" ▾";color:var(--muted)}
+.realworld:not([open]) summary::after{content:" ▸"}
+.rw-here{margin:10px 0 0;padding:8px 12px;border-left:3px solid var(--accent);background:var(--surface-2);border-radius:0 8px 8px 0;font-size:14.5px}
+.rw-cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:4px 24px;margin-top:8px}
+.rw-cols h4{margin:8px 0 4px;font-family:var(--font-mono);font-weight:500;font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.rw-cols ul{margin:0;padding-left:18px;font-size:15px;line-height:1.5}
+.rw-cols li{margin:4px 0}
+.rw-src{margin:10px 0 0;font-size:13px;color:var(--faint)}
 .yr-title{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin:6px 0 4px}
 .yr-title .big{font-family:var(--font-mono);font-size:40px;line-height:1;color:var(--ink)}
 .yr-title .wn{color:var(--muted);font-size:15px}
@@ -699,6 +711,15 @@ function jWorld(j, s){
   if (/\(B\)/.test(s)) return "B"; if (/\(A\)/.test(s)) return "A";
   const w = worldOf(j.who); return w === "C" ? "O" : w;
 }
+// Real history for a year the show has taken you to (no fiction, no future years).
+function realWorld(y){
+  const r = (D.REALWORLD || {})[y]; if (!r) return "";
+  const li = a => (a || []).map(t => `<li>${esc(t)}</li>`).join("");
+  return `<details class="card realworld" open><summary><h3>Meanwhile in the real world · ${esc(y)}</h3></summary>
+    ${r.here ? `<p class="rw-here">${esc(r.here)}</p>` : ""}
+    <div class="rw-cols"><div><h4>In Germany</h4><ul>${li(r.de)}</ul></div>${r.world && r.world.length ? `<div><h4>Around the world</h4><ul>${li(r.world)}</ul></div>` : ""}</div>
+    <p class="rw-src">Real events, not from the show. Checked against encyclopaedias and news archives.</p></details>`;
+}
 function renderYears(){
   const el = $("#v-years");
   if (W < 0) { el.innerHTML = lockedMsg("year lookup"); return; }
@@ -761,6 +782,7 @@ function renderYears(){
     ${worlds.length > 1 ? `<div class="tl-tools">${worlds.map(ww => `<button class="toggle" data-yr="${key(ww, ww===w ? y : (yearsIn(ww).includes(y) ? y : yearsIn(ww).slice(-1)[0]))}" aria-pressed="${ww===w}">${esc(WN[ww])}</button>`).join("")}</div>` : ""}
     <div class="yearstrip">${yearsIn(w).map(yy => `<button data-yr="${key(w,yy)}" class="${yy===y?"on":""} ${nowKeys.includes(key(w,yy))&&yy!==y?"hasnew":""}">${yy}</button>`).join("")}</div>
     <div class="yr-title"><span class="big">${y}</span><span class="wn">${worlds.length>1 ? esc(WN[w]) + " · " : ""}${list.length} ${list.length===1?"person":"people"} · ${here.length} ${here.length===1?"event":"events"}</span></div>
+    ${realWorld(y)}
     <h3 style="font-size:17px;margin-top:14px">Who's in the ${y} scenes</h3>
     <div class="ypeople">${list.map(card).join("") || `<div class="empty">No one you've met yet.</div>`}</div>
     <h3 style="font-size:17px">What you've seen happen in ${y}</h3>
