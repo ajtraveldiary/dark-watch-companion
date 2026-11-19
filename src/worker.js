@@ -121,6 +121,11 @@ async function visitorHash(request, env, day) {
   return [...new Uint8Array(buf)].slice(0, 12).map(b => b.toString(16).padStart(2, "0")).join("");
 }
 
+// In-memory cache of the counts inside this Worker instance. Unlike the Cache API it also works on
+// workers.dev, and it saves a Durable Object call (and its billing) for most count reads.
+let memo = { at: 0, day: "", data: null };
+const MEMO_MS = 30000;
+
 async function handleVisits(request, env, ctx, url) {
   if (!env.VISITS) return err(503, "Visitor counter isn't set up.");
   const stub = env.VISITS.get(env.VISITS.idFromName(COUNTER_NAME));
@@ -131,18 +136,24 @@ async function handleVisits(request, env, ctx, url) {
     if (!sameSite(request, url)) return err(403, "Not allowed.");
     if (await limited(env.VISIT_LIMIT, "v:" + clientIp(request))) return err(429, "Too many requests. Try again in a minute.");
     if (await limited(env.VISIT_GLOBAL, "all")) return json(await stub.stats(day));   // flood: answer, but don't record
-    return json(await stub.visit(day, await visitorHash(request, env, day)));
+    const counts = await stub.visit(day, await visitorHash(request, env, day));
+    memo = { at: Date.now(), day, data: counts };
+    return json(counts);
   }
 
   // GET /api/visits
   if (request.method !== "GET") return err(405, "Use GET.");
   if (await limited(env.READ_LIMIT, "r:" + clientIp(request))) return err(429, "Too many requests. Try again in a minute.");
-  const cache = caches.default;
+  const headers = { "cache-control": "public, max-age=60" };
+  if (memo.data && memo.day === day && Date.now() - memo.at < MEMO_MS) return json(memo.data, 200, headers);
+  // Edge cache too, for when the site gets a custom domain (the Cache API does nothing on workers.dev).
   const key = new Request(url.origin + "/api/visits?d=" + day);
-  const hit = await cache.match(key);
+  const hit = await caches.default.match(key);
   if (hit) return hit;
-  const res = new Response(JSON.stringify(await stub.stats(day)), { headers: { "content-type": "application/json; charset=utf-8", "cache-control": "public, max-age=60" } });
-  ctx.waitUntil(cache.put(key, res.clone()));
+  const data = await stub.stats(day);
+  memo = { at: Date.now(), day, data };
+  const res = json(data, 200, headers);
+  ctx.waitUntil(caches.default.put(key, res.clone()));
   return res;
 }
 

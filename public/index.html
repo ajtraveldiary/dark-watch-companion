@@ -1538,8 +1538,20 @@ loadBaked().then(loadShared);
 countVisit();
 
 // ---------- Visitor counter (only on the Cloudflare site) ----------
+function showVisits(j){
+  const el = $("#visits");
+  el.innerHTML = `<b>${j.total.toLocaleString()}</b> ${j.total === 1 ? "visitor" : "visitors"} so far · <b>${(j.today||0).toLocaleString()}</b> today`;
+  el.hidden = false;
+}
 async function countVisit(){
   const day = new Date().toISOString().slice(0, 10);
+  // Browser cache: already counted today and checked the numbers in the last 10 minutes? Show those
+  // and skip the request, so reloads and tab-hopping don't call the server at all.
+  const memo = store.get("dark.visitCounts", null);
+  if (store.get("dark.visitDay", null) === day && memo && memo.day === day && Date.now() - memo.t < 600000 && typeof memo.total === "number") {
+    if (!apiOK) { apiOK = true; renderPeople(); }
+    showVisits(memo); return;
+  }
   try {
     let r = null;
     if (store.get("dark.visitDay", null) !== day) {          // count this browser once a day
@@ -1551,9 +1563,8 @@ async function countVisit(){
     const j = await r.json();
     if (typeof j.total !== "number") return;
     if (!apiOK) { apiOK = true; renderPeople(); }   // shows the owner sign-in button
-    const el = $("#visits");
-    el.innerHTML = `<b>${j.total.toLocaleString()}</b> ${j.total === 1 ? "visitor" : "visitors"} so far · <b>${(j.today||0).toLocaleString()}</b> today`;
-    el.hidden = false;
+    store.set("dark.visitCounts", {t: Date.now(), day, total: j.total, today: j.today || 0});
+    showVisits(j);
   } catch (e) {}
 }
 })();
