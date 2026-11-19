@@ -871,14 +871,12 @@ function mapBase(towers){
     [652,621],[652,663],[621,673],[595,689],[569,704],[569,735],[549,745],[512,756],[497,776],[487,807],[466,807],[455,766],[430,745],
     [424,673],[445,652],[466,611],[471,585],[492,559],[487,518],[497,466],[507,435]];
   const FIELDS = [
-    [[471,248],[559,254],[621,233],[683,290],[688,373],[652,383],[518,393],[497,424],[445,430],[352,414],[362,362],[414,321],[414,290]],
-    [[631,440],[700,430],[732,470],[725,515],[660,520],[625,500]],
-    [[336,714],[420,706],[430,745],[425,795],[340,792]]];
+    [[471,248],[559,254],[610,240],[640,290],[640,372],[621,388],[518,393],[497,424],[445,430],[352,414],[362,362],[414,321],[414,290]]];
   const LAKE = "M760 812 C760 790 790 780 805 795 C815 778 850 778 858 800 C872 820 860 850 830 852 C810 862 790 870 770 860 C745 852 742 828 760 812 Z";
   const inPoly = (x, y, P) => { let c = false; for (let a = 0, b = P.length - 1; a < P.length; b = a++) { const [xa,ya] = P[a], [xb,yb] = P[b]; if ((ya > y) !== (yb > y) && x < (xb - xa) * (y - ya) / (yb - ya) + xa) c = !c; } return c; };
   const pts = P => P.map(q => q.join(",")).join(" ");
   const clear = (x, y) => inPoly(x,y,TOWN) || FIELDS.some(F => inPoly(x,y,F)) || ((x-808)/70)**2 + ((y-825)/52)**2 < 1
-    || ((x-765)/78)**2 + ((y-262)/62)**2 < 1 || Math.hypot(x-568, y-142) < 34;
+    || ((x-800)/78)**2 + ((y-205)/62)**2 < 1 || Math.hypot(x-705, y-315) < 30;
   let seed = 11; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
   // trees grow in clumps, like real forest
   let trees = "";
@@ -907,25 +905,25 @@ function mapBase(towers){
     ${FIELDS.map(F => `<polygon points="${pts(F)}" fill="url(#fieldHatch)"/>`).join("")}
     <polygon points="${pts(TOWN)}" fill="#151a1b" stroke="#20282a" stroke-width="1.5"/>
     <g fill="#222a2d">${blocks}</g>
-    <ellipse cx="765" cy="262" rx="74" ry="58" fill="#131719"/>
-    <rect x="740" y="250" width="52" height="22" rx="2" fill="#1c2326" stroke="#2f383b" transform="rotate(10 766 261)"/>
-    ${towers ? `${tower(722, 250)}${tower(810, 250)}` : ""}
+    <ellipse cx="800" cy="205" rx="74" ry="58" fill="#131719"/>
+    <rect x="775" y="193" width="52" height="22" rx="2" fill="#1c2326" stroke="#2f383b" transform="rotate(10 801 204)"/>
+    ${towers ? `${tower(757, 193)}${tower(845, 193)}` : ""}
     <path d="${LAKE}" fill="#1a3040" stroke="#24404f" stroke-width="1.5"/>
     ${road("M336 331 C360 345 380 355 393 362 C420 377 445 388 466 399 C480 408 492 414 500 422 C508 432 514 440 518 450 C522 465 525 478 528 492 C534 515 540 540 543 559 C540 572 536 584 533 595 C530 607 528 616 525 626 C510 645 495 660 481 678 C478 720 477 760 476 797 C470 806 462 815 455 823 C448 832 442 840 435 849", 4.5)}
-    ${road("M655 380 C668 374 678 369 688 367 C698 367 706 367 714 367 C726 364 734 360 740 352 C750 335 756 312 760 290")}
-    ${road("M655 380 C643 400 632 420 621 440 C611 457 600 474 590 490 C576 510 562 530 549 549", 3.5)}
+    ${road("M585 399 C590 360 592 320 600 285 C612 240 640 210 680 190 C710 176 740 178 770 186")}
+    ${road("M652 420 C630 440 610 465 590 490 C576 510 562 530 549 549", 3.5)}${road("M611 560 C630 570 650 580 660 585", 2.5, "#2a3235")}
     ${road("M642 673 C665 698 688 722 709 745 C725 760 742 776 760 792", 3.5)}
     ${road("M500 466 C540 470 580 475 615 485", 2.5, "#2a3235")}${road("M466 611 C510 606 560 604 615 600", 2.5, "#2a3235")}${road("M445 690 C490 690 540 692 590 690", 2.5, "#2a3235")}
     ${road("M426 505 C450 510 470 516 492 525", 2.5, "#2a3235")}
-    <path id="ftrack" d="M340 292 C380 250 430 215 490 200 C530 190 560 188 600 196 C660 208 710 228 745 250" fill="none" stroke="#343d41" stroke-width="2.5" stroke-dasharray="7 4" stroke-linecap="round"/>
-    <path d="M568 158 L566 192" stroke="#343d41" stroke-width="2" stroke-dasharray="3 4"/>
-    <path d="M400 800 C420 812 437 820 450 828 C470 838 485 845 500 851 C520 861 540 872 560 886" fill="none" stroke="#454d50" stroke-width="2"/>
-    <path d="M400 800 C420 812 437 820 450 828 C470 838 485 845 500 851 C520 861 540 872 560 886" fill="none" stroke="#0f1713" stroke-width="1" stroke-dasharray="3 5"/>
-    <text class="map-road"><textPath href="#ftrack" startOffset="28%">FOREST TRACK</textPath></text>
-    <text class="map-road" x="694" y="360" transform="rotate(-12 694 360)">ROAD TO THE PLANT</text>
-    <text class="map-road" x="502" y="872" transform="rotate(26 502 872)">RAILWAY</text>
-    <text x="740" y="600" class="map-area" text-anchor="middle">WINDEN</text>
-    <text x="250" y="560" class="map-area" text-anchor="middle" style="font-size:15px">FOREST</text>
+    <path id="ftrack" d="M812 248 C800 290 770 320 765 350 C760 380 770 400 760 420 C745 440 715 440 685 438" fill="none" stroke="#343d41" stroke-width="2.5" stroke-dasharray="7 4" stroke-linecap="round"/>
+    <path d="M718 316 L762 340" stroke="#343d41" stroke-width="2" stroke-dasharray="3 4"/><path d="M690 600 C730 620 765 640 790 652" fill="none" stroke="#343d41" stroke-width="2" stroke-dasharray="3 4"/>
+    <path d="M930 500 C880 560 830 610 800 655 C770 700 740 760 720 900" fill="none" stroke="#454d50" stroke-width="2"/>
+    <path d="M930 500 C880 560 830 610 800 655 C770 700 740 760 720 900" fill="none" stroke="#0f1713" stroke-width="1" stroke-dasharray="3 5"/>
+    <text class="map-road"><textPath href="#ftrack" startOffset="2%">FOREST TRACK</textPath></text>
+    <text class="map-road" x="618" y="232" transform="rotate(-38 618 232)">ROAD TO THE PLANT</text>
+    <text class="map-road" x="842" y="560" transform="rotate(-52 842 560)">RAILWAY</text>
+    <text x="330" y="560" class="map-area" text-anchor="middle">WINDEN</text>
+    <text x="900" y="780" class="map-area" text-anchor="middle" style="font-size:15px">FOREST</text>
     <text x="545" y="330" class="map-area" text-anchor="middle" style="font-size:12px">FIELDS</text>`;
 }
 function renderMap(){
