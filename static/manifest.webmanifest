@@ -1,0 +1,18 @@
+{
+  "name": "Dark Watch Companion",
+  "short_name": "Dark",
+  "description": "A spoiler-free family tree, timeline and recaps for Netflix's Dark that unlock one episode at a time.",
+  "id": "/",
+  "start_url": "/?source=app",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0c0e0f",
+  "theme_color": "#0c0e0f",
+  "categories": ["entertainment"],
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

@@ -13,6 +13,11 @@
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Dark">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="alternate" type="text/markdown" href="/llms.txt" title="Site summary for AI assistants">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Dark Watch Companion">
@@ -63,7 +68,10 @@ h1,h2,h3{font-family:var(--font-display);font-weight:500;text-wrap:balance;margi
 .mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
 
 /* Header */
-header{padding:20px 0 8px}
+header{padding:20px 0 8px;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+.hdr-actions{display:flex;gap:8px;flex-wrap:wrap}
+.share-prev{display:block;width:100%;max-width:360px;margin:6px auto 14px;border-radius:12px;border:1px solid var(--line)}
+.steps-ios{margin:8px 0 0;padding-left:20px;line-height:1.8}
 .brand{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
 .brand h1{font-size:30px;letter-spacing:.32em;font-weight:700}
 .brand h1 .flip{display:inline-block;transform:scaleX(-1)}
@@ -359,6 +367,10 @@ svg.focusing .eg.hl .edge{opacity:1;stroke-width:3px}
     <div class="brand">
       <h1>DARK<span class="vh"> watch companion: a spoiler-free guide to Netflix's Dark</span></h1>
       <span class="sub">Watch companion. Only shows what you've seen.</span>
+    </div>
+    <div class="hdr-actions">
+      <button class="btn sm" id="shareBtn">Share my progress</button>
+      <button class="btn sm" id="installBtn" hidden>Install app</button>
     </div>
     <div class="status" id="status"></div>
   </header>
@@ -1538,6 +1550,105 @@ loadBaked().then(loadShared);
 countVisit();
 
 // ---------- Visitor counter (only on the Cloudflare site) ----------
+// ---------- Shareable progress card (spoiler-free for anyone who sees it) ----------
+// Only counts are shown: no names, relationships, years or titles, because the card is for people
+// who may not have watched yet.
+async function progressCard(){
+  const Wd = 1080, Hd = 1350, cv = document.createElement("canvas"); cv.width = Wd; cv.height = Hd;
+  const g = cv.getContext("2d");
+  if (!g.roundRect) g.roundRect = (x, y, w, h) => g.rect(x, y, w, h);   // older Safari
+  try { await Promise.all(['700 140px "Bodoni Moda"', '500 40px "IBM Plex Sans"', '500 30px "IBM Plex Mono"'].map(f => document.fonts.load(f))); } catch (e) {}
+  const serif = '"Bodoni Moda", Georgia, serif', sans = '"IBM Plex Sans", system-ui, sans-serif', mono = '"IBM Plex Mono", ui-monospace, monospace';
+  const ACC = "#e3b43c", INK = "#e9e4d8", MUT = "#8e968f", LINE = "#2a3135";
+  g.fillStyle = "#0c0e0f"; g.fillRect(0, 0, Wd, Hd);
+  // an abstract family-tree pattern (not the real tree)
+  const pts = [[690,170],[900,170],[795,330],[985,330],[620,360],[720,500],[900,500],[810,650],[1000,640]];
+  const edges = [[0,2],[1,2],[1,3],[2,5],[2,6],[4,5],[6,7],[3,6],[6,8]];
+  g.strokeStyle = LINE; g.lineWidth = 5; edges.forEach(([a,b]) => { g.beginPath(); g.moveTo(...pts[a]); g.lineTo(...pts[b]); g.stroke(); });
+  const done = Math.max(0, W + 1);
+  pts.forEach(([x,y], i) => { g.fillStyle = "#14181a"; g.strokeStyle = i < Math.ceil(done / N * pts.length) ? ACC : "#3b4448"; g.lineWidth = 5;
+    g.beginPath(); g.roundRect(x-40, y-40, 80, 80, 12); g.fill(); g.stroke(); });
+  g.textBaseline = "alphabetic";
+  g.fillStyle = ACC; g.font = `500 32px ${mono}`; g.fillText("WATCH COMPANION", 80, 140);
+  g.fillStyle = INK; g.font = `700 150px ${serif}`; g.fillText("Dark", 76, 300);
+  const finished = W >= N - 1, starting = W < 0;
+  g.fillStyle = MUT; g.font = `500 44px ${sans}`;
+  g.fillText(starting ? "I'm about to start" : finished ? "I finished it." : "I'm watching it now", 80, 390);
+  // big progress number
+  g.fillStyle = INK; g.font = `700 200px ${serif}`;
+  const big = starting ? "S1E1" : code(W); g.fillText(big, 74, 720);
+  g.fillStyle = MUT; g.font = `500 40px ${sans}`;
+  g.fillText(starting ? "first episode up next" : `${done} of ${N} episodes watched`, 80, 790);
+  // progress bar with season breaks
+  const bx = 80, bw = Wd - 160, by = 850, bh = 22;
+  g.fillStyle = "#1b2023"; g.beginPath(); g.roundRect(bx, by, bw, bh, 11); g.fill();
+  g.fillStyle = ACC; g.beginPath(); g.roundRect(bx, by, Math.max(bh, bw * done / N), bh, 11); g.fill();
+  g.fillStyle = "#0c0e0f"; EPS.forEach((e, i) => { if (i && e.s !== EPS[i-1].s) g.fillRect(bx + bw * i / N - 3, by, 6, bh); });
+  // spoiler-free counts
+  const people = D.CHARACTERS.filter(vis).length, qs = D.MYSTERIES.filter(vis).length;
+  const stats = starting ? [["4", "families to keep track of"], ["26", "episodes ahead"]] : [[String(people), "people met so far"], [String(qs), "questions raised so far"]];
+  stats.forEach(([n, l], i) => { const x = 80 + i * 480;
+    g.fillStyle = ACC; g.font = `700 96px ${serif}`; g.fillText(n, x, 1020);
+    g.fillStyle = MUT; g.font = `500 34px ${sans}`; g.fillText(l, x, 1070); });
+  g.fillStyle = LINE; g.fillRect(80, 1140, Wd - 160, 2);
+  g.fillStyle = INK; g.font = `600 40px ${sans}`; g.fillText("Follow along without spoilers", 80, 1210);
+  g.fillStyle = ACC; g.font = `500 32px ${mono}`; g.fillText(location.host, 80, 1262);
+  return await new Promise(res => cv.toBlob(res, "image/png"));
+}
+function shareText(){
+  const url = location.origin + "/";
+  if (W < 0) return `Starting Netflix's Dark. Keeping track of who's who without spoilers: ${url} #DarkNetflix`;
+  if (W >= N - 1) return `I finished Dark! I kept track of who's who without spoilers here: ${url} #DarkNetflix`;
+  return `I'm ${W + 1} of ${N} episodes into Dark (${code(W)}) and keeping track of who's who without spoilers: ${url} #DarkNetflix`;
+}
+let shareBlob = null, shareUrl = null;
+async function openShare(){
+  openSheet(`<h2 id="sheetTitle">Share my progress</h2><p style="color:var(--muted);margin-top:4px">The card only shows how far you are and a few counts. No names, relationships or plot, so it's safe to share with people who haven't watched.</p><div id="sharePrev" style="text-align:center;color:var(--muted);padding:30px 0">Making your card…</div>`);
+  shareBlob = await progressCard();
+  if (shareUrl) URL.revokeObjectURL(shareUrl);
+  shareUrl = URL.createObjectURL(shareBlob);
+  const file = new File([shareBlob], `dark-${W < 0 ? "start" : code(W)}.png`, {type:"image/png"});
+  const canFiles = !!(navigator.canShare && navigator.canShare({files:[file]}));
+  const prev = $("#sharePrev"); if (!prev) return;
+  prev.outerHTML = `<img class="share-prev" src="${shareUrl}" alt="Progress card: ${W < 0 ? "starting Dark" : esc(code(W)) + ", " + (W + 1) + " of " + N + " episodes"}">
+    <div class="btnrow" style="justify-content:center">
+      ${canFiles || navigator.share ? `<button class="btn primary" id="shareNow">Share…</button>` : ""}
+      <a class="btn" id="shareDl" href="${shareUrl}" download="${file.name}">Download image</a>
+      <button class="btn" id="shareCopy">Copy text and link</button>
+    </div>`;
+
+  const sn = $("#shareNow");
+  if (sn) sn.addEventListener("click", async () => {
+    try {
+      if (canFiles) await navigator.share({files:[file], text: shareText()});
+      else await navigator.share({text: shareText(), url: location.origin + "/"});
+    } catch (e) { if (e && e.name !== "AbortError") toast("Couldn't open sharing. Download the image instead."); }
+  });
+  $("#shareCopy").addEventListener("click", async () => {
+    try { await navigator.clipboard.writeText(shareText()); toast("Copied. Paste it with the image."); }
+    catch (e) { toast("Couldn't copy here. " + shareText()); }
+  });
+}
+
+// ---------- Install as an app (works offline once loaded) ----------
+const standalone = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+let installEvt = null;
+if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("/sw.js").catch(() => {}));
+}
+window.addEventListener("beforeinstallprompt", e => { e.preventDefault(); installEvt = e; if (!standalone()) $("#installBtn").hidden = false; });
+window.addEventListener("appinstalled", () => { $("#installBtn").hidden = true; toast("Installed. Open Dark from your home screen."); });
+if (isIOS && !standalone() && "serviceWorker" in navigator) $("#installBtn").hidden = false;
+async function openInstall(){
+  if (installEvt) { installEvt.prompt(); const r = await installEvt.userChoice; installEvt = null; if (r.outcome === "accepted") $("#installBtn").hidden = true; return; }
+  openSheet(`<h2 id="sheetTitle">Install on your ${/ipad/i.test(navigator.userAgent) ? "iPad" : "iPhone"}</h2>
+    <ol class="steps-ios"><li>Tap the <b>Share</b> button in Safari (the square with an arrow).</li><li>Choose <b>Add to Home Screen</b>, then <b>Add</b>.</li></ol>
+    <p style="color:var(--muted);margin-top:12px">It opens full-screen and works offline once loaded. On iPhone and iPad, the app keeps its own progress, separate from Safari, so mark your last episode again the first time you open it.</p>`);
+}
+$("#shareBtn").addEventListener("click", openShare);
+$("#installBtn").addEventListener("click", openInstall);
+
 function showVisits(j){
   const el = $("#visits");
   el.innerHTML = `<b>${j.total.toLocaleString()}</b> ${j.total === 1 ? "visitor" : "visitors"} so far · <b>${(j.today||0).toLocaleString()}</b> today`;
