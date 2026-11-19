@@ -5,6 +5,10 @@ on:
     branches: [main]
   workflow_dispatch:
 
+# The workflow only needs to read the code; it can't push to or change the repository.
+permissions:
+  contents: read
+
 jobs:
   deploy:
     runs-on: ubuntu-latest

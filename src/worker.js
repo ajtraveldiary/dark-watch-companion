@@ -116,7 +116,7 @@ function sameSite(request, url) {
 }
 async function visitorHash(request, env, day) {
   const salt = env.ADMIN_KEY || "dark-watch";       // secret salt, so hashes can't be reversed to IPs
-  const raw = [salt, clientIp(request), request.headers.get("user-agent") || "", day].join("|");
+  const raw = [salt, clientIp(request), day].join("|");   // one count per IP per day; changing the browser string doesn't add more
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(raw));
   return [...new Uint8Array(buf)].slice(0, 12).map(b => b.toString(16).padStart(2, "0")).join("");
 }
@@ -146,6 +146,8 @@ async function handleVisits(request, env, ctx, url) {
   return res;
 }
 
+const safeDecode = s => { try { return decodeURIComponent(s); } catch { return ""; } };
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -154,6 +156,11 @@ export default {
     if (pathname === "/api/visit" || pathname === "/api/visits") return handleVisits(request, env, ctx, url);
 
     if (pathname === "/api/photos" && request.method === "GET") {
+      // Listing the bucket is a billed storage operation, so cache the answer at the edge and rate-limit misses.
+      const listKey = new Request(url.origin + "/api/photos");
+      const hit = await caches.default.match(listKey);
+      if (hit) return hit;
+      if (await limited(env.READ_LIMIT, "r:" + clientIp(request))) return err(429, "Too many requests. Try again in a minute.");
       const out = [];
       let cursor;
       do {
@@ -164,7 +171,9 @@ export default {
         }
         cursor = page.truncated ? page.cursor : undefined;
       } while (cursor);
-      return json({ photos: out });
+      const res = json({ photos: out }, 200, { "cache-control": "public, max-age=60" });
+      ctx.waitUntil(caches.default.put(listKey, res.clone()));
+      return res;
     }
 
     if (pathname === "/api/owner") {
@@ -176,7 +185,7 @@ export default {
 
     const api = pathname.match(/^\/api\/photos\/([^/]+)$/);
     if (api) {
-      const id = decodeURIComponent(api[1]);
+      const id = safeDecode(api[1]);
       if (!ID_RE.test(id)) return err(400, "Unknown character id.");
       if (!env.ADMIN_KEY) return err(503, "Photo uploads aren't set up yet: the ADMIN_KEY secret is missing.");
       if (request.method !== "PUT" && request.method !== "DELETE") return err(405, "Use PUT or DELETE.");
@@ -187,15 +196,19 @@ export default {
       if (request.method === "PUT") {
         const type = (request.headers.get("content-type") || "").split(";")[0].trim();
         if (!TYPES.has(type)) return err(415, "Send a JPEG, PNG or WebP image.");
+        const declared = Number(request.headers.get("content-length") || 0);
+        if (declared > MAX_BYTES) return err(413, "The image is too large (300 KB max).");
         const body = await request.arrayBuffer();
         if (!body.byteLength) return err(400, "The image is empty.");
         if (body.byteLength > MAX_BYTES) return err(413, "The image is too large (300 KB max).");
         if (!looksLike(type, body)) return err(415, "That file isn't a real " + type.slice(6).toUpperCase() + " image.");
         const obj = await env.PHOTOS.put("p/" + id, body, { httpMetadata: { contentType: type } });
+        ctx.waitUntil(caches.default.delete(new Request(url.origin + "/api/photos")));
         return json({ id, h: await sha(id), v: obj.etag.slice(0, 10) });
       }
       if (request.method === "DELETE") {
         await env.PHOTOS.delete("p/" + id);
+        ctx.waitUntil(caches.default.delete(new Request(url.origin + "/api/photos")));
         return json({ id, deleted: true });
       }
       return err(405, "Use PUT or DELETE.");
@@ -203,18 +216,27 @@ export default {
 
     const img = pathname.match(/^\/photos\/([^/]+)$/);
     if (img && (request.method === "GET" || request.method === "HEAD")) {
-      const id = decodeURIComponent(img[1]);
-      if (!ID_RE.test(id)) return new Response("Not found", { status: 404 });
+      const id = safeDecode(img[1]);
+      if (!ID_RE.test(id)) return new Response("Not found", { status: 404, headers: SEC });
+      // Only a well-formed version is cached long; anything else (random cache-busting) gets the short-lived copy.
+      const v = url.searchParams.get("v") || "";
+      const goodV = /^[0-9a-f]{6,16}$/.test(v);
+      const cacheKey = new Request(url.origin + "/photos/" + id + (goodV ? "?v=" + v : ""));
+      const cached = await caches.default.match(cacheKey);
+      if (cached) return request.method === "HEAD" ? new Response(null, { headers: cached.headers }) : cached;
+      if (await limited(env.PHOTO_LIMIT, "p:" + clientIp(request))) return new Response("Too many requests", { status: 429, headers: SEC });
       const obj = await env.PHOTOS.get("p/" + id);
-      if (!obj) return new Response("Not found", { status: 404 });
+      if (!obj) return new Response("Not found", { status: 404, headers: SEC });
       const headers = new Headers(SEC);
       obj.writeHttpMetadata(headers);
       const ct = headers.get("content-type") || "";
       if (!TYPES.has(ct)) headers.set("content-type", "application/octet-stream");   // never serve anything renderable
       headers.set("etag", obj.httpEtag);
       // The page adds ?v=<version> to the URL, so a cached copy is replaced as soon as the photo changes.
-      headers.set("cache-control", url.searchParams.has("v") ? "public, max-age=31536000, immutable" : "public, max-age=60");
-      return new Response(request.method === "HEAD" ? null : obj.body, { headers });
+      headers.set("cache-control", goodV ? "public, max-age=31536000, immutable" : "public, max-age=60");
+      const res = new Response(obj.body, { headers });
+      ctx.waitUntil(caches.default.put(cacheKey, res.clone()));
+      return request.method === "HEAD" ? new Response(null, { headers }) : res;
     }
 
     return env.ASSETS.fetch(request);
