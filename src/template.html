@@ -453,6 +453,7 @@ svg.focusing .eg.hl .edge{opacity:1;stroke-width:3px}
       <div class="tabrow" role="tablist" id="tabrow"></div>
       <button class="iconbtn fsbtn" id="pageFull" aria-label="Full screen" title="Full screen">⛶</button>
     </div>
+    <div class="subrow" role="tablist" id="subrow" hidden></div>
   </nav>
 
   <section class="view" id="v-new" role="tabpanel"></section>
@@ -640,10 +641,26 @@ function renderSelector(){
 }
 
 // ---------- Tabs ----------
-const TABS = [["new","What's new"],["story","Story"],["recap","Recap"],["timeline","Timeline"],["places","Locations"],["tree","Relationship tree"],["people","People"],["mysteries","Mysteries"],["concepts","Theories & concepts"],["travels","Time travel"],["glossary","Glossary"]];
+// Group keys differ from view keys so that go("timeline") or go("people") always lands on that view.
+const TABS = [["new","This episode"],["story","Story"],["when","Timeline"],["cast","People"],["mysteries","Mysteries"],["ideas","Ideas"]];
+const SUBS = {when:[["recap","In order"],["timeline","Events"],["places","Places"],["travels","Journeys"]],
+              cast:[["people","Families"],["tree","Tree"]],
+              ideas:[["glossary","From the show"],["concepts","Science and myth"]]};
+const subSel = {when:"recap", cast:"people", ideas:"glossary"};
+const GROUP_OF = {}; Object.entries(SUBS).forEach(([g, a]) => a.forEach(([v]) => GROUP_OF[v] = g));
+const viewNow = () => SUBS[tab] ? subSel[tab] : tab;
+function go(v){
+  if (SUBS[v]) tab = v; else if (GROUP_OF[v]) { tab = GROUP_OF[v]; subSel[tab] = v; } else tab = v;
+  renderTabs();
+  if (viewNow() === "tree") { renderTree(); requestAnimationFrame(() => fitTree()); }
+}
 function renderTabs(){
-  $("#tabrow").innerHTML = TABS.map(([k,l]) => `<button role="tab" data-tab="${k}" aria-selected="${tab===k}">${l}${k==="new" && W>=0 ? '<span class="dot"></span>':''}</button>`).join("");
-  document.querySelectorAll("section.view").forEach(s => s.classList.toggle("on", s.id === "v-" + tab));
+  $("#tabrow").innerHTML = TABS.map(([k,l]) => `<button role="tab" data-tab="${k}" aria-selected="${tab===k}">${l}${k==="new" && W>=0 ? '<span class="dot" aria-hidden="true"></span>':''}</button>`).join("");
+  const sb = SUBS[tab];
+  $("#subrow").innerHTML = sb ? sb.map(([k,l]) => `<button role="tab" data-tab="${k}" aria-selected="${subSel[tab]===k}">${l}</button>`).join("") : "";
+  $("#subrow").hidden = !sb;
+  const v = viewNow();
+  document.querySelectorAll("section.view").forEach(x => x.classList.toggle("on", x.id === "v-" + v));
 }
 
 // ---------- What's new ----------
@@ -662,7 +679,9 @@ function renderNew(){
   const raised = D.MYSTERIES.filter(isNew);
   const answered = []; D.MYSTERIES.forEach(m => m.a.forEach(a => { if (a.ep === V && m.ep <= V) answered.push([m,a]); }));
   const trips = D.JOURNEYS.filter(isNew);
-  const terms = D.GLOSSARY.filter(isNew);
+  const terms = [...D.GLOSSARY.filter(isNew).map(g => [g.term, g.t]), ...D.CONCEPTS.filter(isNew).map(c => [c.h, c.dark])];
+  const openQs = D.MYSTERIES.filter(m => vis(m) && !m.a.some(a => a.ep <= V));
+  const nxt = V === W && V + 1 < N ? EPS[V+1] : null;
   const e = EPS[V];
   const relTxt = l => relLabel(l);
   el.innerHTML = `
@@ -686,7 +705,8 @@ function renderNew(){
         </div></div>` : ""}
       ${trips.length ? `<div class="card"><h3>Time travel</h3><div class="newlist">${trips.map(t => `<div class="newitem"><span class="k">${esc(t.how)}</span><span><b>${esc(name(t.who))}</b> <span class="mono">${esc(t.from)} → ${esc(t.to)}</span>${t.note?` <span style="color:var(--muted)">(${esc(t.note)})</span>`:""}</span></div>`).join("")}</div></div>` : ""}
       ${(D.NOTES[EPS[V].code]||[]).length ? `<div class="card missed"><h3>You might have missed</h3><div class="newlist">${D.NOTES[EPS[V].code].map(n => `<div class="newitem"><span class="k">${esc(n.k || "Detail")}</span><span>${esc(n.t)}</span></div>`).join("")}</div><div class="src">From the <a href="https://dark-netflix.fandom.com/" target="_blank" rel="noopener">Dark Wiki</a> and fan rewatch notes, in our words. Nothing past ${code(V)}.</div></div>` : ""}
-      ${terms.length ? `<div class="card"><h3>New terms</h3><div class="newlist">${terms.map(g => `<div class="newitem"><span class="k">Term</span><span><b>${esc(g.term)}</b>: ${esc(g.t)}</span></div>`).join("")}</div></div>` : ""}
+      ${terms.length ? `<div class="card"><h3>New ideas</h3><div class="newlist">${terms.map(([h, t]) => `<div class="newitem"><span><b>${esc(h)}</b> ${esc(t)}</span></div>`).join("")}</div></div>` : ""}
+      ${nxt && openQs.length ? `<div class="card"><h3>Still open going into ${nxt.code}</h3><ul class="openq">${openQs.slice(-5).map(m => `<li>${esc(m.q)}</li>`).join("")}</ul></div>` : ""}
     </div>`;
 }
 
@@ -1215,7 +1235,7 @@ function renderPeople(){
     const list = D.CHARACTERS.filter(c => c.fam === f && vis(c) && (c.world || "A") === w);
     if (!list.length) return "";
     return `<div class="famhead" style="--c:${FAM[f].color}"><i></i>${FAM[f].name}</div>` + list.map(c =>
-      `<button class="person ${isNew(c)?"new":""}" data-person="${c.id}">${avatar(c.id)}<span><span class="nm">${esc(c.name)} ${isNew(c)?'<span class="newtag">NEW</span>':""}</span><span class="rl">${esc(roleOf(c.id))}</span><span class="ln">${esc(latestBio(c))}</span></span></button>`).join("");
+      `<button class="person ${isNew(c)?"new":""}" data-person="${c.id}">${avatar(c.id)}<span><span class="nm">${esc(c.name)} ${isNew(c)?'<span class="newtag">NEW</span>':""}</span><span class="rl">${esc(roleOf(c.id))}</span></span></button>`).join("");
   }).join("")).join("");
   el.innerHTML = `<div class="vhead"><h2>People</h2></div>
     <div class="btnrow" style="margin:-4px 0 14px"><button class="btn" id="bulkPhotos">${isOwnerMode() ? "Import photos for everyone…" : "Add my own photos…"}</button>${apiOK ? (isOwnerMode() ? `<button class="btn" id="ownerOut">Owner mode on · Sign out</button>` : `<button class="btn" id="ownerIn">Owner sign-in</button>`) : ""}${Object.keys(photoMem).some(k => photoMem[k]) || hasAnyPhoto() ? `<button class="btn warn" id="clearPhotos">Remove my local photos</button>` : ""}</div>
@@ -1255,19 +1275,13 @@ function renderTravels(){
 // ---------- Recap: each season retold in time order, then explained once it's finished ----------
 function renderRecap(){
   const el = $("#v-recap");
-  if (W < 0) { el.innerHTML = lockedMsg("recap"); return; }
+  if (W < 0) { el.innerHTML = lockedMsg("timeline"); return; }
   const seasons = [...new Set(EPS.filter(e => e.i <= V).map(e => e.s))];
-  el.innerHTML = `<div class="vhead"><h2>Recap</h2></div>` + seasons.map(sn => {
+  el.innerHTML = `<div class="vhead"><h2>In the order it happened</h2></div>` + seasons.map(sn => {
     const rows = D.TIMEORDER.filter(r => r.s === sn && r.ep <= V);
     const years = [...new Set(rows.map(r => r.y))].sort();
-    const ex = D.EXPLAINED[sn];
-    const done = ex && ex.ep <= V;
-    return `<div class="rc-season">
-      <h3 class="rc-h">Season ${sn} in time order</h3>
-      ${years.map(y => `<div class="rc-year"><div class="rc-y mono">${y}</div><div>${rows.filter(r => r.y === y).map(r => `<p class="${r.ep === V ? "rc-new" : ""}">${esc(r.t)}</p>`).join("")}</div></div>`).join("") || `<div class="empty">Nothing yet.</div>`}
-      ${done ? `<h3 class="rc-h" style="margin-top:26px">Season ${sn}, explained</h3>
-        <div class="rc-ex">${ex.parts.map(x => `<div class="card"><h4>${esc(x.h)}</h4><p>${esc(x.t)}</p></div>`).join("")}</div>`
-        : (ex ? `<div class="rc-lock">Season ${sn}, explained: unlocks when you finish the season.</div>` : "")}
+    return `<div class="rc-season"><h3 class="rc-h">Season ${sn}</h3>
+      ${years.map(y => `<div class="rc-year"><div class="rc-y">${y}</div><div>${rows.filter(r => r.y === y).map(r => `<p class="${r.ep === V ? "rc-new" : ""}">${esc(r.t)}</p>`).join("")}</div></div>`).join("") || `<div class="empty">Nothing yet.</div>`}
     </div>`;
   }).reverse().join("");
 }
@@ -1286,28 +1300,22 @@ function renderConcepts(){
 }
 function renderStory(){
   const el = $("#v-story");
-  if (W < 0) { el.innerHTML = lockedMsg("story and recaps"); return; }
+  if (W < 0) { el.innerHTML = lockedMsg("story"); return; }
   const eps = EPS.filter(e => e.i <= V);
-  const nxt = V + 1 < N ? EPS[V+1] : null;
-  const openQs = D.MYSTERIES.filter(m => vis(m) && !m.a.some(a => a.ep <= V));
-  let lastS = 0;
-  const html = eps.map(e => {
-    const brk = e.s !== lastS ? `<div class="seasonbreak">Season ${e.s}</div>` : ""; lastS = e.s;
-    const paras = D.STORY[e.code] || [];
-    const recap = D.RECAPS[e.code];
-    const notes = D.NOTES[e.code] || [];
-    return brk + `<article class="chapter ${e.i===V?"latest":""}" id="ch-${e.i}">
-      <div class="ch-head"><span class="ch-num">${e.code}</span><h3>${esc(e.title)}</h3>${e.i===V?'<span class="newtag">LATEST</span>':""}</div>
-      ${recap ? `<div class="ch-recap"><b>In short</b> ${esc(recap)}</div>` : ""}
+  const explained = sn => { const ex = D.EXPLAINED[sn]; if (!ex || ex.ep > V) return "";
+    return `<section class="explained"><h3>Season ${sn}, explained</h3>${ex.parts.map(x => `<h4>${esc(x.h)}</h4><p>${esc(x.t)}</p>`).join("")}</section>`; };
+  let html = "";
+  eps.forEach((e, k) => {
+    if (k === 0 || e.s !== eps[k-1].s) html += `<div class="seasonbreak">Season ${e.s}</div>`;
+    const paras = D.STORY[e.code] || [], recap = D.RECAPS[e.code], notes = D.NOTES[e.code] || [];
+    html += `<article class="chapter ${e.i===V?"latest":""}" id="ch-${e.i}">
+      <header class="ch-head"><span class="ch-num">${e.code}</span><h3>${esc(e.title)}</h3></header>
+      ${recap ? `<p class="ch-recap">${esc(recap)}</p>` : ""}
       ${paras.map(p => `<p>${esc(p)}</p>`).join("")}
       ${notes.length ? `<div class="ch-notes"><h4>Worth noticing</h4><ul class="notes">${notes.map(n => `<li><b>${esc(n.k || "Detail")}</b> ${esc(n.t)}</li>`).join("")}</ul></div>` : ""}</article>`;
-  }).join("");
-  el.innerHTML = `<div class="vhead"><h2>The story so far</h2></div>
-    ${nxt && V === W ? `<div class="card" style="border-color:var(--accent);margin-bottom:12px"><h3 style="font-size:18px;margin-bottom:6px">Before you press play on ${nxt.code}</h3>
-      <div style="color:var(--muted);font-size:15px">Previously: ${esc(D.RECAPS[EPS[V].code])}</div>
-      ${openQs.length ? `<div style="margin-top:8px;font-size:15px">Open questions: ${openQs.slice(-4).map(m => esc(m.q)).join(" · ")}</div>` : ""}</div>` : ""}
-    <div class="storytools">${eps.length > 1 ? `<button class="btn" data-jumpch="${V}">Jump to ${code(V)}</button>` : ""}</div>
-    <div class="story">${html}</div>`;
+    if (k === eps.length - 1 || eps[k+1].s !== e.s) html += explained(e.s);
+  });
+  el.innerHTML = `<div class="vhead"><h2>The story so far</h2>${eps.length > 1 ? `<button class="btn" data-jumpch="${V}">Jump to ${code(V)}</button>` : ""}</div><div class="story">${html}</div>`;
 }
 
 // ---------- Glossary ----------
@@ -1396,7 +1404,6 @@ function openPerson(id){
     ${links.length ? `<h3>Connections</h3><div class="rels">${links.map(l => { const r = relTo(l, id); const sup = superseded(l);
         return `<button class="rel" data-person="${r.other}"><span class="kind ${sup?"struck":""}">${r.kind}</span>${avatar(r.other)}<span><span class="${sup?"struck":""}">${esc(name(r.other))}</span>${sup?` <span style="color:var(--thread);font-size:12px">· ${esc(l.later)} (${code(l.until)})</span>`:""} ${epBadge(l.ep)}${isNew(l)?' <span class="newtag">NEW</span>':""}</span></button>`; }).join("")}</div>` : ""}
     ${(() => { const xw = crossWorld(id).filter(x => x.kind === "Counterpart"); return xw.length ? `<h3>In other worlds</h3><div class="rels">${xw.map(x => `<button class="rel" data-person="${x.id}"><span class="kind">${esc(worldName(worldOf(x.id)))}</span>${avatar(x.id)}<span>${esc(name(x.id))}</span></button>`).join("")}</div>` : ""; })()}
-    ${trips.length ? `<h3>Time travel</h3><div class="bio">${trips.map(t => `<div class="row">${epBadge(t.ep)}<span class="mono">${esc(t.from)} → ${esc(t.to)}</span><span style="color:var(--muted)">${esc(t.how)}</span></div>`).join("")}</div>` : ""}
     ${evs.length ? `<h3>On the timeline</h3><div class="bio">${evs.map(e => `<div class="row">${e.d ? `<button class="epb" data-yr="${e.w}|${e.d.slice(0,4)}" title="See ${e.d.slice(0,4)} on the timeline" style="cursor:pointer;background:none;font:inherit;font-family:var(--font-mono);font-size:11px;color:var(--accent);border-color:var(--accent)">${e.d.slice(0,4)}${e.w==="B"?" ◐":e.w==="O"?" ○":""}</button>` : `<span class="epb">?</span>`}<span class="${superseded(e)?"struck":""}">${esc(e.t)}</span></div>`).join("")}</div>` : ""}
   </div>`);
 }
@@ -1528,15 +1535,15 @@ document.addEventListener("click", e => {
   if (t.id === "scrim" || t.hasAttribute("data-close")) return closeSheet();
   if (t.dataset.season) { season = +t.dataset.season; renderSelector(); return; }
   if (t.dataset.ep !== undefined) return openEpisode(+t.dataset.ep);
-  if (t.dataset.tab) { tab = t.dataset.tab; renderTabs(); if (tab === "tree") { renderTree(); requestAnimationFrame(() => fitTree()); } return; }
+  if (t.dataset.tab) { go(t.dataset.tab); return; }
   if (t.dataset.person) return openPerson(t.dataset.person);
   if (t.dataset.mark !== undefined) return setWatched(+t.dataset.mark);
   if (t.dataset.view !== undefined) { closeSheet(); return setV(+t.dataset.view); }
-  if (t.dataset.goto) { tab = t.dataset.goto; renderTabs(); if (tab === "tree") { renderTree(); requestAnimationFrame(() => fitTree()); } scrollToTabs(); return; }
+  if (t.dataset.goto) { go(t.dataset.goto); scrollToTabs(); return; }
   if (t.dataset.fam) { famFilter = t.dataset.fam; renderTree(); return; }
   if (t.dataset.worldTab) { curWorld = t.dataset.worldTab; famFilter = "all"; renderTree(); requestAnimationFrame(() => fitTree()); return; }
   if (t.dataset.world) { worldShow[t.dataset.world] = !worldShow[t.dataset.world]; renderTimeline(); return; }
-  if (t.dataset.yr) { const [ww,yy] = t.dataset.yr.split("|"); if (t.closest(".sheet")) closeSheet(); if (tab !== "timeline") { tab = "timeline"; renderTabs(); }
+  if (t.dataset.yr) { const [ww,yy] = t.dataset.yr.split("|"); if (t.closest(".sheet")) closeSheet(); if (viewNow() !== "timeline") go("timeline");
     const g = document.getElementById(`y-${ww}-${yy}`); if (g) setTimeout(() => g.scrollIntoView({behavior:"smooth", block:"start"}), 60); return; }
   if (t.dataset.jump) { const g = document.getElementById(t.dataset.jump); if (g) g.scrollIntoView({behavior:"smooth", block:"start"}); return; }
   if (t.id === "jumpNew") { const n = document.querySelector("#v-timeline .ev.new"); if (n) n.scrollIntoView({behavior:"smooth", block:"center"}); else toast("Nothing new on the timeline in " + code(V) + "."); return; }
@@ -1563,7 +1570,7 @@ $("#epSel").addEventListener("change", e => {
 $("#markNext").onclick = () => { if (W + 1 < N) setWatched(W + 1); };
 $("#vPrev").onclick = () => setV(V-1);
 $("#vNext").onclick = () => setV(V+1);
-window.addEventListener("resize", () => { if (tab === "tree") fitTree(); });
+window.addEventListener("resize", () => { if (viewNow() === "tree") fitTree(); });
 
 function scrollToTabs(){ if (inPageFull()) $("#content").scrollTo({top:0, behavior:"smooth"}); else window.scrollTo({top: document.querySelector("nav.tabs").offsetTop - 4, behavior:"smooth"}); }
 // ---------- Page full screen (any tab) ----------
@@ -1576,7 +1583,7 @@ function setPageFull(on){
     if (on && c.requestFullscreen) c.requestFullscreen().catch(() => {});
     else if (!on && document.fullscreenElement === c) document.exitFullscreen().catch(() => {});
   } catch (e) {}
-  if (tab === "tree") requestAnimationFrame(() => fitTree());
+  if (viewNow() === "tree") requestAnimationFrame(() => fitTree());
   updatePF();
 }
 function updatePF(){
