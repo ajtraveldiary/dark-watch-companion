@@ -8,7 +8,7 @@
 <link rel="canonical" href="https://dark-watch-companion.workdesk.workers.dev/">
 <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
 <meta name="google-site-verification" content="ZsmLaMlIrn8pNCNRF54l98h6r-6HSFgZFL5Jr4DTMdM">
-<meta name="theme-color" content="#0c0e0f">
+<meta name="theme-color" content="#1b2420">
 <meta name="color-scheme" content="dark">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
@@ -34,9 +34,6 @@
 <meta name="twitter:description" content="A spoiler-safe family tree, timeline and recaps for Netflix's Dark that unlock one episode at a time.">
 <meta name="twitter:image" content="https://dark-watch-companion.workdesk.workers.dev/og-image.png">
 <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebSite","@id":"https://dark-watch-companion.workdesk.workers.dev/#website","url":"https://dark-watch-companion.workdesk.workers.dev/","name":"Dark Watch Companion","inLanguage":"en"},{"@type":"WebApplication","@id":"https://dark-watch-companion.workdesk.workers.dev/#app","name":"Dark Watch Companion","url":"https://dark-watch-companion.workdesk.workers.dev/","description":"A free, spoiler-safe companion for watching Netflix's Dark: family tree, timeline, characters, mysteries and recaps that unlock one episode at a time.","applicationCategory":"EntertainmentApplication","operatingSystem":"Any","browserRequirements":"Requires JavaScript","isAccessibleForFree":true,"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"image":"https://dark-watch-companion.workdesk.workers.dev/og-image.png","inLanguage":"en","dateModified":"2026-11-20","about":{"@type":"TVSeries","name":"Dark","inLanguage":"de","numberOfSeasons":3,"numberOfEpisodes":26,"sameAs":["https://en.wikipedia.org/wiki/Dark_(TV_series)","https://www.imdb.com/title/tt5753856/","https://www.netflix.com/title/80100172"]}}]}</script>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,500;6..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 /* Plan: one committed night-forest theme. Episode selector on top, a replay bar, then tabs.
    Everything is filtered by the episode you've watched; items new in the current episode glow yellow. */
@@ -406,6 +403,247 @@ svg.focusing .eg.hl .edge{opacity:1;stroke-width:3px}
   .yeargroup{grid-template-columns:52px 1fr;gap:0 10px}
   .yeargroup .yr{font-size:19px}
 }
+
+/* ===== Redesign: Winden in the November rain =====
+   Wet pine-forest green-grey instead of black. Jonas's raincoat yellow marks only where you are (your
+   episode, what's new). The red thread marks connections and things that turned out wrong.
+   A condensed road-sign face for headings, labels and numbers; a book serif for everything you read. */
+@font-face{font-family:"Barlow Condensed";font-weight:400;font-style:normal;font-display:swap;src:url(/fonts/barlow-condensed-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"Barlow Condensed";font-weight:500;font-style:normal;font-display:swap;src:url(/fonts/barlow-condensed-latin-500-normal.woff2) format("woff2")}
+@font-face{font-family:"Barlow Condensed";font-weight:600;font-style:normal;font-display:swap;src:url(/fonts/barlow-condensed-latin-600-normal.woff2) format("woff2")}
+@font-face{font-family:"Source Serif 4";font-weight:400;font-style:normal;font-display:swap;src:url(/fonts/source-serif-4-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"Source Serif 4";font-weight:400;font-style:italic;font-display:swap;src:url(/fonts/source-serif-4-latin-400-italic.woff2) format("woff2")}
+@font-face{font-family:"Source Serif 4";font-weight:600;font-style:normal;font-display:swap;src:url(/fonts/source-serif-4-latin-600-normal.woff2) format("woff2")}
+:root{
+  --bg:#1b2420; --surface:#222c27; --surface-2:#2a352f; --line:#36433c; --line-2:#4a5850;
+  --ink:#e7eae3; --muted:#aeb8b0; --faint:#8e9a92;
+  --accent:#e0b341;          /* Jonas's raincoat: you are here, and what's new */
+  --thread:#c0473b; --thread-ink:#e28a7e;   /* the red thread: connections, and what turned out wrong */
+  --same:#c9b27a;
+  --font-display:"Barlow Condensed","Arial Narrow",sans-serif;
+  --font-body:"Source Serif 4",Georgia,serif;
+  --font-mono:"Barlow Condensed","Arial Narrow",sans-serif;
+}
+html,body{font-size:17px;line-height:1.6;background:var(--bg)}
+h1,h2,h3,h4{font-family:var(--font-display);font-weight:600;letter-spacing:.005em}
+.mono{font-family:var(--font-display);font-variant-numeric:tabular-nums;letter-spacing:.01em}
+button,select,input,.btn,.chip,.toggle{font-family:var(--font-display)}
+::selection{background:rgba(224,179,65,.35)}
+
+/* Header */
+header{padding:22px 0 6px}
+.brand{gap:14px}
+.brand h1{font-size:40px;letter-spacing:.02em;font-weight:600;line-height:1}
+.brand .sub{font-family:var(--font-body);font-style:italic;font-size:16px;color:var(--muted)}
+.btn{font-size:17px;font-weight:500;border:1px solid var(--line-2);background:transparent;border-radius:3px;padding:8px 14px;color:var(--ink)}
+.btn:hover{border-color:var(--ink)}
+.btn.sm{height:auto;padding:6px 12px;font-size:16px}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#1b1a12;font-weight:600}
+.btn.primary:hover{background:#ebc35a}
+.btn.warn{border-color:var(--thread);color:var(--thread-ink)}
+.iconbtn{background:transparent;border:1px solid var(--line-2);border-radius:3px}
+.linkbtn{color:var(--ink);text-decoration-color:rgba(192,71,59,.75);text-decoration-thickness:1.5px;text-underline-offset:4px;font-family:inherit}
+.linkbtn:hover{color:var(--thread-ink)}
+
+/* Progress: the episode strip */
+.selector{background:none;border:0;border-radius:0;padding:0;margin-top:18px}
+.prog-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.prog-now{margin:0;font-family:var(--font-display);font-size:20px;color:var(--muted)}
+.prog-now b{color:var(--ink);font-weight:600}
+.prog-now .t{font-family:var(--font-body);font-style:italic;font-size:16px;margin-left:4px}
+.strip{display:flex;gap:14px}
+.strip-s{min-width:0}
+.strip-l{display:block;font-family:var(--font-display);font-size:14px;color:var(--faint);margin-bottom:4px}
+.cells{display:flex;gap:3px}
+.cell{flex:1;min-width:0;height:38px;border:0;border-radius:2px;background:var(--surface-2);color:var(--faint);font-family:var(--font-display);font-size:16px;font-variant-numeric:tabular-nums;cursor:pointer;padding:0}
+.cell.seen,.cell.last{background:#46554c;color:var(--ink)}
+.cell.last{box-shadow:inset 0 0 0 2px var(--accent)}
+.cell.here{background:var(--accent);color:#1b1a12;font-weight:600}
+.cell.next{background:transparent;box-shadow:inset 0 0 0 1px var(--line-2);color:var(--muted)}
+.cell.ahead{background:transparent;box-shadow:inset 0 -2px 0 var(--surface-2)}
+.cell:hover{box-shadow:inset 0 0 0 2px var(--ink)}
+.replay-note{margin-top:8px;font-size:15px;color:var(--muted)}
+.replay-note:empty{display:none}
+@media (max-width:760px){
+  .strip{flex-direction:column;gap:8px}
+  .strip-s{flex:none!important}
+  .cell{height:34px}
+}
+
+/* Navigation: plain words, the current one underlined */
+nav.tabs{background:var(--bg);padding:14px 0 0;margin-top:14px;border-bottom:1px solid var(--line)}
+.tabrow{gap:22px}
+.tabrow button{border:0;border-radius:0;padding:6px 0 10px;font-size:21px;font-weight:500;color:var(--muted);background:none;position:relative}
+.tabrow button:hover{color:var(--ink)}
+.tabrow button[aria-selected="true"]{color:var(--ink);background:none;box-shadow:inset 0 -3px 0 var(--ink)}
+.tabrow .dot{width:7px;height:7px;margin-left:5px;vertical-align:4px}
+.subrow{display:flex;gap:18px;overflow-x:auto;scrollbar-width:none;padding:8px 0 8px}
+.subrow[hidden]{display:none}
+.subrow button{flex:none;background:none;border:0;padding:2px 0;font-size:17px;color:var(--faint);cursor:pointer}
+.subrow button:hover{color:var(--ink)}
+.subrow button[aria-selected="true"]{color:var(--ink);text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:6px}
+.fsbtn{align-self:center}
+section.view{padding-top:18px}
+.vhead{margin:4px 0 18px;align-items:baseline}
+.vhead h2{font-size:36px;font-weight:600;line-height:1.05}
+
+.ep-head{flex-direction:column;align-items:flex-start;gap:2px}
+.ep-code{font-family:var(--font-display);font-size:18px;color:var(--accent);font-weight:500}
+@media (max-width:760px){.tabrow{gap:14px}.tabrow button{font-size:18px}.fsbtn{display:none}.brand h1{font-size:34px}}
+@media (max-width:420px){.tabrow{gap:11px}.tabrow button{font-size:16.5px}}
+/* Surfaces: quiet. No glow, no shadow; "new" is a raincoat-yellow edge */
+.card{background:var(--surface);border:0;border-radius:3px}
+.new{border-color:transparent!important;box-shadow:inset 3px 0 0 var(--accent)!important}
+.newtag{font-family:var(--font-display);font-size:13px;letter-spacing:0;text-transform:none;font-weight:600;background:none;color:var(--accent);padding:0;border-radius:0}
+.epb{font-family:var(--font-display);font-size:14px;border:0;padding:0;color:var(--faint)}
+.empty{border:0;border-top:1px solid var(--line);border-radius:0;text-align:left;padding:16px 0;font-style:italic}
+.struck{text-decoration-color:var(--thread);text-decoration-thickness:2px}
+.turned{border-left:2px solid var(--thread)}
+.turned b{font-family:var(--font-display);font-size:14px;letter-spacing:0;color:var(--thread-ink)}
+.chip{background:transparent;border:0;padding:2px 8px 2px 0;font-size:16px;border-radius:0}
+.chip:hover{text-decoration:underline;text-decoration-color:var(--thread)}
+.av{border-radius:2px;font-family:var(--font-display);font-size:15px;background:var(--surface-2);border-width:0;box-shadow:inset 0 -3px 0 var(--c,#888)}
+.chip .av{font-size:11px}
+select,input[type=search]{background:var(--surface);border:1px solid var(--line-2);border-radius:3px;font-family:var(--font-display);font-size:17px}
+.toggle{border-radius:3px;background:transparent;font-size:16px}
+
+/* This episode: one reading column of sections, two columns on wide screens */
+.recap{font-size:20px;line-height:1.55;max-width:60ch;background:none;padding:0}
+.card.recap{background:none}
+.counts{margin-top:12px;gap:16px}
+.counts span{font-family:var(--font-display);font-size:16px}
+.counts b{color:var(--ink);font-weight:600}
+.newgrid{grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:0 40px;margin-top:22px!important}
+.newgrid .card{background:none;border-top:1px solid var(--line);border-radius:0;padding:16px 0 18px}
+.newgrid h3{font-size:22px;margin-bottom:10px}
+.newitem{font-size:16px;gap:12px}
+.newitem .k{font-family:var(--font-display);font-size:15px;text-transform:none;letter-spacing:0;width:70px;color:var(--faint);padding-top:1px}
+.missed .newitem .k{width:84px}
+.openq{margin:0;padding-left:20px}
+.openq li{margin:4px 0}
+
+/* Timeline: the years carry the structure */
+.yearstrip button{font-family:var(--font-display);font-size:16px;border:0;border-radius:2px;background:var(--surface);color:var(--muted);padding:3px 10px}
+.yearstrip button.hasnew{color:var(--ink);box-shadow:inset 0 -2px 0 var(--accent)}
+.yeargroup{grid-template-columns:96px 1fr;gap:0 18px}
+.yeargroup .yr{font-family:var(--font-display);font-weight:500;font-size:44px;line-height:.9;padding-top:6px;color:var(--ink);top:96px}
+.yeargroup .evs{border-left:1px solid var(--line-2);padding:4px 0 26px 18px;gap:6px}
+.ev{background:none;padding:6px 0 10px;border-bottom:1px solid var(--line);border-radius:0}
+.ev.new{padding-left:12px}
+.ev::before{left:-23.5px;top:13px;width:9px;height:9px;background:var(--bg);border:2px solid var(--line-2)}
+.ev.new::before{border-color:var(--accent);background:var(--accent)}
+.ev .meta{font-size:15px;color:var(--faint)}
+.ev .meta .date{font-family:var(--font-display);font-size:16px;color:var(--muted)}
+.world > h3{font-family:var(--font-display);text-transform:none;letter-spacing:0;font-size:22px;color:var(--ink)}
+.realworld{background:none;border-top:1px dashed var(--line-2);border-radius:0;padding:10px 0 4px}
+.realworld summary h3{font-size:18px;font-weight:500;color:var(--muted)}
+.rw-here{background:none;border-left:2px solid var(--line-2);font-style:italic}
+.rw-cols h4{font-family:var(--font-display);text-transform:none;letter-spacing:0;font-size:17px;color:var(--ink)}
+@media (max-width:520px){.yeargroup{grid-template-columns:58px 1fr;gap:0 10px}.yeargroup .yr{font-size:28px}}
+
+/* In order (the season retold) */
+.rc-h{font-size:24px}
+.rc-year{grid-template-columns:96px 1fr;gap:18px;border-top:1px solid var(--line);padding:16px 0}
+.rc-y{font-family:var(--font-display);font-weight:500;font-size:40px;line-height:.95;color:var(--ink)}
+.rc-year p{font-size:17.5px;line-height:1.7;max-width:64ch}
+.rc-year p.rc-new{border-left:3px solid var(--accent);padding-left:12px}
+
+/* Places and journeys */
+.loc{background:none;border-top:1px solid var(--line);border-radius:0;padding:12px 0}
+.loc-name{font-family:var(--font-display);font-size:22px;font-weight:500}
+.loc-n{font-family:var(--font-display);font-size:15px;border:0;color:var(--faint)}
+.loc.loc-new{box-shadow:inset 3px 0 0 var(--accent);padding-left:12px}
+.loc-about{font-style:italic}
+.loc-d{font-family:var(--font-display);font-size:16px;color:var(--muted)}
+.loc-evs li.new{border-left:3px solid var(--accent)}
+.trips .card,.trip{background:none;border-radius:0;border-top:1px solid var(--line);padding:12px 0}
+.trip .route{font-family:var(--font-display);font-size:20px}
+.trip .route .arrow{color:var(--thread)}
+.trip .who{font-family:var(--font-display);font-size:18px;font-weight:500}
+
+/* Story: a book */
+.story{max-width:66ch}
+.seasonbreak{font-family:var(--font-display);font-size:30px;font-weight:600;letter-spacing:0;text-transform:none;text-align:left;color:var(--ink);margin:40px 0 4px;padding-top:14px;border-top:3px solid var(--ink)}
+.seasonbreak:first-child{margin-top:4px}
+.chapter{border-top:1px solid var(--line);padding:26px 0 10px}
+.chapter .ch-head{gap:12px}
+.chapter .ch-num{font-family:var(--font-display);font-size:18px;letter-spacing:0;color:var(--faint)}
+.chapter h3{font-size:30px;font-weight:600}
+.chapter.latest .ch-num{color:var(--accent)}
+.chapter.latest h3{color:var(--ink)}
+.chapter p{font-size:18px;line-height:1.72}
+.chapter p:first-of-type::first-letter{all:unset}
+.chapter .ch-recap{font-style:italic;font-size:18px;color:var(--muted);border:0;padding:0;margin:0 0 16px}
+.chapter .ch-notes{background:none;border:0;border-left:2px solid var(--line-2);border-radius:0;padding:2px 0 2px 16px;margin:6px 0 16px}
+.chapter .ch-notes h4{font-family:var(--font-display);text-transform:none;letter-spacing:0;font-size:19px;color:var(--ink)}
+.notes li{border-left:0;padding-left:0;font-size:16px}
+.notes li b{font-family:var(--font-display);font-size:16px;text-transform:none;letter-spacing:0;color:var(--ink);font-weight:600}
+.explained{margin:30px 0 10px;padding:22px 0 6px;border-top:3px double var(--line-2)}
+.explained h3{font-size:30px;margin-bottom:6px}
+.explained h4{font-size:21px;margin:18px 0 4px}
+.explained p{font-size:18px;line-height:1.72;margin:0}
+
+/* People */
+.people{grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:2px 24px}
+.famhead{font-family:var(--font-display);font-size:24px;text-transform:none;letter-spacing:0;color:var(--ink);margin-top:22px;padding-bottom:6px;border-bottom:1px solid var(--line)}
+.person{background:none;border:0;border-radius:0;padding:10px 0;gap:14px;align-items:center}
+.person .av{width:52px;height:52px;font-size:17px}
+.person .nm{font-family:var(--font-display);font-size:19px;font-weight:500}
+.person .rl{color:var(--muted);font-size:15px;font-style:italic}
+.person:hover .nm{text-decoration:underline;text-decoration-color:var(--thread);text-decoration-thickness:2px}
+.person.new{box-shadow:none!important}
+.worldhead{font-family:var(--font-display);font-size:26px}
+
+/* Tree */
+.treebox{background:#18201c;border:0;border-radius:3px}
+.node text{font-family:var(--font-display);font-size:14px;stroke:#18201c}
+.node text.job{fill:var(--muted);font-family:var(--font-body);font-style:italic;font-size:11.5px}
+.node .sub{font-family:var(--font-display)}
+.eralabel{font-family:var(--font-display);font-size:15px}
+.eraline{stroke:#26302b}
+.edgetip{border-radius:3px;font-family:var(--font-body)}
+.edgetip .k{font-family:var(--font-display);text-transform:none;letter-spacing:0;font-size:14px}
+.famchips button,.worldtabs button{background:transparent;border-radius:3px;font-size:16px}
+.legend{font-size:15px}
+
+/* Mysteries */
+.mgrid{gap:0 32px;grid-template-columns:repeat(auto-fill,minmax(340px,1fr))}
+.mgrid .card{background:none;border-top:1px solid var(--line);border-radius:0;padding:16px 0}
+.mq{font-family:var(--font-display);font-weight:500;font-size:23px;line-height:1.15}
+.mstate{font-family:var(--font-display);text-transform:none;letter-spacing:0;font-size:16px}
+.mstate.open{color:var(--thread-ink)}
+.mstate.solved{color:#9fcfa6}
+
+/* Ideas */
+.gloss{gap:0 32px;grid-template-columns:repeat(auto-fill,minmax(300px,1fr))}
+.gloss > div{background:none;border-radius:0;border-top:1px solid var(--line);padding:14px 0}
+.gloss dt{font-family:var(--font-display);font-weight:500;font-size:22px}
+.gloss dd{font-size:16.5px}
+.cc-list{gap:0;max-width:72ch}
+.cc{background:none;border:0;border-top:1px solid var(--line);border-radius:0;padding:20px 0}
+.cc.cc-new{box-shadow:inset 3px 0 0 var(--accent);padding-left:14px}
+.cc h3{font-size:26px;font-weight:500}
+.cc p{font-size:17.5px;line-height:1.7}
+.cc-dark{border-left:2px solid var(--thread);color:var(--ink);font-style:italic}
+.cc-dark b{font-family:var(--font-display);font-style:normal;font-weight:600}
+.cc-ep{font-family:var(--font-display);font-size:15px;top:22px;right:0}
+
+/* Sheets */
+.sheet{background:var(--surface);border-radius:6px 6px 0 0;border-color:var(--line-2)}
+.sheet h2{font-size:32px}
+.dossier h3{font-family:var(--font-display);font-size:21px;font-weight:600;text-transform:none;letter-spacing:0;color:var(--ink);margin:22px 0 8px}
+.dossier-top .av{border-radius:3px;border:0}
+.who-sum{background:none;border-left:2px solid var(--line-2);border-radius:0;font-size:17px;padding:2px 0 2px 14px}
+.bio .row{font-size:16.5px}
+.rel .kind{font-family:var(--font-display);font-size:15px;color:var(--faint)}
+.warnbox{border-radius:3px}
+.toast{border-radius:3px;font-family:var(--font-display);font-size:17px}
+.footer{font-size:15px;font-style:italic}
+.footer a{color:var(--ink);text-decoration-color:var(--thread)}
+.footer .visits{font-family:var(--font-display);font-style:normal}
+.footer .visits b{color:var(--ink)}
+.treehint{font-style:italic}
+
 @media (prefers-reduced-motion:reduce){
   *{transition:none!important;animation:none!important}
 }
@@ -415,7 +653,7 @@ svg.focusing .eg.hl .edge{opacity:1;stroke-width:3px}
 <div class="wrap">
   <header>
     <div class="brand">
-      <h1>DARK<span class="vh"> watch companion: a spoiler-free guide to Netflix's Dark</span></h1>
+      <h1>Dark<span class="vh"> watch companion: a spoiler-free guide to Netflix's Dark</span></h1>
       <span class="sub">Watch companion. Only shows what you've seen.</span>
     </div>
     <div class="hdr-actions">
@@ -425,18 +663,12 @@ svg.focusing .eg.hl .edge{opacity:1;stroke-width:3px}
     <div class="status" id="status"></div>
   </header>
 
-  <div class="selector" aria-label="Episode selector">
-    <div class="pick">
-      <label for="epSel">Watched</label>
-      <select id="epSel"></select>
+  <div class="selector" aria-label="Your progress">
+    <div class="prog-head">
+      <p class="prog-now" id="progNow"></p>
       <button class="btn primary sm" id="markNext"></button>
     </div>
-    <div class="replay" id="replay">
-      <button class="iconbtn" id="vPrev" aria-label="Previous episode">◀</button>
-      <input type="range" id="vRange" min="0" max="0" value="0" aria-label="Show the story as of episode">
-      <button class="iconbtn" id="vNext" aria-label="Next episode">▶</button>
-      <span class="label" id="vLabel"></span>
-    </div>
+    <div class="strip" id="strip"></div>
     <div class="replay-note" id="replayNote"></div>
   </div>
 
@@ -626,18 +858,19 @@ function renderStatus(){
 }
 function renderSelector(){
   // Titles past the next episode stay hidden: some of them give things away.
-  $("#epSel").innerHTML = `<option value="-1" ${W<0?"selected":""}>Nothing yet</option>` + [1,2,3].map(sn =>
-    `<optgroup label="Season ${sn}">` + EPS.filter(e => e.s === sn).map(e =>
-      `<option value="${e.i}" ${e.i===W?"selected":""}>${e.code} · ${e.i <= W + 1 ? esc(e.title) : "Locked"}${e.i === W + 1 ? "  (up next)" : ""}</option>`).join("") + `</optgroup>`).join("");
+  $("#progNow").innerHTML = W < 0 ? "Nothing watched yet" : `Watched up to <b>${code(W)}</b> <span class="t">${esc(EPS[W].title)}</span>`;
   const mn = $("#markNext");
-  if (W + 1 < N) { mn.disabled = false; mn.textContent = `✓ ${code(W+1)}`; mn.setAttribute("aria-label", `Mark ${code(W+1)} as watched`); }
+  if (W + 1 < N) { mn.disabled = false; mn.textContent = `Mark ${code(W+1)} watched`; }
   else { mn.disabled = true; mn.textContent = "All watched"; }
-  const r = $("#vRange");
-  $("#replay").style.display = W >= 0 ? "" : "none";
-  r.max = Math.max(0, W); r.value = Math.max(0, V);
-  $("#vPrev").disabled = V <= 0; $("#vNext").disabled = V >= W;
-  $("#vLabel").innerHTML = W >= 0 ? `As of <b class="mono">${code(V)}</b>` : "";
-  $("#replayNote").innerHTML = (W >= 0 && V < W) ? `Replay mode: you're seeing the story as it stood after ${code(V)}. <button class="linkbtn" id="toLatest">Back to ${code(W)}</button>` : "";
+  const cell = e => {
+    const i = e.i, n = e.code.split("E")[1], known = i <= W + 1;
+    const st = i === V ? "here" : i === W ? "last" : i < W ? "seen" : i === W + 1 ? "next" : "ahead";
+    const label = `${e.code}${known ? ": " + e.title : ""}${i === V ? " (showing)" : i <= W ? " (watched)" : i === W + 1 ? " (up next)" : ""}`;
+    return `<button class="cell ${st}" ${i <= W ? `data-view="${i}"` : `data-ep="${i}"`} aria-label="${esc(label)}" title="${esc(label)}"${i === V && W >= 0 ? ' aria-current="step"' : ""}>${n}</button>`;
+  };
+  $("#strip").innerHTML = [1,2,3].map(sn => { const eps = EPS.filter(e => e.s === sn);
+    return `<div class="strip-s" style="flex:${eps.length}"><span class="strip-l">Season ${sn}</span><div class="cells">${eps.map(cell).join("")}</div></div>`; }).join("");
+  $("#replayNote").innerHTML = (W >= 0 && V < W) ? `Showing the story as it stood after ${code(V)}. <button class="linkbtn" id="toLatest">Back to ${code(W)}</button>` : "";
 }
 
 // ---------- Tabs ----------
@@ -685,13 +918,13 @@ function renderNew(){
   const e = EPS[V];
   const relTxt = l => relLabel(l);
   el.innerHTML = `
-    <div class="vhead"><h2>${e.code} · ${esc(e.title)}</h2></div>
+    <div class="vhead ep-head"><span class="ep-code">${e.code}</span><h2>${esc(e.title)}</h2></div>
     <div class="card recap">${esc(D.RECAPS[e.code] || "")}
       <div class="counts"><span><b>${people.length}</b> people</span><span><b>${links.length}</b> connections</span><span><b>${events.length}</b> events</span><span><b>${answered.length}</b> answers</span></div>
     </div>
     <div class="newgrid" style="margin-top:12px">
       ${people.length ? `<div class="card"><h3>New faces</h3><div class="chips">${people.map(c => chip(c.id)).join("")}</div></div>` : ""}
-      ${links.length ? `<div class="card"><h3>New connections</h3><div class="newlist">${links.map(l => `<div class="newitem"><span class="k">${l.type==="same"?"Identity":"Link"}</span><span><button class="linkbtn" data-person="${l.a}">${esc(name(l.a))}</button> ${relTxt(l)} <button class="linkbtn" data-person="${l.b}">${esc(name(l.b))}</button></span></div>`).join("")}</div>
+      ${links.length ? `<div class="card"><h3>New connections</h3><div class="newlist">${links.map(l => `<div class="newitem">${l.type==="same" ? `<span class="k">Identity</span>` : ""}<span><button class="linkbtn" data-person="${l.a}">${esc(name(l.a))}</button> ${relTxt(l)} <button class="linkbtn" data-person="${l.b}">${esc(name(l.b))}</button></span></div>`).join("")}</div>
         <div class="btnrow"><button class="btn" data-goto="tree">See it in the tree</button></div></div>` : ""}
       ${(overturned.length || bioOverturned.length) ? `<div class="card"><h3>Not what it seemed</h3><div class="newlist">
         ${overturned.map(x => `<div class="newitem"><span class="k">Overturned</span><span><span class="struck">${esc(x.t || (name(x.a) + " " + relLabel(x) + " " + name(x.b)))}</span><div class="turned"><b>NOW</b> ${esc(x.later)}</div></span></div>`).join("")}
@@ -733,7 +966,7 @@ function renderTimeline(){
   const allYears = [];
   groups.forEach(g => g.years.forEach(y => allYears.push({w:g.w, y:y.y, hasNew:y.list.some(isNew)})));
   el.innerHTML = `
-    <div class="vhead"><h2>Timeline</h2></div>
+    <div class="vhead"><h2>Every event</h2></div>
     <div class="tl-tools">
       <select id="personSel" aria-label="Filter by person"><option value="">Everyone</option>${peopleOpts.map(c => `<option value="${c.id}" ${c.id===personFilter?"selected":""}>${esc(c.name)}</option>`).join("")}</select>
       ${worldsPresent.length > 1 ? worldsPresent.map(w => `<button class="toggle" data-world="${w}" aria-pressed="${worldShow[w]}">${WN[w]}</button>`).join("") : ""}
@@ -764,7 +997,7 @@ function realWorld(y){
 function evCard(ev){
   const sup = superseded(ev);
   return `<div class="card ev ${isNew(ev)?"new":""}">
-    <div class="meta"><span class="date">${fmtDate(ev.d)}${ev.d===null && ev.w!=="O"?" · year not yet known":""}</span><span>${isNew(ev)?'<span class="newtag">NEW</span> ':""}${epBadge(ev.ep)}</span></div>
+    <div class="meta"><span class="date">${fmtDate(ev.d)}${ev.d===null && ev.w!=="O"?", year not known yet":""}</span><span>${isNew(ev)?'<span class="newtag">New</span> ':""}${epBadge(ev.ep)}</span></div>
     <div class="${sup?"struck":""}">${esc(ev.t)}</div>
     ${sup ? `<div class="turned"><b>TURNED OUT · ${code(ev.until)}</b> ${esc(ev.later)}</div>` : ""}
     ${ev.who.length ? `<div class="chips">${ev.who.map(chip).join("")}</div>` : ""}
@@ -776,7 +1009,7 @@ function renderPlaces(){
   const el = $("#v-places");
   if (W < 0) { el.innerHTML = lockedMsg("locations"); return; }
   const places = D.PLACES.filter(p => p.ep <= V);
-  el.innerHTML = `<div class="vhead"><h2>Locations</h2></div><div class="loc-list">${places.map(p => {
+  el.innerHTML = `<div class="vhead"><h2>Places</h2></div><div class="loc-list">${places.map(p => {
     const evs = placeEvents(p);
     const fresh = p.ep === V || evs.some(isNew);
     return `<details class="card loc ${fresh ? "loc-new" : ""}">
@@ -1110,7 +1343,7 @@ function renderTree(){
   const famLegend = `<span><svg viewBox="0 0 30 14"><path d="M15,0 V6 M4,6 H26 M4,6 V14 M26,6 V14" stroke="#b9c0b8" stroke-width="1.6" fill="none"/></svg>Parents → children</span>`;
   $("#legend").innerHTML = famLegend + Object.entries(REL).filter(([k]) => used.has(k)).map(([k,s]) =>
     `<span><svg viewBox="0 0 30 10"><line x1="1" y1="5" x2="29" y2="5" stroke="${s.stroke}" stroke-width="${Math.min(s.w,2.6)}" ${s.dash?`stroke-dasharray="${s.dash}"`:""}/></svg>${{parent:"Parent → child",adoptive:"Adoptive",raised:"Grandparent",married:"Married",partner:"Couple",affair:"Affair",sibling:"Siblings",same:"Same person",counterpart:"Other-world version"}[k]}</span>`).join("")
-    + `<span><svg viewBox="0 0 30 10"><line x1="1" y1="5" x2="29" y2="5" stroke="#e3b43c" stroke-width="2.5"/></svg>New in ${code(V)}</span>`;
+    + `<span><svg viewBox="0 0 30 10"><line x1="1" y1="5" x2="29" y2="5" stroke="#e0b341" stroke-width="2.5"/></svg>New in ${code(V)}</span>`;
   $("#treehint").textContent = `${nodes.length} people · ${edges.length} connections`;
   $("#loopsBtn").setAttribute("aria-pressed", String(showLoops));
   $("#fullep").textContent = "as of " + code(V);
@@ -1235,7 +1468,7 @@ function renderPeople(){
     const list = D.CHARACTERS.filter(c => c.fam === f && vis(c) && (c.world || "A") === w);
     if (!list.length) return "";
     return `<div class="famhead" style="--c:${FAM[f].color}"><i></i>${FAM[f].name}</div>` + list.map(c =>
-      `<button class="person ${isNew(c)?"new":""}" data-person="${c.id}">${avatar(c.id)}<span><span class="nm">${esc(c.name)} ${isNew(c)?'<span class="newtag">NEW</span>':""}</span><span class="rl">${esc(roleOf(c.id))}</span></span></button>`).join("");
+      `<button class="person ${isNew(c)?"new":""}" data-person="${c.id}">${avatar(c.id)}<span><span class="nm">${esc(c.name)} ${isNew(c)?'<span class="newtag">New</span>':""}</span><span class="rl">${esc(roleOf(c.id))}</span></span></button>`).join("");
   }).join("")).join("");
   el.innerHTML = `<div class="vhead"><h2>People</h2></div>
     <div class="btnrow" style="margin:-4px 0 14px"><button class="btn" id="bulkPhotos">${isOwnerMode() ? "Import photos for everyone…" : "Add my own photos…"}</button>${apiOK ? (isOwnerMode() ? `<button class="btn" id="ownerOut">Owner mode on · Sign out</button>` : `<button class="btn" id="ownerIn">Owner sign-in</button>`) : ""}${Object.keys(photoMem).some(k => photoMem[k]) || hasAnyPhoto() ? `<button class="btn warn" id="clearPhotos">Remove my local photos</button>` : ""}</div>
@@ -1251,12 +1484,12 @@ function renderMysteries(){
   const card = x => `<div class="card ${isNew(x.m) || x.ans.some(isNew) ? "new":""}">
     <div style="display:flex;justify-content:space-between;gap:8px;margin-bottom:4px"><span class="mstate ${x.ans.length ? "solved" : "open"}">${x.ans.length ? "Answered" : "Open"}</span><span>${epBadge(x.m.ep)}</span></div>
     <div class="mq">${esc(x.m.q)}</div>
-    ${x.ans.map(a => `<div class="ans">${epBadge(a.ep)}<span>${isNew(a)?'<span class="newtag">NEW</span> ':""}${esc(a.t)}</span></div>`).join("")}
+    ${x.ans.map(a => `<div class="ans">${epBadge(a.ep)}<span>${isNew(a)?'<span class="newtag">New</span> ':""}${esc(a.t)}</span></div>`).join("")}
   </div>`;
   el.innerHTML = `<div class="vhead"><h2>Mysteries</h2></div>
-    <h3 style="font-size:18px;margin:4px 0 10px">Still open · ${open.length}</h3>
+    <h3 style="font-size:18px;margin:4px 0 10px">Still open (${open.length})</h3>
     <div class="mgrid">${open.map(card).join("") || `<div class="empty">Nothing open right now.</div>`}</div>
-    <h3 style="font-size:18px;margin:22px 0 10px">Answered so far · ${part.length}</h3>
+    <h3 style="font-size:18px;margin:22px 0 10px">Answered so far (${part.length})</h3>
     <div class="mgrid">${part.map(card).join("") || `<div class="empty">No answers yet. Keep watching.</div>`}</div>`;
 }
 
@@ -1265,7 +1498,7 @@ function renderTravels(){
   const el = $("#v-travels");
   if (W < 0) { el.innerHTML = lockedMsg("travel log"); return; }
   const js = D.JOURNEYS.filter(vis);
-  el.innerHTML = `<div class="vhead"><h2>Time travel log</h2></div>
+  el.innerHTML = `<div class="vhead"><h2>Journeys</h2></div>
     <div class="trips">${js.map(t => `<div class="card trip ${isNew(t)?"new":""}">${avatar(t.who)}
       <div><div class="who">${esc(name(t.who))}</div><div class="route"><span>${esc(t.from)}</span><span class="arrow">→</span><span>${esc(t.to)}</span></div><div class="how">${esc(t.how)}${t.note?" · "+esc(t.note):""}</div></div>
       <div>${epBadge(t.ep)}</div></div>`).join("") || `<div class="empty">No one has travelled yet. As far as you know.</div>`}</div>`;
@@ -1290,7 +1523,7 @@ function renderConcepts(){
   const el = $("#v-concepts");
   if (W < 0) { el.innerHTML = lockedMsg("theories and concepts"); return; }
   const list = D.CONCEPTS.filter(c => c.ep <= V).slice().reverse();
-  el.innerHTML = `<div class="vhead"><h2>Theories &amp; concepts</h2></div>
+  el.innerHTML = `<div class="vhead"><h2>Science and myth</h2></div>
     <div class="cc-list">${list.map(c => `<article class="cc ${c.ep === V ? "cc-new" : ""}">
       <h3>${esc(c.h)}</h3>
       <p>${esc(c.what)}</p>
@@ -1309,7 +1542,7 @@ function renderStory(){
     if (k === 0 || e.s !== eps[k-1].s) html += `<div class="seasonbreak">Season ${e.s}</div>`;
     const paras = D.STORY[e.code] || [], recap = D.RECAPS[e.code], notes = D.NOTES[e.code] || [];
     html += `<article class="chapter ${e.i===V?"latest":""}" id="ch-${e.i}">
-      <header class="ch-head"><span class="ch-num">${e.code}</span><h3>${esc(e.title)}</h3></header>
+      <div class="ch-head"><span class="ch-num">${e.code}</span><h3>${esc(e.title)}</h3></div>
       ${recap ? `<p class="ch-recap">${esc(recap)}</p>` : ""}
       ${paras.map(p => `<p>${esc(p)}</p>`).join("")}
       ${notes.length ? `<div class="ch-notes"><h4>Worth noticing</h4><ul class="notes">${notes.map(n => `<li><b>${esc(n.k || "Detail")}</b> ${esc(n.t)}</li>`).join("")}</ul></div>` : ""}</article>`;
@@ -1323,7 +1556,7 @@ function renderGlossary(){
   const el = $("#v-glossary");
   if (W < 0) { el.innerHTML = lockedMsg("glossary"); return; }
   const g = D.GLOSSARY.filter(vis);
-  el.innerHTML = `<div class="vhead"><h2>Glossary</h2></div>
+  el.innerHTML = `<div class="vhead"><h2>From the show</h2></div>
     <dl class="gloss">${g.map(x => `<div class="card ${isNew(x)?"new":""}"><dt>${esc(x.term)} ${epBadge(x.ep)}</dt><dd>${esc(x.t)}</dd></div>`).join("") || `<div class="empty">No terms yet.</div>`}</dl>`;
 }
 
@@ -1394,15 +1627,15 @@ function openPerson(id){
   const trips = D.JOURNEYS.filter(t => vis(t) && t.who === id);
   const ph = photo(id);
   openSheet(`<div class="dossier">
-    <div class="dossier-top">${avatar(id)}<div><h2 id="sheetTitle">${esc(c.name)}</h2><div style="font-size:14px;margin-top:2px">${esc(roleOf(id))}</div><div style="color:var(--muted);font-size:12.5px">${visWorlds().length > 1 ? esc(worldName(worldOf(id))) + " · " : ""}${FAM[c.fam].name} · first seen ${code(c.ep)}</div>
+    <div class="dossier-top">${avatar(id)}<div><h2 id="sheetTitle">${esc(c.name)}</h2><div style="font-size:14px;margin-top:2px">${esc(roleOf(id))}</div><div style="color:var(--muted);font-size:12.5px">${visWorlds().length > 1 ? esc(worldName(worldOf(id))) + " · " : ""}${FAM[c.fam].name} family, first seen in ${code(c.ep)}</div>
       <div class="btnrow" style="margin-top:8px">${isOwnerMode()
         ? `<button class="btn" data-photo="${id}">${shared[id] ? "Replace photo for everyone" : "Add photo for everyone"}</button>${shared[id] ? `<button class="btn" data-unphoto="${id}">Remove for everyone</button>` : ""}`
         : `<button class="btn" data-photo="${id}">${localPhoto(id) ? "Change my photo" : (shared[id] ? "Use my own photo" : "Add photo")}</button>${localPhoto(id) ? `<button class="btn" data-unphoto="${id}">Remove my photo</button>` : ""}`}</div></div></div>
     <h3>What you know</h3>
     ${(() => { const sm = summaryOf(id, links, evs, trips); return sm ? `<p class="who-sum">${esc(sm)}</p>` : ""; })()}
-    <div class="bio">${bio.map(b => `<div class="row">${epBadge(b.ep)}<span>${isNew(b)?'<span class="newtag">NEW</span> ':""}<span class="${superseded(b)?"struck":""}">${esc(b.t)}</span>${superseded(b) ? `<div class="turned"><b>TURNED OUT · ${code(b.until)}</b> ${esc(b.later)}</div>` : ""}</span></div>`).join("")}</div>
+    <div class="bio">${bio.map(b => `<div class="row">${epBadge(b.ep)}<span>${isNew(b)?'<span class="newtag">New</span> ':""}<span class="${superseded(b)?"struck":""}">${esc(b.t)}</span>${superseded(b) ? `<div class="turned"><b>TURNED OUT · ${code(b.until)}</b> ${esc(b.later)}</div>` : ""}</span></div>`).join("")}</div>
     ${links.length ? `<h3>Connections</h3><div class="rels">${links.map(l => { const r = relTo(l, id); const sup = superseded(l);
-        return `<button class="rel" data-person="${r.other}"><span class="kind ${sup?"struck":""}">${r.kind}</span>${avatar(r.other)}<span><span class="${sup?"struck":""}">${esc(name(r.other))}</span>${sup?` <span style="color:var(--thread);font-size:12px">· ${esc(l.later)} (${code(l.until)})</span>`:""} ${epBadge(l.ep)}${isNew(l)?' <span class="newtag">NEW</span>':""}</span></button>`; }).join("")}</div>` : ""}
+        return `<button class="rel" data-person="${r.other}"><span class="kind ${sup?"struck":""}">${r.kind}</span>${avatar(r.other)}<span><span class="${sup?"struck":""}">${esc(name(r.other))}</span>${sup?` <span style="color:var(--thread);font-size:12px">· ${esc(l.later)} (${code(l.until)})</span>`:""} ${epBadge(l.ep)}${isNew(l)?' <span class="newtag">New</span>':""}</span></button>`; }).join("")}</div>` : ""}
     ${(() => { const xw = crossWorld(id).filter(x => x.kind === "Counterpart"); return xw.length ? `<h3>In other worlds</h3><div class="rels">${xw.map(x => `<button class="rel" data-person="${x.id}"><span class="kind">${esc(worldName(worldOf(x.id)))}</span>${avatar(x.id)}<span>${esc(name(x.id))}</span></button>`).join("")}</div>` : ""; })()}
     ${evs.length ? `<h3>On the timeline</h3><div class="bio">${evs.map(e => `<div class="row">${e.d ? `<button class="epb" data-yr="${e.w}|${e.d.slice(0,4)}" title="See ${e.d.slice(0,4)} on the timeline" style="cursor:pointer;background:none;font:inherit;font-family:var(--font-mono);font-size:11px;color:var(--accent);border-color:var(--accent)">${e.d.slice(0,4)}${e.w==="B"?" ◐":e.w==="O"?" ○":""}</button>` : `<span class="epb">?</span>`}<span class="${superseded(e)?"struck":""}">${esc(e.t)}</span></div>`).join("")}</div>` : ""}
   </div>`);
@@ -1559,17 +1792,7 @@ document.addEventListener("click", e => {
 document.addEventListener("change", e => { if (e.target.id === "personSel") { personFilter = e.target.value; renderTimeline(); } });
 document.addEventListener("keydown", e => { if (e.key === "Escape") closeSheet(); });
 document.addEventListener("keydown", e => { if ((e.key === "Enter" || e.key === " ") && e.target.classList && e.target.classList.contains("yp")) { e.preventDefault(); e.target.click(); } });
-$("#vRange").addEventListener("input", e => setV(+e.target.value));
-$("#epSel").addEventListener("change", e => {
-  const v = +e.target.value;
-  e.target.value = String(W);           // keep showing real progress until confirmed
-  if (v === W) return;
-  if (v > W + 1) return openEpisode(v); // skipping ahead: confirm first
-  setWatched(v);
-});
 $("#markNext").onclick = () => { if (W + 1 < N) setWatched(W + 1); };
-$("#vPrev").onclick = () => setV(V-1);
-$("#vNext").onclick = () => setV(V+1);
 window.addEventListener("resize", () => { if (viewNow() === "tree") fitTree(); });
 
 function scrollToTabs(){ if (inPageFull()) $("#content").scrollTo({top:0, behavior:"smooth"}); else window.scrollTo({top: document.querySelector("nav.tabs").offsetTop - 4, behavior:"smooth"}); }
@@ -1613,19 +1836,19 @@ async function progressCard(){
   const Wd = 1080, Hd = 1350, cv = document.createElement("canvas"); cv.width = Wd; cv.height = Hd;
   const g = cv.getContext("2d");
   if (!g.roundRect) g.roundRect = (x, y, w, h) => g.rect(x, y, w, h);   // older Safari
-  try { await Promise.all(['700 140px "Bodoni Moda"', '500 40px "IBM Plex Sans"', '500 30px "IBM Plex Mono"'].map(f => document.fonts.load(f))); } catch (e) {}
-  const serif = '"Bodoni Moda", Georgia, serif', sans = '"IBM Plex Sans", system-ui, sans-serif', mono = '"IBM Plex Mono", ui-monospace, monospace';
-  const ACC = "#e3b43c", INK = "#e9e4d8", MUT = "#8e968f", LINE = "#2a3135";
-  g.fillStyle = "#0c0e0f"; g.fillRect(0, 0, Wd, Hd);
+  try { await Promise.all(['600 140px "Barlow Condensed"', '400 40px "Source Serif 4"', '500 30px "Barlow Condensed"'].map(f => document.fonts.load(f))); } catch (e) {}
+  const serif = '"Barlow Condensed", "Arial Narrow", sans-serif', sans = '"Source Serif 4", Georgia, serif', mono = '"Barlow Condensed", "Arial Narrow", sans-serif';
+  const ACC = "#e0b341", INK = "#e7eae3", MUT = "#9aa69e", LINE = "#36433c";
+  g.fillStyle = "#1b2420"; g.fillRect(0, 0, Wd, Hd);
   // an abstract family-tree pattern (not the real tree)
   const pts = [[690,170],[900,170],[795,330],[985,330],[620,360],[720,500],[900,500],[810,650],[1000,640]];
   const edges = [[0,2],[1,2],[1,3],[2,5],[2,6],[4,5],[6,7],[3,6],[6,8]];
   g.strokeStyle = LINE; g.lineWidth = 5; edges.forEach(([a,b]) => { g.beginPath(); g.moveTo(...pts[a]); g.lineTo(...pts[b]); g.stroke(); });
   const done = Math.max(0, W + 1);
-  pts.forEach(([x,y], i) => { g.fillStyle = "#14181a"; g.strokeStyle = i < Math.ceil(done / N * pts.length) ? ACC : "#3b4448"; g.lineWidth = 5;
+  pts.forEach(([x,y], i) => { g.fillStyle = "#232d28"; g.strokeStyle = i < Math.ceil(done / N * pts.length) ? ACC : "#3b4448"; g.lineWidth = 5;
     g.beginPath(); g.roundRect(x-40, y-40, 80, 80, 12); g.fill(); g.stroke(); });
   g.textBaseline = "alphabetic";
-  g.fillStyle = ACC; g.font = `500 32px ${mono}`; g.fillText("WATCH COMPANION", 80, 140);
+  g.fillStyle = ACC; g.font = `500 32px ${mono}`; g.fillText("Watch companion", 80, 140);
   g.fillStyle = INK; g.font = `700 150px ${serif}`; g.fillText("Dark", 76, 300);
   const finished = W >= N - 1, starting = W < 0;
   g.fillStyle = MUT; g.font = `500 44px ${sans}`;
@@ -1639,7 +1862,7 @@ async function progressCard(){
   const bx = 80, bw = Wd - 160, by = 850, bh = 22;
   g.fillStyle = "#1b2023"; g.beginPath(); g.roundRect(bx, by, bw, bh, 11); g.fill();
   g.fillStyle = ACC; g.beginPath(); g.roundRect(bx, by, Math.max(bh, bw * done / N), bh, 11); g.fill();
-  g.fillStyle = "#0c0e0f"; EPS.forEach((e, i) => { if (i && e.s !== EPS[i-1].s) g.fillRect(bx + bw * i / N - 3, by, 6, bh); });
+  g.fillStyle = "#1b2420"; EPS.forEach((e, i) => { if (i && e.s !== EPS[i-1].s) g.fillRect(bx + bw * i / N - 3, by, 6, bh); });
   // spoiler-free counts
   const people = D.CHARACTERS.filter(vis).length, qs = D.MYSTERIES.filter(vis).length;
   const stats = starting ? [["4", "families to keep track of"], ["26", "episodes ahead"]] : [[String(people), "people met so far"], [String(qs), "questions raised so far"]];

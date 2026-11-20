@@ -2,11 +2,12 @@
 
 A spoiler-safe companion for watching the Netflix series *Dark*. Mark the latest episode you've watched and everything unlocks up to that point, and nothing beyond it:
 
-- **Story** – the plot narrated chapter by chapter, in airing order
-- **Timeline** – events by in-world year, across all three worlds
-- **Relationship tree** – generations, couples and family lines, plus the time-loop and identity links, with hover help and full screen
-- **People, Mysteries, Time travel, Glossary**
-- A replay slider to see the story as it stood after any earlier episode
+- **This episode**: what the latest episode revealed, what you might have missed, and what's still open
+- **Story**: the plot narrated chapter by chapter, plus "Season explained" once a season is finished
+- **Timeline**: the season retold in the order it happened, every event by year, places, and time-travel journeys
+- **People**: everyone met so far by family, with a summary each, and the relationship tree
+- **Mysteries** and **Ideas** (terms from the show, and the science and myth behind it)
+- An episode strip: tap a watched episode to see the story as it stood then
 
 Misdirections are shown the way the show presents them until the episode that overturns them. Viewing progress is stored in each visitor's browser.
 
