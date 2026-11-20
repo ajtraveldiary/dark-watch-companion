@@ -83,5 +83,5 @@ cached at the edge for 60 seconds, and the counter stops recording after 20,000 
 `build.js` also writes `robots.txt` (all crawlers welcome, AI crawlers named explicitly; `/api/` excluded),
 `sitemap.xml`, `llms.txt` (a plain summary for AI assistants), a real `404.html`, and the IndexNow key file.
 The page has a description, canonical URL, Open Graph/Twitter preview (`static/og-image.png`), JSON-LD
-(WebSite, WebApplication about the TV series, FAQPage) and a short crawlable "About" section with no spoilers.
+(WebSite, and WebApplication about the TV series).
 Each deploy pings IndexNow so Bing and other engines re-crawl quickly.

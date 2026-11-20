@@ -38,12 +38,6 @@ out.PHOTOS = PHOTO_MANIFEST.map(p => ({ h: p.h, f: p.f }));
 const b64 = Buffer.from(JSON.stringify(out), "utf8").toString("base64");
 const SITE = "https://dark-watch-companion.workdesk.workers.dev";
 const today = new Date().toISOString().slice(0, 10);
-const FAQ = [
-  ["Is it really spoiler-free?", "Yes, as far as the episode you've marked. Nothing from later episodes is shown, not even their titles."],
-  ["What can I use it for while watching?", "Checking who someone is and how they're related, catching up on the last episode before the next one, and keeping track of the open questions the show has raised so far."],
-  ["Do I need an account?", "No. It's free, with no ads and no sign-up. Progress is saved only in your own browser."],
-  ["Is this made by Netflix?", "No. It's an unofficial fan project and isn't affiliated with Netflix."]
-];
 const jsonld = {
   "@context": "https://schema.org",
   "@graph": [
@@ -54,8 +48,7 @@ const jsonld = {
       "isAccessibleForFree": true, "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
       "image": SITE + "/og-image.png", "inLanguage": "en", "dateModified": today,
       "about": { "@type": "TVSeries", "name": "Dark", "inLanguage": "de", "numberOfSeasons": 3, "numberOfEpisodes": 26,
-        "sameAs": ["https://en.wikipedia.org/wiki/Dark_(TV_series)", "https://www.imdb.com/title/tt5753856/", "https://www.netflix.com/title/80100172"] } },
-    { "@type": "FAQPage", "@id": SITE + "/#faq", "mainEntity": FAQ.map(([q, a]) => ({ "@type": "Question", "name": q, "acceptedAnswer": { "@type": "Answer", "text": a } })) }
+        "sameAs": ["https://en.wikipedia.org/wiki/Dark_(TV_series)", "https://www.imdb.com/title/tt5753856/", "https://www.netflix.com/title/80100172"] } }
   ]
 };
 const html = fs.readFileSync("src/template.html", "utf8")
