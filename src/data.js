@@ -711,6 +711,7 @@ const EVENTS = [
 
 const JOURNEYS = [
   {ep:"1.2", who:"mikkel",  from:"2019", to:"1986", how:"Caves"},
+  { ep:"1.2", who:"stranger", from:"Unknown year", to:"2019", how:"Unknown" },
   {ep:"1.5", who:"stranger",from:"2019", to:"1986", how:"Caves"},
   {ep:"1.6", who:"jonas",   from:"2019", to:"1986", how:"Caves"},
   {ep:"1.7", who:"helge",   from:"1986", to:"2019", how:"Bunker passage", note:"to take boys"},
