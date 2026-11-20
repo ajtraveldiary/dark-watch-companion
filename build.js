@@ -67,8 +67,8 @@ const hash = require("crypto").createHash("sha256").update(scripts[0], "utf8").d
 const csp = [
   "default-src 'none'",
   `script-src 'sha256-${hash}'`,
-  "style-src 'self' 'unsafe-inline'",
-  "font-src 'self'",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "font-src https://fonts.gstatic.com",
   "img-src 'self' data: blob:",
   "connect-src 'self'",
   "worker-src 'self'",
@@ -80,13 +80,6 @@ const csp = [
 ].join("; ");
 // ---------- Discoverability: static files, robots, sitemap, llms.txt, 404 ----------
 for (const f of fs.readdirSync("static")) fs.copyFileSync("static/" + f, "public/" + f);
-// Fonts are served from the site itself (no third-party requests): a German road-sign style condensed
-// face for headings, labels and numbers, and a book serif for reading.
-const FONTS = [["barlow-condensed", "barlow-condensed-latin-400-normal"], ["barlow-condensed", "barlow-condensed-latin-500-normal"],
-  ["barlow-condensed", "barlow-condensed-latin-600-normal"], ["source-serif-4", "source-serif-4-latin-400-normal"],
-  ["source-serif-4", "source-serif-4-latin-400-italic"], ["source-serif-4", "source-serif-4-latin-600-normal"]];
-fs.mkdirSync("public/fonts", { recursive: true });
-for (const [pkg, f] of FONTS) fs.copyFileSync(`node_modules/@fontsource/${pkg}/files/${f}.woff2`, `public/fonts/${f}.woff2`);
 // Shared photos fetched by scripts/fetch-photos.mjs (in CI) become static files under /img/.
 fs.rmSync("public/img", { recursive: true, force: true });
 if (PHOTO_MANIFEST.length) {
@@ -147,12 +140,15 @@ Website: ${SITE}/
 
 ## Sections of the site
 
-- This episode: everything the latest watched episode revealed (new people, connections, events, answers), details you might have missed, and the questions still open going into the next one.
-- Story: a narrated summary of each episode watched, with a one-line recap and details worth noticing, plus "Season explained" once a season is finished.
-- Timeline: events seen so far, in four views: the season retold in the order it happened, every event by date, places in Winden and what happened at each, and every time-travel journey.
-- People: every character met so far by family, with a short summary of what's known about each, and a relationship tree that grows episode by episode.
+- What's new: everything the latest watched episode revealed.
+- Story: a narrated, in-order summary of each episode watched, with a one-line recap and details worth noticing.
+- Recap: each season retold in time order, plus "explained" once the season is finished.
+- Theories & concepts: the real science, philosophy and myth the show draws on (wormholes, causal loops, the bootstrap and grandfather paradoxes and more), explained in plain words.
+- Timeline: events seen so far, ordered by date.
+- Relationship tree: a family tree of the four families that grows episode by episode, with photos and roles.
+- People: every character met so far, with a short spoiler-safe note.
 - Mysteries: open questions raised so far, and answers once the show gives them.
-- Ideas: terms from the show, and the real science, philosophy and myth it draws on (wormholes, causal loops, the bootstrap and grandfather paradoxes and more), explained in plain words.
+- Glossary: terms and places as the show introduces them.
 
 ## About the show (spoiler-free)
 
@@ -165,7 +161,7 @@ Website: ${SITE}/
 - Contact: ajtraveldiary@proton.me
 `);
 fs.writeFileSync("public/404.html", `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="robots" content="noindex"><title>Page not found · Dark Watch Companion</title>
-<style>body{background:#1b2420;color:#e7eae3;font:16px/1.6 system-ui,sans-serif;display:grid;place-items:center;min-height:90vh;margin:0;text-align:center}a{color:#e3b43c}</style></head>
+<style>body{background:#0c0e0f;color:#e9e4d8;font:16px/1.6 system-ui,sans-serif;display:grid;place-items:center;min-height:90vh;margin:0;text-align:center}a{color:#e3b43c}</style></head>
 <body><main><h1>Page not found</h1><p><a href="/">Go to the Dark Watch Companion</a></p></main></body></html>
 `);
 const INDEXNOW_KEY = "d4rkw4tch5e0c1a2b3c4d5e6f7a8b9c0";
@@ -182,9 +178,6 @@ fs.writeFileSync("public/_headers", `/*
 /img/*
   Cache-Control: public, max-age=31536000, immutable
 
-/fonts/*
-  Cache-Control: public, max-age=31536000, immutable
-
 /sw.js
   Cache-Control: no-cache
 `);
@@ -193,7 +186,7 @@ fs.writeFileSync("public/_headers", `/*
 // The page and its files are kept on the device so the installed app opens offline. The page is
 // fetched fresh when online (so updates arrive), and falls back to the saved copy when offline.
 const PRECACHE = ["/", "/manifest.webmanifest", "/favicon.svg", "/favicon-32.png", "/apple-touch-icon.png",
-  "/icon-192.png", "/icon-512.png", "/icon-maskable-512.png", ...FONTS.map(([, f]) => `/fonts/${f}.woff2`), ...PHOTO_MANIFEST.map(p => "/img/" + p.f)];
+  "/icon-192.png", "/icon-512.png", "/icon-maskable-512.png", ...PHOTO_MANIFEST.map(p => "/img/" + p.f)];
 const swVersion = require("crypto").createHash("sha256").update(html + JSON.stringify(PRECACHE)).digest("hex").slice(0, 12);
 fs.writeFileSync("public/sw.js", `// Generated by build.js. Version ${swVersion}.
 const CACHE = "dark-${swVersion}";
