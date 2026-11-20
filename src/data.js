@@ -1037,35 +1037,52 @@ module.exports.REALWORLD = {
       "Germany's last nuclear reactors were still scheduled to close by the end of 2022 (the final three actually shut in April 2023)."] }
 };
 
-// ---------- Map of Winden (an original, stylised impression, not an exact plan) ----------
-// Layout: started from a fan map shared on r/DarK ("Winden city area map v0.1"), corrected with the Dark Wiki's
-// episode pages and the thread's own comments: an L-shaped town wrapped round a patch of woods that everyone cuts
-// through; the plant, caves, bunker and Doppler cabin together to the north-east on the forest track (the shortcut
-// to the hospital end of town); the railway bridge in the woods between the caves and the school; the Waldhotel and
-// Tiedemann house side by side on the forest edge; the crossroads and bus stop at the inner corner. Our own drawing.
-// ep: first episode a place is clearly on screen (erring later when unsure). re: words tying timeline events to it.
+// ---------- Locations ----------
+// ep: first episode a place is clearly on screen. about: what it is, using only what's known by then.
+// re: words that tie timeline events to the place (events are listed under it in story-time order).
 module.exports.PLACES = [
-  { id:"forest",   name:"Winden forest",        ep:"1.1", x:702, y:52,  lx:18,  ly:5,  la:"start",  kind:"nature",   icon:"tree",  re:"forest|woods" },
-  { id:"plant",    name:"Power plant",          ep:"1.1", x:800, y:205, lx:0,   ly:58, la:"middle", kind:"building", icon:"plant", re:"power plant|\\bplant\\b|reactor" },
-  { id:"caves",    name:"The caves",            ep:"1.1", x:705, y:315, lx:-18, ly:5,  la:"end",    kind:"nature",   icon:"cave",  re:"cave" },
-  { id:"hospital", name:"Hospital",             ep:"1.5", x:575, y:405, lx:18,  ly:5,  la:"start",  kind:"building", icon:"plus",  re:"hospital|\\bward\\b" },
-  { id:"police",   name:"Police station",       ep:"1.1", x:480, y:440, lx:-18, ly:5,  la:"end",    kind:"building", icon:"badge", re:"police station|\\bcell\\b|interrogat" },
-  { id:"church",   name:"Church",               ep:"1.5", x:385, y:495, lx:-18, ly:5,  la:"end",    kind:"building", icon:"cross", re:"church|sermon" },
-  { id:"resthome", name:"Care home",            ep:"1.1", x:572, y:505, lx:18,  ly:5,  la:"start",  kind:"building", icon:"house", re:"care home|rest home" },
-  { id:"shop",     name:"Clockmaker's shop",    ep:"1.3", x:490, y:540, lx:-18, ly:5,  la:"end",    kind:"building", icon:"clock", re:"clockmaker|watchmaker|tannhaus's shop|the shop" },
-  { id:"hotel",    name:"Waldhotel",            ep:"1.1", x:440, y:598, lx:-18, ly:5,  la:"end",    kind:"building", icon:"bed",   re:"hotel|room 8" },
-  { id:"kahnwald", name:"Kahnwald house",       ep:"1.1", x:563, y:610, lx:18,  ly:5,  la:"start",  kind:"building", icon:"house", re:"kahnwald (house|home)|jonas's (house|home)" },
-  { id:"tiedemann",name:"Tiedemann house",      ep:"1.2", x:440, y:650, lx:-18, ly:5,  la:"end",    kind:"building", icon:"house", re:"tiedemann (house|home)|tiedemanns' (house|home)" },
-  { id:"crossing", name:"Crossroads & bus stop",ep:"1.1", x:585, y:712, lx:0,   ly:30, la:"middle", kind:"building", icon:"bus",   re:"crossroads|bus stop|intersection" },
-  { id:"nielsen",  name:"Nielsen house",        ep:"1.1", x:690, y:700, lx:0,   ly:-20,la:"middle", kind:"building", icon:"house", re:"nielsen (house|home)|nielsens' (house|home)" },
-  { id:"school",   name:"High school",          ep:"1.1", x:800, y:700, lx:0,   ly:-20,la:"middle", kind:"building", icon:"school",re:"school|classroom" },
-  { id:"doppler",  name:"Doppler house",        ep:"1.1", x:560, y:815, lx:-18, ly:5,  la:"end",  kind:"building", icon:"house", re:"doppler (house|home)|dopplers' (house|home)" },
-  { id:"bridge",   name:"Railway bridge",       ep:"1.4", x:760, y:485, lx:18,  ly:5,  la:"start",  kind:"building", icon:"rail",  re:"railway bridge|railroad bridge|\\bbridge\\b" },
-  { id:"tower",    name:"Forest watchtower",    ep:"1.7", x:430, y:175, lx:0,   ly:-20,la:"middle", kind:"nature",   icon:"tower", re:"watchtower" },
-  { id:"bunker",   name:"Bunker",               ep:"1.7", x:655, y:365, lx:-18, ly:5,  la:"end",    kind:"nature",   icon:"bunker",re:"bunker" },
-  { id:"cabin",    name:"Doppler cabin",        ep:"1.7", x:740, y:392, lx:18,  ly:5,  la:"start",  kind:"building", icon:"house", re:"doppler cabin" },
-  { id:"lake",     name:"The lake",             ep:"2.1", x:930, y:830, lx:0,   ly:45, la:"middle", kind:"nature",   icon:"wave",  re:"\\blake\\b|beach|shore" },
-  { id:"library",  name:"Library",              ep:"2.4", x:760, y:785, lx:18,  ly:5,  la:"start",  kind:"building", icon:"book",  re:"library" }
+  { id:"forest",   name:"Winden forest",        ep:"1.1", re:"forest|woods",
+    about:"Dense woods surround Winden on every side. People cut through them to get almost anywhere, and the caves lie hidden inside." },
+  { id:"caves",    name:"The caves",            ep:"1.1", re:"cave",
+    about:"A network of caves in the forest close to the power plant. Teenagers go there to party and buy drugs; parents tell their children to stay away." },
+  { id:"plant",    name:"Winden power plant",   ep:"1.1", re:"power plant|\\bplant\\b|reactor",
+    about:"The nuclear power plant that dominates the town. Its cooling towers rise above the trees, and much of Winden depends on it for work." },
+  { id:"crossing", name:"Crossroads & bus stop",ep:"1.1", re:"crossroads|bus stop|intersection",
+    about:"The town's main junction by the bus stop, with the cooling towers in view above the trees." },
+  { id:"school",   name:"High school",          ep:"1.1", re:"school|classroom",
+    about:"Winden's high school, where Jonas, Martha, Bartosz, Magnus and Franziska are students." },
+  { id:"police",   name:"Police station",       ep:"1.1", re:"police station|\\bcell\\b|interrogat|arrests?\\b|suspended",
+    about:"Winden's police station, where Charlotte Doppler is chief and Ulrich Nielsen is an officer." },
+  { id:"hotel",    name:"Waldhotel",            ep:"1.1", re:"hotel|room 8",
+    about:"The \"forest hotel\" on the edge of the woods, run by Regina Tiedemann." },
+  { id:"kahnwald", name:"Kahnwald house",       ep:"1.1", re:"kahnwald (house|home)|jonas's (house|home)|attic",
+    about:"Home of Hannah and Jonas Kahnwald." },
+  { id:"nielsen",  name:"Nielsen house",        ep:"1.1", re:"nielsen (house|home)|nielsens' (house|home)",
+    about:"Home of Ulrich and Katharina Nielsen and their children Magnus, Martha and Mikkel." },
+  { id:"doppler",  name:"Doppler house",        ep:"1.1", re:"doppler (house|home)|dopplers' (house|home)",
+    about:"Home of Charlotte and Peter Doppler and their family." },
+  { id:"resthome", name:"Care home",            ep:"1.1", re:"care home|rest home|confronting old helge",
+    about:"A home for elderly residents, backing onto the forest." },
+  { id:"tiedemann",name:"Tiedemann house",      ep:"1.2", re:"tiedemann (house|home)|tiedemanns' (house|home)",
+    about:"Home of Regina and Aleksander Tiedemann and their son Bartosz." },
+  { id:"hospital", name:"Hospital",             ep:"1.3", re:"hospital|\\bward\\b|nurse",
+    about:"Winden's hospital, on the edge of town." },
+  { id:"shop",     name:"Clockmaker's shop",    ep:"1.3", re:"clockmaker|watchmaker|tannhaus's shop|the shop",
+    about:"H.G. Tannhaus's clock and watch shop." },
+  { id:"bridge",   name:"Railway bridge",       ep:"1.4", re:"railway bridge|railroad bridge|\\bbridge\\b",
+    about:"An old railway bridge in the woods, a walk from the school." },
+  { id:"bunker",   name:"The bunker",           ep:"1.4", re:"bunker",
+    about:"A hidden concrete room in the forest, near the Doppler family's cabin." },
+  { id:"cabin",    name:"Doppler cabin",        ep:"1.4", re:"doppler cabin",
+    about:"The Doppler family's cabin in the forest." },
+  { id:"church",   name:"Church",               ep:"1.5", re:"church|sermon|pastor|priest",
+    about:"The town church and its graveyard, among the trees." },
+  { id:"tower",    name:"Forest watchtower",    ep:"1.7", re:"watchtower",
+    about:"A wooden watchtower in the forest." },
+  { id:"lake",     name:"The lake",             ep:"2.1", re:"\\blake\\b|beach|shore",
+    about:"A lake in the woods outside town." },
+  { id:"library",  name:"Library",              ep:"2.4", re:"library",
+    about:"Winden's public library." }
 ];
 
 // ---------- Recap tab: the season retold in time order, plus "explained" once a season is finished ----------
