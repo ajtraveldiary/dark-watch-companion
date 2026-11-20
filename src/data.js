@@ -1182,3 +1182,212 @@ module.exports.CONCEPTS = [
     what:"Two entangled particles share a single state: measure one and you instantly know about the other, however far apart they are.",
     dark:"The two Windens behave like an entangled pair: what happens in one is mirrored in the other." }
 ];
+
+// ---------- Year-by-year summaries for the people sheet ("What you know") ----------
+// [year, ep, text]: each line shows from its episode on. Optional 4th item {until, later} replaces the line once
+// the show overturns it. Lines are listed in episode order within a year. Our own words.
+module.exports.YEARS = {
+  stranger: [
+    ["1986","1.5","Visits old Tannhaus to talk about time."],
+    ["1986","1.7","Warns Jonas that taking Mikkel home would erase Jonas himself."],
+    ["1986","1.8","Tells Tannhaus he came from the future to destroy the wormhole, and shows him a broken device with Tannhaus's initials."],
+    ["1986","1.10","Reveals to young Jonas that he is Jonas, from the future."],
+    ["2019","1.2","Checks into room 8 of the Waldhotel and covers the walls with notes on time. Changes a newspaper headline from \"Where\" to \"When\"."],
+    ["2019","1.5","Gets Michael's letter to Jonas through Regina."],
+    ["2019","1.9","Opens a yellow barrel."],
+    ["2019","1.10","Loads radioactive material into his device in the caves to destroy the wormhole."]
+  ],
+  oldclaudia: [
+    ["2019","1.10","With Tronte, has Peter leave a boy's body in the bunker where it \"must be found\"."]
+  ],
+  soldier: [
+    ["2052","1.10","Knocks Jonas out: \"Welcome to the future.\""]
+  ],
+  tannhaus: [
+    ["1953","1.8","A young clockmaker. Finds the jacket Ulrich left behind, with a smartphone holding a 2019 photo."],
+    ["1953","1.9","An elderly woman asks him to build a time machine."],
+    ["1986","1.3","An old clockmaker. Finishes a brass device identical to the Stranger's."],
+    ["1986","1.5","The Stranger visits him to talk about time."],
+    ["1986","1.8","The Stranger shows him a broken device bearing his own initials."]
+  ],
+  bernd: [
+    ["1953","1.8","Planning Winden's nuclear power plant. Helge's father."],
+    ["1986","1.3","Hands the plant to its new director, Claudia Tiedemann, with the key to yellow barrels hidden in the caves."],
+    ["1986","1.9","Admits to Claudia that the summer incident at the plant leaked radiation."]
+  ],
+  greta: [
+    ["1953","1.8","Helge's mother, cold towards her son."],
+    ["1953","1.9","Confesses to Pastor Noah that she never wanted Helge."]
+  ],
+  helge: [
+    ["1953","1.8","A boy. Ulrich beats him with a rock and leaves him in the bunker."],
+    ["1953","1.10","Reaches into a wormhole and lands in 1986."],
+    ["1986","1.3","A guard at the power plant."],
+    ["1986","1.7","Takes boys through the bunker for Noah, and drags Mads's body into the forest."],
+    ["1986","1.10","Straps Jonas into the chair. His older self, come from 2019, tries to stop him; their cars collide and the old man dies."],
+    ["2019","1.1","Old and confused, living in a care home."],
+    ["2019","1.7","Ulrich confronts him and chases him into the caves."]
+  ],
+  peter: [
+    ["2019","1.1","A therapist, married to Charlotte. Jonas is one of his patients."],
+    ["2019","1.4","Lied about the night Mikkel vanished: a wildlife camera caught his car near the caves."],
+    ["2019","1.10","Sees a flash in the bunker and a boy's body falls through. Leaves it where it must be found."]
+  ],
+  charlotte: [
+    ["2019","1.1","Winden's police chief, married to Peter."],
+    ["2019","1.4","Finds a wildlife-camera shot of Peter's car near the caves the night Mikkel vanished."],
+    ["2019","1.7","Finds tunnels running under the Doppler cabin."],
+    ["2019","1.10","Finds a 1953 newspaper with Ulrich's photo as a suspected child murderer."]
+  ],
+  franziska: [
+    ["2019","1.1","Charlotte and Peter's elder daughter. Quiet and secretive."],
+    ["2019","1.4","Magnus finds her hidden cash; they sleep together."]
+  ],
+  elisabeth: [
+    ["2019","1.4","Charlotte and Peter's younger daughter, who is deaf. A man called Noah gives her a pocket watch engraved \"For Charlotte\"."],
+    ["2019","1.5","Her boyfriend Yasin goes missing."]
+  ],
+  egon: [
+    ["1953","1.8","A young police officer. Investigates the two dead boys found at the plant site. His dog Gretchen runs into the caves."],
+    ["1953","1.9","Arrests Ulrich."],
+    ["1953","1.10","Interrogates and beats him."],
+    ["1986","1.3","An older police officer, the chief investigator. Claudia's father. Suspects teen Ulrich of hurting a boy."],
+    ["1986","1.5","Arrests teen Ulrich after Hannah accuses him of raping Katharina."]
+  ],
+  doris: [
+    ["1953","1.8","Egon's wife and Claudia's mother."]
+  ],
+  claudia: [
+    ["1953","1.8","A girl, Egon and Doris's daughter."],
+    ["1986","1.3","Becomes director of the power plant; Bernd gives her the key to barrels hidden in the caves. Refuses to carry on her affair with Tronte."],
+    ["1986","1.9","Learns the summer incident leaked radiation, and hires Aleksander, who seals the cave door."]
+  ],
+  regina: [
+    ["1986","1.6","A bullied teenager. Ulrich and Katharina tie her to a tree by the caves and leave her."],
+    ["1986","1.9","Tends to a wounded man who has buried a gun and passports."],
+    ["2019","1.1","Runs the Waldhotel. Married to Aleksander, mother of Bartosz."],
+    ["2019","1.5","Passes the Stranger's package to Jonas."],
+    ["2019","1.6","Her cancer has spread."]
+  ],
+  aleksander: [
+    ["1986","1.9","Arrives wounded, buries a gun and passports in false names, and is hired by Claudia to seal the cave door."],
+    ["2019","1.1","Runs the power plant. Regina's husband, Bartosz's father."],
+    ["2019","1.2","Blocks a police search of the plant."],
+    ["2019","1.9","Hannah blackmails him into destroying Ulrich."]
+  ],
+  bartosz: [
+    ["2019","1.1","Jonas's best friend, now dating Martha."],
+    ["2019","1.5","Gets into Noah's car."],
+    ["2019","1.10","Noah tells him Claudia is his enemy and recruits him."]
+  ],
+  daniel: [
+    ["1953","1.8","Winden's police chief, Ines's father."]
+  ],
+  ines: [
+    ["1953","1.8","A girl, daughter of police chief Daniel Kahnwald."],
+    ["1986","1.3","A nurse at the hospital, caring for Mikkel."],
+    ["1986","1.10","Adopts Mikkel and names him Michael Kahnwald."],
+    ["2019","1.1","Michael's mother. Reads his letter after 22:13, and cries."]
+  ],
+  michael: [
+    ["1986","1.10","Adopted by Ines as a boy and given the name Michael Kahnwald."],
+    ["2019","1.1","Jonas's father. Hangs himself in his attic in June, leaving a letter not to be opened before 4 November."],
+    ["2019","1.5","His letter reveals he was Mikkel, who fell from 2019 into 1986."]
+  ],
+  hannah: [
+    ["1986","1.3","A teenager; meets Mikkel."],
+    ["1986","1.5","In love with Ulrich. Tells the police he raped Katharina."],
+    ["1986","1.6","She and her father give Jonas a lift."],
+    ["2019","1.1","Jonas's mother, Michael's widow. Having an affair with Ulrich."],
+    ["2019","1.5","Ulrich ends the affair."],
+    ["2019","1.9","Blackmails Aleksander into destroying Ulrich."]
+  ],
+  jonas: [
+    ["1986","1.6","Arrives through the caves; teen Hannah gives him a lift."],
+    ["1986","1.7","Finds Mikkel in hospital. The Stranger warns him not to take him home."],
+    ["1986","1.10","Strapped into Helge's chair, learns the Stranger is himself, and is thrown forward by a wormhole."],
+    ["2019","1.1","Back at school after his father's suicide. Martha is now with Bartosz."],
+    ["2019","1.2","Finds his father's cave map in the attic."],
+    ["2019","1.5","Learns from his father's letter that Michael was Mikkel. Kisses Martha."],
+    ["2019","1.6","Follows a red thread through the caves to a door and goes through."],
+    ["2019","1.9","Ends things with Martha."],
+    ["2019","1.10","Burns his father's letter."],
+    ["2052","1.10","Wakes in a ruined Winden. A masked soldier knocks him out."]
+  ],
+  agnes: [
+    ["1953","1.8","Arrives in Winden with her son Tronte."]
+  ],
+  tronte: [
+    ["1953","1.8","A boy, newly arrived in Winden with his mother Agnes."],
+    ["1986","1.3","A journalist, married to Jana. Begs Claudia to keep their affair going."],
+    ["1986","1.6","Was with Claudia the night Mads vanished."],
+    ["2019","1.2","Ulrich's father. Can't account for where he was the night Mikkel vanished.", {until:"1.10", later:"Ulrich's father. The night Mikkel vanished, he was in the bunker with an old woman named Claudia, leaving a boy's body to be found."}]
+  ],
+  jana: [
+    ["1953","1.8","A girl. Meets Ulrich, not knowing he is her future son."],
+    ["1986","1.1","Her son Mads disappears."],
+    ["1986","1.3","Mikkel visits her while she grieves."],
+    ["2019","1.1","Ulrich's mother. Sees a dark figure in the forest and finds a Raider wrapper: \"It's happening again.\""]
+  ],
+  ulrich: [
+    ["1953","1.8","Arrives through the caves. Meets the children who will be his parents, and beats young Helge with a rock."],
+    ["1953","1.9","Arrested by Egon."],
+    ["1953","1.10","Interrogated and beaten; held as the prime suspect."],
+    ["1986","1.1","A teenager. His little brother Mads disappears."],
+    ["1986","1.3","Egon suspects him of hurting a boy."],
+    ["1986","1.5","Arrested after Hannah accuses him of raping Katharina."],
+    ["1986","1.6","He and Katharina tie Regina to a tree by the caves."],
+    ["2019","1.1","Police officer, married to Katharina, father of Magnus, Martha and Mikkel. Sleeping with Hannah. His son Mikkel disappears at the caves."],
+    ["2019","1.2","Finds a sealed steel door in the caves."],
+    ["2019","1.5","Ends the affair with Hannah."],
+    ["2019","1.6","Identifies the dead boy as his brother Mads."],
+    ["2019","1.7","Suspended after confronting old Helge, then chases him into the caves."]
+  ],
+  mads: [
+    ["1986","1.1","Ulrich's little brother. Vanishes in November and is never found."],
+    ["1986","1.7","Taken through the bunker by Helge."],
+    ["2019","1.6","Identified as the dead boy found in the forest, not a day older."],
+    ["2019","1.10","His body falls through into the bunker, and Peter leaves it to be found."]
+  ],
+  magnus: [
+    ["2019","1.1","Martha's older brother."],
+    ["2019","1.4","Finds Franziska's secret cash; they sleep together."]
+  ],
+  martha: [
+    ["2019","1.1","Ulrich's daughter, dating Bartosz. Plays Ariadne in the school play."],
+    ["2019","1.5","Kisses Jonas."],
+    ["2019","1.9","Jonas ends things with her."]
+  ],
+  mikkel: [
+    ["1986","1.2","Walks out of the caves. Teen Ulrich slams the door on him."],
+    ["1986","1.3","In hospital in nurse Ines's care. Visits his grandmother Jana."],
+    ["1986","1.5","A priest named Noah visits him."],
+    ["1986","1.7","Jonas finds him in hospital."],
+    ["1986","1.10","Adopted by Ines and named Michael Kahnwald."],
+    ["2019","1.1","Ulrich's youngest son. Vanishes at the caves on 4 November."]
+  ],
+  katharina: [
+    ["1986","1.3","A teenager; meets Mikkel."],
+    ["1986","1.5","Hannah tells the police Ulrich raped her."],
+    ["1986","1.6","She and Ulrich tie Regina to a tree by the caves."],
+    ["2019","1.1","Head of the school. Ulrich's wife, mother of Magnus, Martha and Mikkel."]
+  ],
+  jurgen: [["2019","1.1","Erik's father."]],
+  ulla: [["2019","1.1","Erik's mother."]],
+  erik: [["2019","1.1","A teenage dealer, missing since October."]],
+  yasin: [
+    ["2019","1.4","Elisabeth's boyfriend. A hooded man stops him: \"Noah sent me.\""],
+    ["2019","1.5","Reported missing."]
+  ],
+  torben: [["2019","1.2","A police officer with an eye patch."]],
+  hermann: [["1986","1.3","A farmer. 33 of his sheep die overnight."]],
+  noah: [
+    ["1953","1.9","A pastor. Greta Doppler confesses to him."],
+    ["1986","1.5","A priest. Visits Mikkel in hospital."],
+    ["1986","1.7","Helge takes boys through the bunker for him."],
+    ["2019","1.4","Gives Elisabeth a pocket watch engraved \"For Charlotte\"."],
+    ["2019","1.5","Picks up Bartosz in his car."],
+    ["2019","1.7","Chalks two dates from 1953 on the bunker wall."],
+    ["2019","1.10","Tells Bartosz that Claudia is his enemy and recruits him."]
+  ]
+};

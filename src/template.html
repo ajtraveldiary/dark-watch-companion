@@ -209,6 +209,10 @@ select,input[type=search]{background:var(--surface-2);color:var(--ink);border:1p
 .loc-d{font-size:13px;color:var(--accent);padding-top:2px}
 @media (max-width:560px){.loc-evs li{grid-template-columns:1fr;gap:2px}}
 .who-sum{margin:0 0 12px;padding:12px 14px;border-left:3px solid var(--accent);background:rgba(227,180,60,.06);border-radius:0 10px 10px 0;line-height:1.6}
+.yrsum{border:1px solid var(--line);border-radius:12px;padding:4px 12px;margin:10px 0 14px}
+.ys-row{display:grid;grid-template-columns:62px 1fr;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);line-height:1.5}
+.ys-row:last-child{border-bottom:none}
+.ys-y{color:var(--accent);font-size:14px;padding-top:1px}
 .rc-season{margin-bottom:34px}
 .rc-h{font-size:20px;margin:6px 0 14px}
 .rc-year{display:grid;grid-template-columns:64px 1fr;gap:14px;padding:12px 0;border-top:1px solid var(--line)}
@@ -1378,6 +1382,16 @@ function summaryOf(id, links, evs, trips){
   if (latest) out.push(`Most recently: ${latest.t.replace(/\.?$/, ".")}`);
   return out.join(" ");
 }
+// Year-by-year summary for a character: hand-written lines where we have them, otherwise their dated events.
+function yearSummary(id, evs){
+  const g = new Map();
+  const put = (w, y, t) => { const k = w + "|" + y; if (!g.has(k)) g.set(k, {w, y, parts: []}); const e = g.get(k); if (!e.parts.includes(t)) e.parts.push(t); };
+  const rows = (D.YEARS || {})[id];
+  if (rows) rows.filter(r => r.ep <= V).forEach(r => put("A", r.y, superseded(r) ? r.later : r.t));
+  else evs.forEach(e => { if (e.d) put(e.w || "A", e.d.slice(0, 4), superseded(e) && e.later ? e.later : e.t); });
+  const order = {A: 0, B: 1, O: 2};
+  return [...g.values()].sort((a, b) => (order[a.w] - order[b.w]) || a.y.localeCompare(b.y));
+}
 function openPerson(id){
   const c = CH[id]; if (!c || c.ep > V) return;
   const bio = c.bio.filter(vis);
@@ -1392,6 +1406,7 @@ function openPerson(id){
         : `<button class="btn" data-photo="${id}">${localPhoto(id) ? "Change my photo" : (shared[id] ? "Use my own photo" : "Add photo")}</button>${localPhoto(id) ? `<button class="btn" data-unphoto="${id}">Remove my photo</button>` : ""}`}</div></div></div>
     <h3>What you know</h3>
     ${(() => { const sm = summaryOf(id, links, evs, trips); return sm ? `<p class="who-sum">${esc(sm)}</p>` : ""; })()}
+    ${(() => { const ys = yearSummary(id, evs); return ys.length ? `<div class="yrsum">${ys.map(r => `<div class="ys-row"><span class="ys-y mono">${esc(r.y)}${r.w === "B" ? " ◐" : r.w === "O" ? " ○" : ""}</span><span>${esc(r.parts.join(" "))}</span></div>`).join("")}</div>` : ""; })()}
     <div class="bio">${bio.map(b => `<div class="row">${epBadge(b.ep)}<span>${isNew(b)?'<span class="newtag">NEW</span> ':""}<span class="${superseded(b)?"struck":""}">${esc(b.t)}</span>${superseded(b) ? `<div class="turned"><b>TURNED OUT · ${code(b.until)}</b> ${esc(b.later)}</div>` : ""}</span></div>`).join("")}</div>
     ${links.length ? `<h3>Connections</h3><div class="rels">${links.map(l => { const r = relTo(l, id); const sup = superseded(l);
         return `<button class="rel" data-person="${r.other}"><span class="kind ${sup?"struck":""}">${r.kind}</span>${avatar(r.other)}<span><span class="${sup?"struck":""}">${esc(name(r.other))}</span>${sup?` <span style="color:var(--thread);font-size:12px">· ${esc(l.later)} (${code(l.until)})</span>`:""} ${epBadge(l.ep)}${isNew(l)?' <span class="newtag">NEW</span>':""}</span></button>`; }).join("")}</div>` : ""}
