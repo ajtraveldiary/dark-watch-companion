@@ -208,8 +208,9 @@ select,input[type=search]{background:var(--surface-2);color:var(--ink);border:1p
 .loc-evs li.new{border-left:3px solid var(--accent);padding-left:8px}
 .loc-d{font-size:13px;color:var(--accent);padding-top:2px}
 @media (max-width:560px){.loc-evs li{grid-template-columns:1fr;gap:2px}}
-.who-sum{margin:0 0 12px;padding:12px 14px;border-left:3px solid var(--accent);background:rgba(227,180,60,.06);border-radius:0 10px 10px 0;line-height:1.6}
-.yrsum{border:1px solid var(--line);border-radius:12px;padding:4px 12px;margin:10px 0 14px}
+.who-sum{margin:0 0 12px;padding:4px 14px;border-left:3px solid var(--accent);background:rgba(227,180,60,.06);border-radius:0 10px 10px 0;line-height:1.6}
+.who-head{margin:8px 0;padding-bottom:8px;border-bottom:1px solid var(--line)}
+.who-sum .who-head:last-child{border-bottom:none}
 .ys-row{display:grid;grid-template-columns:62px 1fr;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);line-height:1.5}
 .ys-row:last-child{border-bottom:none}
 .ys-y{color:var(--accent);font-size:14px;padding-top:1px}
@@ -1361,7 +1362,7 @@ function relTo(l, id){
 }
 // One short paragraph pulling together what's known about someone so far, built from the same gated data.
 const andList = a => a.length < 2 ? (a[0] || "") : a.slice(0, -1).join(", ") + " and " + a[a.length-1];
-function summaryOf(id, links, evs, trips){
+function summaryOf(id, links, evs, trips, hasYears){
   const out = [], by = {};
   const sur = n => (n.match(/\s(\S+)$/) || [,""])[1];
   const mine = sur(name(id));
@@ -1376,10 +1377,10 @@ function summaryOf(id, links, evs, trips){
   say("Raised", "Raised"); say("Grandparent of", "Grandparent of"); say("Sibling of", "Sibling of");
   const years = new Set(evs.filter(e => e.d).map(e => e.d.slice(0,4)));
   (D.SIGHTINGS || []).forEach(r => { if (r.id === id && r.ep <= V && /^\d{4}$/.test(r.y)) years.add(r.y); });
-  const ys = [...years].sort(); if (ys.length) out.push(`Seen in ${andList(ys)}.`);
+  const ys = [...years].sort(); if (ys.length && !hasYears) out.push(`Seen in ${andList(ys)}.`);
   if (trips.length) out.push(`Travelled ${andList(trips.map(t => `${t.from.replace(/^Unknown/, "an unknown")} → ${t.to}`))}.`);
   const latest = evs.filter(e => !superseded(e)).sort((a, b) => b.ep - a.ep)[0];
-  if (latest) out.push(`Most recently: ${latest.t.replace(/\.?$/, ".")}`);
+  if (latest && !hasYears) out.push(`Most recently: ${latest.t.replace(/\.?$/, ".")}`);
   return out.join(" ");
 }
 // Year-by-year summary for a character: hand-written lines where we have them, otherwise their dated events.
@@ -1405,8 +1406,8 @@ function openPerson(id){
         ? `<button class="btn" data-photo="${id}">${shared[id] ? "Replace photo for everyone" : "Add photo for everyone"}</button>${shared[id] ? `<button class="btn" data-unphoto="${id}">Remove for everyone</button>` : ""}`
         : `<button class="btn" data-photo="${id}">${localPhoto(id) ? "Change my photo" : (shared[id] ? "Use my own photo" : "Add photo")}</button>${localPhoto(id) ? `<button class="btn" data-unphoto="${id}">Remove my photo</button>` : ""}`}</div></div></div>
     <h3>What you know</h3>
-    ${(() => { const sm = summaryOf(id, links, evs, trips); return sm ? `<p class="who-sum">${esc(sm)}</p>` : ""; })()}
-    ${(() => { const ys = yearSummary(id, evs); return ys.length ? `<div class="yrsum">${ys.map(r => `<div class="ys-row"><span class="ys-y mono">${esc(r.y)}${r.w === "B" ? " ◐" : r.w === "O" ? " ○" : ""}</span><span>${esc(r.parts.join(" "))}</span></div>`).join("")}</div>` : ""; })()}
+    ${(() => { const ys = yearSummary(id, evs); const sm = summaryOf(id, links, evs, trips, ys.length > 0);
+      return (sm || ys.length) ? `<div class="who-sum">${sm ? `<p class="who-head">${esc(sm)}</p>` : ""}${ys.map(r => `<div class="ys-row"><span class="ys-y mono">${esc(r.y)}${r.w === "B" ? " ◐" : r.w === "O" ? " ○" : ""}</span><span>${esc(r.parts.join(" "))}</span></div>`).join("")}</div>` : ""; })()}
     <div class="bio">${bio.map(b => `<div class="row">${epBadge(b.ep)}<span>${isNew(b)?'<span class="newtag">NEW</span> ':""}<span class="${superseded(b)?"struck":""}">${esc(b.t)}</span>${superseded(b) ? `<div class="turned"><b>TURNED OUT · ${code(b.until)}</b> ${esc(b.later)}</div>` : ""}</span></div>`).join("")}</div>
     ${links.length ? `<h3>Connections</h3><div class="rels">${links.map(l => { const r = relTo(l, id); const sup = superseded(l);
         return `<button class="rel" data-person="${r.other}"><span class="kind ${sup?"struck":""}">${r.kind}</span>${avatar(r.other)}<span><span class="${sup?"struck":""}">${esc(name(r.other))}</span>${sup?` <span style="color:var(--thread);font-size:12px">· ${esc(l.later)} (${code(l.until)})</span>`:""} ${epBadge(l.ep)}${isNew(l)?' <span class="newtag">NEW</span>':""}</span></button>`; }).join("")}</div>` : ""}
