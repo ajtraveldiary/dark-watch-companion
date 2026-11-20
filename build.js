@@ -18,6 +18,8 @@ const out = {
   BIRTHS: Object.fromEntries(Object.entries(D.BIRTHS).map(([id,[y,ep]]) => [id, {y, ep:Math.max(E(ep), E(D.CHARACTERS.find(c => c.id === id).ep))}])),
   REALWORLD: D.REALWORLD,
   PLACES: D.PLACES.map(p => ({...p, ep:E(p.ep)})),
+  TIMEORDER: D.TIMEORDER.map(r => ({...r, ep:E(r.ep)})),
+  EXPLAINED: Object.fromEntries(Object.entries(D.EXPLAINED).map(([s,x]) => [s, {...x, ep:E(x.ep)}])),
   NOTES: Object.fromEntries(Object.entries(D.NOTES).map(([k,v]) => { const [s,n]=k.split("."); return [`S${s}E${n}`, v]; }))
 };
 // integrity checks
@@ -138,7 +140,8 @@ Website: ${SITE}/
 ## Sections of the site
 
 - What's new: everything the latest watched episode revealed.
-- Story & recaps: a narrated, in-order summary of each episode watched, with a one-line recap and details worth noticing.
+- Story: a narrated, in-order summary of each episode watched, with a one-line recap and details worth noticing.
+- Recap: each season retold in time order, plus "explained" once the season is finished.
 - Timeline: events seen so far, ordered by date.
 - Relationship tree: a family tree of the four families that grows episode by episode, with photos and roles.
 - People: every character met so far, with a short spoiler-safe note.

@@ -210,6 +210,17 @@ select,input[type=search]{background:var(--surface-2);color:var(--ink);border:1p
 .lg{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px;border:2px solid #3b4448}
 .lg.lit{border-color:var(--accent);background:#1d1a10}
 .evs .hl .ev{border-color:var(--accent)}
+.rc-season{margin-bottom:34px}
+.rc-h{font-size:20px;margin:6px 0 14px}
+.rc-year{display:grid;grid-template-columns:64px 1fr;gap:14px;padding:12px 0;border-top:1px solid var(--line)}
+.rc-y{font-size:18px;color:var(--accent);padding-top:2px}
+.rc-year p{margin:0 0 10px;line-height:1.6}
+.rc-year p.rc-new{border-left:3px solid var(--accent);padding-left:10px}
+.rc-ex{display:grid;gap:10px}
+.rc-ex h4{margin:0 0 6px;font-size:16px;color:var(--ink)}
+.rc-ex p{margin:0;line-height:1.6;color:var(--muted)}
+.rc-lock{margin-top:18px;padding:12px 14px;border:1px dashed var(--line);border-radius:12px;color:var(--faint);font-size:14px}
+@media (max-width:560px){.rc-year{grid-template-columns:1fr;gap:4px}}
 .yr-title{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin:6px 0 4px}
 .yr-title .big{font-family:var(--font-mono);font-size:40px;line-height:1;color:var(--ink)}
 .yr-title .wn{color:var(--muted);font-size:15px}
@@ -447,6 +458,7 @@ svg.focusing .eg.hl .edge{opacity:1;stroke-width:3px}
 
   <section class="view" id="v-new" role="tabpanel"></section>
   <section class="view" id="v-story" role="tabpanel"></section>
+  <section class="view" id="v-recap" role="tabpanel"></section>
   <section class="view" id="v-timeline" role="tabpanel"></section>
   <section class="view" id="v-map" role="tabpanel"></section>
   <section class="view" id="v-tree" role="tabpanel"></section>
@@ -628,7 +640,7 @@ function renderSelector(){
 }
 
 // ---------- Tabs ----------
-const TABS = [["new","What's new"],["story","Story & recaps"],["timeline","Timeline"],["map","Map"],["tree","Relationship tree"],["people","People"],["mysteries","Mysteries"],["travels","Time travel"],["glossary","Glossary"]];
+const TABS = [["new","What's new"],["story","Story"],["recap","Recap"],["timeline","Timeline"],["map","Map"],["tree","Relationship tree"],["people","People"],["mysteries","Mysteries"],["travels","Time travel"],["glossary","Glossary"]];
 function renderTabs(){
   $("#tabrow").innerHTML = TABS.map(([k,l]) => `<button role="tab" data-tab="${k}" aria-selected="${tab===k}">${l}${k==="new" && W>=0 ? '<span class="dot"></span>':''}</button>`).join("");
   document.querySelectorAll("section.view").forEach(s => s.classList.toggle("on", s.id === "v-" + tab));
@@ -1355,6 +1367,25 @@ function renderTravels(){
 }
 
 // ---------- Recaps ----------
+// ---------- Recap: each season retold in time order, then explained once it's finished ----------
+function renderRecap(){
+  const el = $("#v-recap");
+  if (W < 0) { el.innerHTML = lockedMsg("recap"); return; }
+  const seasons = [...new Set(EPS.filter(e => e.i <= V).map(e => e.s))];
+  el.innerHTML = `<div class="vhead"><h2>Recap</h2></div>` + seasons.map(sn => {
+    const rows = D.TIMEORDER.filter(r => r.s === sn && r.ep <= V);
+    const years = [...new Set(rows.map(r => r.y))].sort();
+    const ex = D.EXPLAINED[sn];
+    const done = ex && ex.ep <= V;
+    return `<div class="rc-season">
+      <h3 class="rc-h">Season ${sn} in time order</h3>
+      ${years.map(y => `<div class="rc-year"><div class="rc-y mono">${y}</div><div>${rows.filter(r => r.y === y).map(r => `<p class="${r.ep === V ? "rc-new" : ""}">${esc(r.t)}</p>`).join("")}</div></div>`).join("") || `<div class="empty">Nothing yet.</div>`}
+      ${done ? `<h3 class="rc-h" style="margin-top:26px">Season ${sn}, explained</h3>
+        <div class="rc-ex">${ex.parts.map(x => `<div class="card"><h4>${esc(x.h)}</h4><p>${esc(x.t)}</p></div>`).join("")}</div>`
+        : (ex ? `<div class="rc-lock">Season ${sn}, explained: unlocks when you finish the season.</div>` : "")}
+    </div>`;
+  }).reverse().join("");
+}
 function renderStory(){
   const el = $("#v-story");
   if (W < 0) { el.innerHTML = lockedMsg("story and recaps"); return; }
@@ -1641,7 +1672,7 @@ document.addEventListener("keydown", e => { if (e.key === "Escape" && inPageFull
 
 function renderAll(){
   renderStatus(); renderSelector(); renderTabs(); updatePF();
-  renderNew(); renderStory(); renderTimeline(); renderMap(); renderTree(); renderPeople(); renderMysteries(); renderTravels(); renderGlossary();
+  renderNew(); renderStory(); renderRecap(); renderTimeline(); renderMap(); renderTree(); renderPeople(); renderMysteries(); renderTravels(); renderGlossary();
 }
 renderAll();
 loadBaked().then(loadShared);
