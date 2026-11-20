@@ -210,6 +210,18 @@ select,input[type=search]{background:var(--surface-2);color:var(--ink);border:1p
 .lg{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px;border:2px solid #3b4448}
 .lg.lit{border-color:var(--accent);background:#1d1a10}
 .evs .hl .ev{border-color:var(--accent)}
+.th-season{margin-bottom:30px}
+.th-group{margin-bottom:18px}
+.th-group h4{font-size:14px;letter-spacing:.04em;color:var(--muted);margin:0 0 8px;font-family:var(--font-mono)}
+.th{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:8px;background:var(--surface,#121517)}
+.th.th-new{border-color:var(--accent)}
+.th p{margin:0 0 6px;line-height:1.55}
+.th-b{display:inline-block;font-size:12px;font-family:var(--font-mono);padding:2px 8px;border-radius:999px;margin:2px 6px 0 0;border:1px solid var(--line);color:var(--muted)}
+.th-b.yes{border-color:#5f9e6e;color:#8fd19e}
+.th-b.no{border-color:#a05656;color:#e29a9a}
+.th-b.part,.th-b.open{border-color:#8a7a45;color:#d9c27a}
+.th-b.called{border-color:var(--accent);color:var(--accent)}
+.th-note{font-size:14px;color:var(--muted);margin-top:6px}
 .rc-season{margin-bottom:34px}
 .rc-h{font-size:20px;margin:6px 0 14px}
 .rc-year{display:grid;grid-template-columns:64px 1fr;gap:14px;padding:12px 0;border-top:1px solid var(--line)}
@@ -464,6 +476,7 @@ svg.focusing .eg.hl .edge{opacity:1;stroke-width:3px}
   <section class="view" id="v-tree" role="tabpanel"></section>
   <section class="view" id="v-people" role="tabpanel"></section>
   <section class="view" id="v-mysteries" role="tabpanel"></section>
+  <section class="view" id="v-theories" role="tabpanel"></section>
   <section class="view" id="v-travels" role="tabpanel"></section>
   <section class="view" id="v-glossary" role="tabpanel"></section>
   </div>
@@ -640,7 +653,7 @@ function renderSelector(){
 }
 
 // ---------- Tabs ----------
-const TABS = [["new","What's new"],["story","Story"],["recap","Recap"],["timeline","Timeline"],["map","Map"],["tree","Relationship tree"],["people","People"],["mysteries","Mysteries"],["travels","Time travel"],["glossary","Glossary"]];
+const TABS = [["new","What's new"],["story","Story"],["recap","Recap"],["timeline","Timeline"],["map","Map"],["tree","Relationship tree"],["people","People"],["mysteries","Mysteries"],["theories","Fan theories"],["travels","Time travel"],["glossary","Glossary"]];
 function renderTabs(){
   $("#tabrow").innerHTML = TABS.map(([k,l]) => `<button role="tab" data-tab="${k}" aria-selected="${tab===k}">${l}${k==="new" && W>=0 ? '<span class="dot"></span>':''}</button>`).join("");
   document.querySelectorAll("section.view").forEach(s => s.classList.toggle("on", s.id === "v-" + tab));
@@ -1386,6 +1399,30 @@ function renderRecap(){
     </div>`;
   }).reverse().join("");
 }
+// ---------- Fan theories ----------
+function renderTheories(){
+  const el = $("#v-theories");
+  if (W < 0) { el.innerHTML = lockedMsg("fan theories"); return; }
+  const seen = t => Math.max(t.ep, t.show == null ? -1 : t.show) <= V;
+  const verdict = t => {
+    const called = t.show != null && t.show > t.ep ? `<span class="th-b called">Fans called it after ${code(t.ep)}</span>` : "";
+    if (!t.res || t.res.ep > V) return called;
+    const lab = {yes:`Right · ${code(t.res.ep)}`, no:`Wrong · ${code(t.res.ep)}`, part:`Partly right · ${code(t.res.ep)}`, open:"Never answered"}[t.res.v];
+    return `${called}<span class="th-b ${t.res.v}">${lab}</span>${t.res.note ? `<div class="th-note">${esc(t.res.note)}</div>` : ""}`;
+  };
+  const card = t => `<div class="th ${Math.max(t.ep, t.show ?? -1) === V ? "th-new" : ""}"><p>${esc(t.t)}</p>${verdict(t)}</div>`;
+  const list = D.THEORIES.filter(seen);
+  const seasons = [...new Set(EPS.filter(e => e.i <= V).map(e => e.s))].reverse();
+  el.innerHTML = `<div class="vhead"><h2>Fan theories</h2></div>` + seasons.map(sn => {
+    const after = list.filter(t => t.season === sn);
+    const eps = EPS.filter(e => e.s === sn && e.i <= V).reverse();
+    const byEp = eps.map(e => [e, list.filter(t => !t.season && (t.show != null && t.show > t.ep ? t.show : t.ep) === e.i)]).filter(([,a]) => a.length);
+    return `<div class="th-season"><h3 class="rc-h">Season ${sn}</h3>
+      ${after.length ? `<div class="th-group"><h4>After the season</h4>${after.map(card).join("")}</div>` : ""}
+      ${byEp.map(([e, a]) => `<div class="th-group"><h4>${e.code} · ${esc(e.title)}</h4>${a.map(card).join("")}</div>`).join("")}
+    </div>`;
+  }).join("") + `<p class="treehint">From fan discussion on r/DarK and press roundups of fan theories (Bustle, TV Guide, Inverse, Business Insider).</p>`;
+}
 function renderStory(){
   const el = $("#v-story");
   if (W < 0) { el.innerHTML = lockedMsg("story and recaps"); return; }
@@ -1672,7 +1709,7 @@ document.addEventListener("keydown", e => { if (e.key === "Escape" && inPageFull
 
 function renderAll(){
   renderStatus(); renderSelector(); renderTabs(); updatePF();
-  renderNew(); renderStory(); renderRecap(); renderTimeline(); renderMap(); renderTree(); renderPeople(); renderMysteries(); renderTravels(); renderGlossary();
+  renderNew(); renderStory(); renderRecap(); renderTimeline(); renderMap(); renderTree(); renderPeople(); renderMysteries(); renderTheories(); renderTravels(); renderGlossary();
 }
 renderAll();
 loadBaked().then(loadShared);
