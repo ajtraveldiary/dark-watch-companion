@@ -1107,3 +1107,60 @@ module.exports.EXPLAINED = {
     { h:"Questions the season leaves open", t:"What destroys Winden before 2052? Who is Noah, and what is he building? Who is the old woman called Claudia, and why is Noah at war with her? Can Ulrich get home from 1953, and can Jonas get back from 2052?" }
   ]}
 };
+
+// ---------- Theories & concepts: the real science, philosophy and myth Dark draws on ----------
+// ep: first episode that raises it. what: the idea in plain words (true in the real world, no plot). dark: how it
+// shows up, using only what's on screen by ep. more: optional later lines, each with its own ep.
+module.exports.CONCEPTS = [
+  { ep:"1.1", h:"Past, present and future at once",
+    what:"Einstein's relativity treats time as a dimension, much like space. Many physicists read this as meaning every moment exists equally, past and future alike, and that \"now\" is just where we happen to be standing. Einstein called the difference between past, present and future \"a stubbornly persistent illusion\".",
+    dark:"Season 1 opens with that Einstein line. From the start, the show treats the past as not gone and the future as already there." },
+  { ep:"1.3", h:"Wormholes (Einstein–Rosen bridges)",
+    what:"A wormhole is a shortcut through space-time that Einstein's equations allow on paper: a tunnel joining two distant points, or two different times. None has ever been found, and holding one open would need a kind of matter nobody knows exists.",
+    dark:"The Stranger covers the walls of room 8 with notes on black holes and time. The passage in the caves behaves like a wormhole joining moments 33 years apart." },
+  { ep:"1.5", h:"Causal loops",
+    what:"A causal loop is a chain of events that causes itself: A leads to B, and B leads back to A. Nothing outside the loop starts it, and nothing inside it can be removed without the whole thing falling apart.",
+    dark:"Mikkel falls into 1986 and grows up to be Michael, Jonas's father. Jonas exists only because Mikkel disappeared, and Mikkel disappeared in a world that already had Jonas in it. Each half needs the other." },
+  { ep:"1.5", h:"Ariadne's thread",
+    what:"In Greek myth, Ariadne gives Theseus a ball of thread so he can find his way back out of the Minotaur's labyrinth.",
+    dark:"Martha rehearses the part of Ariadne for the school play.",
+    more:[{ ep:"1.6", t:"Then Jonas follows a red thread through the caves, like Theseus in the maze." }] },
+  { ep:"1.6", h:"The Emerald Tablet and Hermeticism",
+    what:"The Emerald Tablet is a short, cryptic text from Hermeticism, a mystical tradition prized by medieval alchemists. It's the source of the phrase \"as above, so below\". One line ends \"thus the world was created\", in Latin \"sic mundus creatus est\".",
+    dark:"Those Latin words are carved on the door Jonas finds in the caves." },
+
+  { ep:"1.7", h:"The grandfather paradox",
+    what:"The classic objection to time travel: go back and stop your grandparents from meeting, and you are never born, so you could never have gone back to stop them.",
+    dark:"The Stranger warns Jonas that bringing Mikkel home from 1986 would erase Jonas himself.",
+    more:[{ ep:"1.8", t:"Ulrich faces the same risk in 1953, where his own parents are still children." }] },
+  { ep:"1.7", h:"Noah's ark",
+    what:"In the Bible, Noah builds an ark to carry a chosen few through a flood that wipes out everyone else.",
+    dark:"The man who calls himself Noah calls the chair in the bunker an ark." },
+  { ep:"1.8", h:"The bootstrap paradox",
+    what:"A causal loop involving an object or an idea. It is carried back in time and copied, so it exists without anyone ever having created it. The name comes from the impossible trick of pulling yourself up by your own bootstraps.",
+    dark:"The Stranger shows Tannhaus a broken time machine that bears Tannhaus's own initials." },
+  { ep:"1.8", h:"Why 33 years",
+    what:"33 years of the sun-based calendar come to almost exactly 34 years of the moon-based one, so after 33 years the two calendars line up again. Some real calendars use a 33-year cycle for this reason.",
+    dark:"Tannhaus gives this as the reason the passage joins times exactly 33 years apart." },
+  { ep:"1.8", h:"Eternal recurrence",
+    what:"Friedrich Nietzsche's thought experiment: suppose you had to live your life again, exactly the same, over and over forever. He asked whether you could welcome that or would despair at it.",
+    dark:"Winden looks caught in something close to it: the same kinds of events coming round every 33 years, to the same families." },
+  { ep:"1.8", h:"Determinism and free will",
+    what:"Determinism says every event follows necessarily from what came before. Free will says our choices are genuinely open. Philosophers have argued for centuries over whether both can be true.",
+    dark:"Ulrich goes to 1953 convinced he can stop the killings by acting now. The show keeps asking whether anyone in Winden really chooses anything." },
+  { ep:"1.10", h:"Novikov's self-consistency principle",
+    what:"Physicist Igor Novikov proposed that if time travel were possible, only consistent histories could happen: you couldn't change the past, because whatever you did there had always been part of it.",
+    dark:"By the end of Season 1, every attempt to change the past, Ulrich's, old Helge's and the Stranger's, turns out to be part of what happened." },
+  { ep:"1.10", h:"Cesium-137",
+    what:"Cesium-137 is a radioactive by-product of nuclear fission, made in reactors and spread by accidents like Chernobyl. Half of any amount decays in about 30 years, so it stays dangerous for a long time.",
+    dark:"The Stranger loads it into his device in the caves to destroy the wormhole." },
+  { ep:"2.1", h:"The \"God particle\"",
+    what:"\"God particle\" is a nickname for the Higgs boson, a real particle confirmed at CERN in 2012. It has nothing to do with time travel: Dark borrows the nickname for something entirely fictional.",
+    dark:"At the plant, a black sphere the show calls dark matter can send people through time." },
+  { ep:"3.1", h:"Superposition and Schrödinger's cat",
+    what:"In quantum physics, a system can be in a mix of possible states until it is measured. Schrödinger's cat is a thought experiment that pushes this to absurdity: a cat in a sealed box that is somehow both alive and dead until someone looks.",
+    dark:"Season 3 shows two versions of Winden existing side by side." },
+  { ep:"3.1", h:"Quantum entanglement",
+    what:"Two entangled particles share a single state: measure one and you instantly know about the other, however far apart they are.",
+    dark:"The two Windens behave like an entangled pair: what happens in one is mirrored in the other." }
+];

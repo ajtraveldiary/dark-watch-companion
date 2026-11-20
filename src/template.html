@@ -210,6 +210,14 @@ select,input[type=search]{background:var(--surface-2);color:var(--ink);border:1p
 .lg{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px;border:2px solid #3b4448}
 .lg.lit{border-color:var(--accent);background:#1d1a10}
 .evs .hl .ev{border-color:var(--accent)}
+.cc-list{display:grid;gap:12px}
+.cc{position:relative;border:1px solid var(--line);border-radius:14px;padding:16px 16px 14px;background:var(--surface,#121517)}
+.cc.cc-new{border-color:var(--accent)}
+.cc h3{font-size:18px;margin:0 0 8px;padding-right:56px}
+.cc p{margin:0 0 10px;line-height:1.6}
+.cc-dark{border-left:3px solid var(--accent);padding:2px 0 2px 12px;color:var(--muted);line-height:1.55}
+.cc-dark b{color:var(--ink);margin-right:4px}
+.cc-ep{position:absolute;top:16px;right:16px;font-size:12px;color:var(--faint)}
 .rc-season{margin-bottom:34px}
 .rc-h{font-size:20px;margin:6px 0 14px}
 .rc-year{display:grid;grid-template-columns:64px 1fr;gap:14px;padding:12px 0;border-top:1px solid var(--line)}
@@ -464,6 +472,7 @@ svg.focusing .eg.hl .edge{opacity:1;stroke-width:3px}
   <section class="view" id="v-tree" role="tabpanel"></section>
   <section class="view" id="v-people" role="tabpanel"></section>
   <section class="view" id="v-mysteries" role="tabpanel"></section>
+  <section class="view" id="v-concepts" role="tabpanel"></section>
   <section class="view" id="v-travels" role="tabpanel"></section>
   <section class="view" id="v-glossary" role="tabpanel"></section>
   </div>
@@ -640,7 +649,7 @@ function renderSelector(){
 }
 
 // ---------- Tabs ----------
-const TABS = [["new","What's new"],["story","Story"],["recap","Recap"],["timeline","Timeline"],["map","Map"],["tree","Relationship tree"],["people","People"],["mysteries","Mysteries"],["travels","Time travel"],["glossary","Glossary"]];
+const TABS = [["new","What's new"],["story","Story"],["recap","Recap"],["timeline","Timeline"],["map","Map"],["tree","Relationship tree"],["people","People"],["mysteries","Mysteries"],["concepts","Theories & concepts"],["travels","Time travel"],["glossary","Glossary"]];
 function renderTabs(){
   $("#tabrow").innerHTML = TABS.map(([k,l]) => `<button role="tab" data-tab="${k}" aria-selected="${tab===k}">${l}${k==="new" && W>=0 ? '<span class="dot"></span>':''}</button>`).join("");
   document.querySelectorAll("section.view").forEach(s => s.classList.toggle("on", s.id === "v-" + tab));
@@ -1386,6 +1395,19 @@ function renderRecap(){
     </div>`;
   }).reverse().join("");
 }
+// ---------- Theories & concepts ----------
+function renderConcepts(){
+  const el = $("#v-concepts");
+  if (W < 0) { el.innerHTML = lockedMsg("theories and concepts"); return; }
+  const list = D.CONCEPTS.filter(c => c.ep <= V).slice().reverse();
+  el.innerHTML = `<div class="vhead"><h2>Theories &amp; concepts</h2></div>
+    <div class="cc-list">${list.map(c => `<article class="cc ${c.ep === V ? "cc-new" : ""}">
+      <h3>${esc(c.h)}</h3>
+      <p>${esc(c.what)}</p>
+      <div class="cc-dark"><b>In Dark</b> ${esc(c.dark)}${c.more.filter(m => m.ep <= V).map(m => ` ${esc(m.t)}`).join("")}</div>
+      <div class="cc-ep mono">${code(c.ep)}</div>
+    </article>`).join("") || `<div class="empty">Nothing yet.</div>`}</div>`;
+}
 function renderStory(){
   const el = $("#v-story");
   if (W < 0) { el.innerHTML = lockedMsg("story and recaps"); return; }
@@ -1672,7 +1694,7 @@ document.addEventListener("keydown", e => { if (e.key === "Escape" && inPageFull
 
 function renderAll(){
   renderStatus(); renderSelector(); renderTabs(); updatePF();
-  renderNew(); renderStory(); renderRecap(); renderTimeline(); renderMap(); renderTree(); renderPeople(); renderMysteries(); renderTravels(); renderGlossary();
+  renderNew(); renderStory(); renderRecap(); renderTimeline(); renderMap(); renderTree(); renderPeople(); renderMysteries(); renderConcepts(); renderTravels(); renderGlossary();
 }
 renderAll();
 loadBaked().then(loadShared);

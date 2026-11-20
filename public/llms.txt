@@ -23,6 +23,7 @@ Website: https://dark-watch-companion.workdesk.workers.dev/
 - What's new: everything the latest watched episode revealed.
 - Story: a narrated, in-order summary of each episode watched, with a one-line recap and details worth noticing.
 - Recap: each season retold in time order, plus "explained" once the season is finished.
+- Theories & concepts: the real science, philosophy and myth the show draws on (wormholes, causal loops, the bootstrap and grandfather paradoxes and more), explained in plain words.
 - Timeline: events seen so far, ordered by date.
 - Relationship tree: a family tree of the four families that grows episode by episode, with photos and roles.
 - People: every character met so far, with a short spoiler-safe note.

@@ -19,6 +19,7 @@ const out = {
   REALWORLD: D.REALWORLD,
   PLACES: D.PLACES.map(p => ({...p, ep:E(p.ep)})),
   TIMEORDER: D.TIMEORDER.map(r => ({...r, ep:E(r.ep)})),
+  CONCEPTS: D.CONCEPTS.map(c => ({...c, ep:E(c.ep), more:(c.more || []).map(m => ({...m, ep:E(m.ep)}))})),
   EXPLAINED: Object.fromEntries(Object.entries(D.EXPLAINED).map(([s,x]) => [s, {...x, ep:E(x.ep)}])),
   NOTES: Object.fromEntries(Object.entries(D.NOTES).map(([k,v]) => { const [s,n]=k.split("."); return [`S${s}E${n}`, v]; }))
 };
@@ -142,6 +143,7 @@ Website: ${SITE}/
 - What's new: everything the latest watched episode revealed.
 - Story: a narrated, in-order summary of each episode watched, with a one-line recap and details worth noticing.
 - Recap: each season retold in time order, plus "explained" once the season is finished.
+- Theories & concepts: the real science, philosophy and myth the show draws on (wormholes, causal loops, the bootstrap and grandfather paradoxes and more), explained in plain words.
 - Timeline: events seen so far, ordered by date.
 - Relationship tree: a family tree of the four families that grows episode by episode, with photos and roles.
 - People: every character met so far, with a short spoiler-safe note.
