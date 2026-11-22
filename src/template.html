@@ -134,11 +134,8 @@ section.view.on{display:block}
 .vhead p{margin:0;color:var(--muted);font-size:14px;max-width:60ch}
 
 /* Generic cards */
-.card{background:none;border:0;border-top:1px solid var(--line);border-radius:0;padding:14px 0}
-details.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px}
-details.card.new,.loc.loc-new{border:1px solid var(--accent)!important;padding-left:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px}
 .new{border-color:var(--accent)!important;box-shadow:0 0 0 1px rgba(227,180,60,.35),0 0 24px -8px rgba(227,180,60,.6)}
-.card.new{border-color:var(--line)!important;border-left:3px solid var(--accent)!important;box-shadow:none!important;padding-left:12px}
 .newtag{font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;color:var(--bg);background:var(--accent);border-radius:4px;padding:1px 5px;vertical-align:middle}
 .epb{font-family:var(--font-mono);font-size:12px;color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:0 5px;white-space:nowrap}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
@@ -189,14 +186,14 @@ select,input[type=search]{background:var(--surface-2);color:var(--ink);border:1p
 .rw-cols ul{margin:0;padding-left:18px;font-size:15px;line-height:1.5}
 .rw-cols li{margin:4px 0}
 .rw-src{margin:10px 0 0;font-size:13px;color:var(--faint)}
-.cc-list{display:grid;gap:4px}
-.cc{position:relative;border-top:1px solid var(--line);padding:16px 0 14px}
-.cc.cc-new{border-top-color:var(--line);border-left:3px solid var(--accent);padding-left:12px}
+.cc-list{display:grid;gap:12px}
+.cc{position:relative;border:1px solid var(--line);border-radius:14px;padding:16px 16px 14px;background:var(--surface)}
+.cc.cc-new{border-color:var(--accent)}
 .cc h3{font-size:18px;margin:0 0 8px;padding-right:56px}
 .cc p{margin:0 0 10px;line-height:1.6}
 .cc-dark{border-left:3px solid var(--line);padding:2px 0 2px 12px;color:var(--muted);line-height:1.55}
 .cc-dark b{color:var(--ink);margin-right:4px}
-.cc-ep{position:absolute;top:16px;right:0;font-size:12px;color:var(--faint)}
+.cc-ep{position:absolute;top:16px;right:16px;font-size:12px;color:var(--faint)}
 .loc-list{display:grid;gap:10px}
 .loc summary{display:flex;align-items:center;justify-content:space-between;gap:10px;cursor:pointer;list-style:none}
 .loc summary::-webkit-details-marker{display:none}
@@ -211,7 +208,7 @@ select,input[type=search]{background:var(--surface-2);color:var(--ink);border:1p
 .loc-evs li.new{border-left:3px solid var(--accent);padding-left:8px}
 .loc-d{font-size:13px;color:var(--muted);padding-top:2px}
 @media (max-width:560px){.loc-evs li{grid-template-columns:1fr;gap:2px}}
-.who-sum{margin:0 0 12px;line-height:1.6}
+.who-sum{margin:0 0 12px;padding:4px 14px;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;line-height:1.6}
 .who-head{margin:8px 0;padding-bottom:8px;border-bottom:1px solid var(--line)}
 .who-sum .who-head:last-child{border-bottom:none}
 .ys-row{display:grid;grid-template-columns:62px 1fr;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);line-height:1.5}
@@ -223,7 +220,7 @@ select,input[type=search]{background:var(--surface-2);color:var(--ink);border:1p
 .rc-y{font-size:18px;color:var(--muted);padding-top:2px}
 .rc-year p{margin:0 0 10px;line-height:1.6}
 .rc-year p.rc-new{border-left:3px solid var(--accent);padding-left:10px}
-.rc-ex{display:grid;gap:0}
+.rc-ex{display:grid;gap:10px}
 .rc-ex h4{margin:0 0 6px;font-size:16px;color:var(--ink)}
 .rc-ex p{margin:0;line-height:1.6;color:var(--muted)}
 .rc-lock{margin-top:18px;padding:12px 14px;border:1px dashed var(--line);border-radius:12px;color:var(--faint);font-size:14px}
@@ -363,7 +360,7 @@ svg.focusing .eg.hl .edge{opacity:1;stroke-width:3px}
 .chapter.latest h3{color:var(--accent)}
 .chapter .ch-recap{font-size:15px;line-height:1.55;color:var(--muted);border-left:3px solid var(--line);padding:6px 0 6px 12px;margin:0 0 16px}
 .chapter .ch-recap b{color:var(--ink);font-weight:700;margin-right:4px}
-.chapter .ch-notes{margin:4px 0 14px;padding-top:10px;border-top:1px solid var(--line)}
+.chapter .ch-notes{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:4px 0 14px}
 .chapter .ch-notes h4{font-size:14px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
 .seasonbreak{font-family:var(--font-display);font-size:16px;letter-spacing:.3em;text-transform:uppercase;color:var(--muted);text-align:center;margin:30px 0 8px}
 .storytools{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
@@ -692,7 +689,7 @@ function renderNew(){
         ${answered.map(([m,a]) => `<div class="newitem"><span class="k" style="color:#79b884">Answer</span><span><b>${esc(m.q)}</b><br>${esc(a.t)}</span></div>`).join("")}
         ${raised.filter(m => !answered.some(([mm]) => mm===m)).map(m => `<div class="newitem"><span class="k" style="color:var(--thread)">New</span><span>${esc(m.q)}</span></div>`).join("")}
         </div></div>` : ""}
-      ${trips.length ? `<div class="card"><h3>Time travel</h3><div class="newlist">${trips.map(t => `<div class="newitem"><span class="k">${esc(t.how)}</span><span><b>${esc(name(t.who))}</b> <span class="mono">${esc(t.from)} → ${esc(t.to)}</span>${t.note?` <span style="color:var(--muted)">(${esc(t.note)})</span>`:""}</span></div>`).join("")}</div></div>` : ""}
+      ${trips.length ? `<div class="card"><h3>Time travel</h3><div class="newlist">${trips.map(t => `<div class="newitem"><span class="k">${esc(t.how)}</span><span><b>${esc(name(t.who))}</b> <span class="mono">${esc(t.from)} → ${esc(tripTo(t))}</span>${t.note?` <span style="color:var(--muted)">(${esc(t.note)})</span>`:""}</span></div>`).join("")}</div></div>` : ""}
       ${(D.NOTES[EPS[V].code]||[]).length ? `<div class="card missed"><h3>You might have missed</h3><div class="newlist">${D.NOTES[EPS[V].code].map(n => `<div class="newitem"><span class="k">${esc(n.k || "Detail")}</span><span>${esc(n.t)}</span></div>`).join("")}</div><div class="src">From the <a href="https://dark-netflix.fandom.com/" target="_blank" rel="noopener">Dark Wiki</a> and fan rewatch notes, in our words. Nothing past ${code(V)}.</div></div>` : ""}
       ${terms.length ? `<div class="card"><h3>New terms</h3><div class="newlist">${terms.map(g => `<div class="newitem"><span class="k">Term</span><span><b>${esc(g.term)}</b>: ${esc(g.t)}</span></div>`).join("")}</div></div>` : ""}
     </div>`;
@@ -774,6 +771,8 @@ function renderPlaces(){
     </details>`;
   }).join("")}</div>`;
 }
+// A trip's destination can stay hidden until the episode that shows where the traveller lands.
+const tripTo = t => t.toAt != null && t.toAt > V ? "Unknown" : t.to;
 function lockedMsg(what){ return `<div class="vhead"><h2>${what[0].toUpperCase()+what.slice(1)}</h2></div><div class="empty">Mark S1E1 as watched to start the ${what}.</div>`; }
 
 // ---------- Relationship tree ----------
@@ -1255,7 +1254,7 @@ function renderTravels(){
   const js = D.JOURNEYS.filter(vis);
   el.innerHTML = `<div class="vhead"><h2>Time travel log</h2></div>
     <div class="trips">${js.map(t => `<div class="card trip ${isNew(t)?"new":""}">${avatar(t.who)}
-      <div><div class="who">${esc(name(t.who))}</div><div class="route"><span>${esc(t.from)}</span><span class="arrow">→</span><span>${esc(t.to)}</span></div><div class="how">${esc(t.how)}${t.note?" · "+esc(t.note):""}</div></div>
+      <div><div class="who">${esc(name(t.who))}</div><div class="route"><span>${esc(t.from)}</span><span class="arrow">→</span><span>${esc(tripTo(t))}</span></div><div class="how">${esc(t.how)}${t.note?" · "+esc(t.note):""}</div></div>
       <div>${epBadge(t.ep)}</div></div>`).join("") || `<div class="empty">No one has travelled yet. As far as you know.</div>`}</div>`;
 }
 
@@ -1381,7 +1380,7 @@ function summaryOf(id, links, evs, trips, hasYears){
   const years = new Set(evs.filter(e => e.d).map(e => e.d.slice(0,4)));
   (D.SIGHTINGS || []).forEach(r => { if (r.id === id && r.ep <= V && /^\d{4}$/.test(r.y)) years.add(r.y); });
   const ys = [...years].sort(); if (ys.length && !hasYears) out.push(`Seen in ${andList(ys)}.`);
-  if (trips.length) out.push(`Travelled ${andList(trips.map(t => `${t.from.replace(/^Unknown/, "an unknown")} → ${t.to}`))}.`);
+  if (trips.length) out.push(`Travelled ${andList(trips.map(t => `${t.from.replace(/^Unknown/, "an unknown")} → ${tripTo(t).replace(/^Unknown$/, "an unknown year")}`))}.`);
   const latest = evs.filter(e => !superseded(e)).sort((a, b) => b.ep - a.ep)[0];
   if (latest && !hasYears) out.push(`Most recently: ${latest.t.replace(/\.?$/, ".")}`);
   return out.join(" ");
@@ -1415,7 +1414,7 @@ function openPerson(id){
     ${links.length ? `<h3>Connections</h3><div class="rels">${links.map(l => { const r = relTo(l, id); const sup = superseded(l);
         return `<button class="rel" data-person="${r.other}"><span class="kind ${sup?"struck":""}">${r.kind}</span>${avatar(r.other)}<span><span class="${sup?"struck":""}">${esc(name(r.other))}</span>${sup?` <span style="color:var(--thread);font-size:12px">· ${esc(l.later)} (${code(l.until)})</span>`:""} ${epBadge(l.ep)}${isNew(l)?' <span class="newtag">NEW</span>':""}</span></button>`; }).join("")}</div>` : ""}
     ${(() => { const xw = crossWorld(id).filter(x => x.kind === "Counterpart"); return xw.length ? `<h3>In other worlds</h3><div class="rels">${xw.map(x => `<button class="rel" data-person="${x.id}"><span class="kind">${esc(worldName(worldOf(x.id)))}</span>${avatar(x.id)}<span>${esc(name(x.id))}</span></button>`).join("")}</div>` : ""; })()}
-    ${trips.length ? `<h3>Time travel</h3><div class="bio">${trips.map(t => `<div class="row">${epBadge(t.ep)}<span class="mono">${esc(t.from)} → ${esc(t.to)}</span><span style="color:var(--muted)">${esc(t.how)}</span></div>`).join("")}</div>` : ""}
+    ${trips.length ? `<h3>Time travel</h3><div class="bio">${trips.map(t => `<div class="row">${epBadge(t.ep)}<span class="mono">${esc(t.from)} → ${esc(tripTo(t))}</span><span style="color:var(--muted)">${esc(t.how)}</span></div>`).join("")}</div>` : ""}
     ${evs.length ? `<h3>On the timeline</h3><div class="bio">${evs.map(e => `<div class="row">${e.d ? `<button class="epb" data-yr="${e.w}|${e.d.slice(0,4)}" title="See ${e.d.slice(0,4)} on the timeline" style="cursor:pointer;background:none;font:inherit;font-family:var(--font-mono);font-size:11px;color:var(--muted);border-color:var(--line)">${e.d.slice(0,4)}${e.w==="B"?" ◐":e.w==="O"?" ○":""}</button>` : `<span class="epb">?</span>`}<span class="${superseded(e)?"struck":""}">${esc(e.t)}</span></div>`).join("")}</div>` : ""}
   </div>`);
 }
