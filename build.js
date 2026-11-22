@@ -9,7 +9,7 @@ const out = {
   CHARACTERS: D.CHARACTERS.map(c => ({...fix({...c}), bio:c.bio.map(b => fix({...b})), role:(c.role||[]).map(r => fix({...r})), job:(c.job||[]).map(r => fix({...r})), posFrom:(c.posFrom||[]).map(p => ({ep:E(p.ep), pos:p.pos}))})),
   LINKS: D.LINKS.map(l => fix({...l})),
   EVENTS: D.EVENTS.map(e => fix({...e})),
-  JOURNEYS: D.JOURNEYS.map(j => fix({...j})),
+  JOURNEYS: D.JOURNEYS.map(j => { const o = fix({...j}); if (o.toAt !== undefined) o.toAt = E(o.toAt); return o; }),
   MYSTERIES: D.MYSTERIES.map(m => ({...fix({...m}), a:m.a.map(a => fix({...a}))})),
   GLOSSARY: D.GLOSSARY.map(g => fix({...g})),
   RECAPS: Object.fromEntries(Object.entries(D.RECAPS).map(([k,v]) => { const [s,n]=k.split("."); return [`S${s}E${n}`, v]; })),
