@@ -3,10 +3,11 @@ const D = require("./src/data.js");
 const idx = {}; D.EPISODES.forEach(([c], i) => idx[c] = i);
 const E = c => { if (c === undefined) return undefined; if (!(c in idx)) throw new Error("bad ep " + c); return idx[c]; };
 const fix = o => { o.ep = E(o.ep); if (o.until !== undefined) o.until = E(o.until); return o; };
+D.MERGES.forEach(m => { const c = D.CHARACTERS.find(x => x.id === m.from); if (!c || !D.CHARACTERS.some(x => x.id === m.into)) throw new Error("MERGES " + m.from); c.mergedInto = m.into; c.mergedAt = m.ep; });
 const out = {
   EPISODES: D.EPISODES.map(([c, t], i) => { const [s, n] = c.split("."); return {i, code:`S${s}E${n}`, s:+s, n:+n, title:t}; }),
   FAMILIES: D.FAMILIES,
-  CHARACTERS: D.CHARACTERS.map(c => ({...fix({...c}), bio:c.bio.map(b => fix({...b})), role:(c.role||[]).map(r => fix({...r})), job:(c.job||[]).map(r => fix({...r})), posFrom:(c.posFrom||[]).map(p => ({ep:E(p.ep), pos:p.pos}))})),
+  CHARACTERS: D.CHARACTERS.map(c => ({...fix({...c}), mergedAt: c.mergedAt !== undefined ? E(c.mergedAt) : undefined, bio:c.bio.map(b => fix({...b})), role:(c.role||[]).map(r => fix({...r})), job:(c.job||[]).map(r => fix({...r})), posFrom:(c.posFrom||[]).map(p => ({ep:E(p.ep), pos:p.pos}))})),
   LINKS: D.LINKS.map(l => fix({...l})),
   EVENTS: D.EVENTS.map(e => fix({...e})),
   JOURNEYS: D.JOURNEYS.map(j => { const o = fix({...j}); if (o.toAt !== undefined) o.toAt = E(o.toAt); return o; }),

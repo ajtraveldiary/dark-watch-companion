@@ -209,6 +209,9 @@ select,input[type=search]{background:var(--surface-2);color:var(--ink);border:1p
 .loc-d{font-size:13px;color:var(--accent);padding-top:2px}
 @media (max-width:560px){.loc-evs li{grid-template-columns:1fr;gap:2px}}
 .who-sum{margin:0 0 12px;padding:4px 14px;border-left:3px solid var(--accent);background:rgba(227,180,60,.06);border-radius:0 10px 10px 0;line-height:1.6}
+.ages{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 2px}
+.age{font:inherit;font-size:13.5px;padding:5px 12px;border-radius:999px;border:1px solid var(--line);background:var(--surface);color:var(--muted);cursor:pointer}
+.age.on{background:var(--ink);border-color:var(--ink);color:var(--bg);cursor:default}
 .who-head{margin:8px 0;padding-bottom:8px;border-bottom:1px solid var(--line)}
 .who-sum .who-head:last-child{border-bottom:none}
 .ys-row{display:grid;grid-template-columns:62px 1fr;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);line-height:1.5}
@@ -518,7 +521,11 @@ let curWorld = "A", showLoops = true, famFilter = "all", personFilter = "", worl
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
 const code = i => EPS[i] ? EPS[i].code : "";
-const vis = it => it.ep <= V;
+const vis = it => it.ep <= V && !(it.mergedAt != null && it.mergedAt <= V);
+// A mystery figure folds into the real character once the show reveals who they are.
+const isMerged = c => c && c.mergedAt != null && c.mergedAt <= V;
+const canon = id => isMerged(CH[id]) ? CH[id].mergedInto : id;
+const alsoIds = id => [id, ...D.CHARACTERS.filter(c => c.mergedInto === id && isMerged(c)).map(c => c.id)];
 const isNew = it => it.ep === V;
 const superseded = it => it.until !== undefined && it.until <= V;
 function initials(name){
@@ -607,7 +614,7 @@ function fmtDate(d){
   return m[+p[1]-1] + " " + (+p[2]) + ", " + p[0];
 }
 // Name a character as known at V (identity reveals keep their own names)
-function name(id){ return CH[id] ? CH[id].name : id; }
+function name(id){ return CH[id] ? (isMerged(CH[id]) ? name(CH[id].mergedInto) : CH[id].name) : id; }
 function jobOf(id){ const c = CH[id]; if (!c || !c.job) return ""; const r = c.job.filter(x => x.ep <= V); return r.length ? r[r.length-1].t : ""; }
 // The three worlds. Names follow what the show has revealed by the episode being viewed.
 const EPI = c => EPS.findIndex(e => e.code === c);
@@ -706,7 +713,7 @@ function renderTimeline(){
   let evs = D.EVENTS.filter(vis);
   const peopleOpts = D.CHARACTERS.filter(vis).sort((a,b)=>a.name.localeCompare(b.name));
   if (personFilter && !(CH[personFilter] && CH[personFilter].ep <= V)) personFilter = "";
-  if (personFilter) evs = evs.filter(e => e.who.includes(personFilter));
+  if (personFilter) evs = evs.filter(e => e.who.some(x => alsoIds(personFilter).includes(x)));
   const worldsPresent = ["A","B","O"].filter(w => D.EVENTS.some(e => vis(e) && e.w === w));
   const WN = {A:worldName("A"), B:worldName("B"), O:worldName("C")};
   const groups = worldsPresent.filter(w => worldShow[w]).map(w => {
@@ -1369,7 +1376,9 @@ function summaryOf(id, links, evs, trips, hasYears){
   const sur = n => (n.match(/\s(\S+)$/) || [,""])[1];
   const mine = sur(name(id));
   const short = o => { const n = name(o).replace(/^The /, "the "); return mine && sur(n) === mine && !/^the /.test(n) ? n.slice(0, -mine.length - 1) : n; };
-  links.filter(l => !superseded(l)).forEach(l => { const r = relTo(l, id); (by[r.kind] = by[r.kind] || []).push(short(r.other)); });
+  const ids = alsoIds(id);
+  ids.filter(x => x !== id).forEach(x => out.push(`Known as \u201c${CH[x].name.replace(/^The /, "the ")}\u201d until ${code(CH[x].mergedAt)}.`));
+  links.filter(l => !superseded(l)).forEach(l => { const r = relTo(l, ids.includes(l.a) ? l.a : l.b); (by[r.kind] = by[r.kind] || []).push(short(r.other)); });
   const role = roleOf(id).split(";").map(x => x.trim()).filter(x => x && !/'s (husband|wife|son|daughter|father|mother|brother|sister|partner|boyfriend|girlfriend|grandson|granddaughter|grandmother|grandfather)\b/i.test(x)).join("; ");
   if (role) out.push(role.charAt(0).toUpperCase() + role.slice(1).replace(/[.\s]+$/, "") + ".");
   const say = (k, lead) => { if (by[k]) out.push(`${lead} ${andList(by[k])}.`); };
@@ -1401,30 +1410,37 @@ function summaryOf(id, links, evs, trips, hasYears){
 function yearSummary(id, evs){
   const g = new Map();
   const put = (w, y, t) => { const k = w + "|" + y; if (!g.has(k)) g.set(k, {w, y, parts: []}); const e = g.get(k); if (!e.parts.includes(t)) e.parts.push(t); };
-  const rows = (D.YEARS || {})[id];
-  if (rows) rows.filter(r => r.ep <= V).forEach(r => put("A", r.y, superseded(r) ? r.later : r.t));
-  else evs.forEach(e => { if (e.d) put(e.w || "A", e.d.slice(0, 4), superseded(e) && e.later ? e.later : e.t); });
+  const rows = alsoIds(id).flatMap(x => (D.YEARS || {})[x] || []);
+  if (!rows.length) { evs.forEach(e => { if (e.d) put(e.w || "A", e.d.slice(0, 4), superseded(e) && e.later ? e.later : e.t); }); }
+  rows.filter(r => r.ep <= V).forEach(r => put("A", r.y, superseded(r) ? r.later : r.t));
   const order = {A: 0, B: 1, O: 2};
   return [...g.values()].sort((a, b) => (order[a.w] - order[b.w]) || a.y.localeCompare(b.y));
 }
 function openPerson(id){
+  id = canon(id);
   const c = CH[id]; if (!c || c.ep > V) return;
-  const bio = c.bio.filter(vis);
-  const links = D.LINKS.filter(l => vis(l) && (l.a === id || l.b === id) && CH[l.a].ep <= V && CH[l.b].ep <= V);
-  const evs = D.EVENTS.filter(e => vis(e) && e.who.includes(id)).sort(evSort);
-  const trips = D.JOURNEYS.filter(t => vis(t) && t.who === id);
+  const ids = alsoIds(id);
+  const bio = ids.flatMap(x => CH[x].bio).filter(vis).sort((a, b) => a.ep - b.ep);
+  const links = D.LINKS.filter(l => vis(l) && (ids.includes(l.a) || ids.includes(l.b)) && !(ids.includes(l.a) && ids.includes(l.b)) && CH[l.a].ep <= V && CH[l.b].ep <= V);
+  const evs = D.EVENTS.filter(e => vis(e) && e.who.some(x => ids.includes(x))).sort(evSort);
+  const trips = D.JOURNEYS.filter(t => vis(t) && ids.includes(t.who));
   const ph = photo(id);
   openSheet(`<div class="dossier">
     <div class="dossier-top">${avatar(id)}<div><h2 id="sheetTitle">${esc(c.name)}</h2><div style="font-size:14px;margin-top:2px">${esc(roleOf(id))}</div><div style="color:var(--muted);font-size:12.5px">${visWorlds().length > 1 ? esc(worldName(worldOf(id))) + " · " : ""}${FAM[c.fam].name} · first seen ${code(c.ep)}</div>
       <div class="btnrow" style="margin-top:8px">${isOwnerMode()
         ? `<button class="btn" data-photo="${id}">${shared[id] ? "Replace photo for everyone" : "Add photo for everyone"}</button>${shared[id] ? `<button class="btn" data-unphoto="${id}">Remove for everyone</button>` : ""}`
         : `<button class="btn" data-photo="${id}">${localPhoto(id) ? "Change my photo" : (shared[id] ? "Use my own photo" : "Add photo")}</button>${localPhoto(id) ? `<button class="btn" data-unphoto="${id}">Remove my photo</button>` : ""}`}</div></div></div>
+    ${(() => { // the same person at other ages (kept as separate cards): a switch between them
+      const seen = new Set([id]), q = [id];
+      while (q.length) { const x = q.shift(); D.LINKS.forEach(l => { if (l.type === "same" && vis(l) && (l.a === x || l.b === x)) { const o = l.a === x ? l.b : l.a; if (!seen.has(o) && CH[o].ep <= V && !isMerged(CH[o])) { seen.add(o); q.push(o); } } }); }
+      const ages = [...seen].sort((a, b) => CH[a].ep - CH[b].ep);
+      return ages.length > 1 ? `<div class="ages">${ages.map(x => `<button class="age ${x === id ? "on" : ""}" ${x === id ? 'aria-current="true"' : `data-person="${x}"`}>${esc(name(x))}</button>`).join("")}</div>` : ""; })()}
     <h3>What you know</h3>
     ${(() => { const ys = yearSummary(id, evs); const sm = summaryOf(id, links, evs, trips, ys.length > 0);
       return (sm || ys.length) ? `<div class="who-sum">${sm ? `<p class="who-head">${esc(sm)}</p>` : ""}${ys.map(r => `<div class="ys-row"><span class="ys-y mono">${esc(r.y)}${r.w === "B" ? " ◐" : r.w === "O" ? " ○" : ""}</span><span>${esc(r.parts.join(" "))}</span></div>`).join("")}</div>` : ""; })()}
     <div class="bio">${bio.map(b => `<div class="row">${epBadge(b.ep)}<span>${isNew(b)?'<span class="newtag">NEW</span> ':""}<span class="${superseded(b)?"struck":""}">${esc(b.t)}</span>${superseded(b) ? `<div class="turned"><b>TURNED OUT · ${code(b.until)}</b> ${esc(b.later)}</div>` : ""}</span></div>`).join("")}</div>
-    ${links.length ? `<h3>Connections</h3><div class="rels">${links.map(l => { const r = relTo(l, id); const sup = superseded(l);
-        return `<button class="rel" data-person="${r.other}"><span class="kind ${sup?"struck":""}">${r.kind}</span>${avatar(r.other)}<span><span class="${sup?"struck":""}">${esc(name(r.other))}</span>${sup?` <span style="color:var(--thread);font-size:12px">· ${esc(l.later)} (${code(l.until)})</span>`:""} ${epBadge(l.ep)}${isNew(l)?' <span class="newtag">NEW</span>':""}</span></button>`; }).join("")}</div>` : ""}
+    ${links.length ? `<h3>Connections</h3><div class="rels">${links.map(l => { const r = relTo(l, ids.includes(l.a) ? l.a : l.b); const sup = superseded(l);
+        return `<button class="rel" data-person="${canon(r.other)}"><span class="kind ${sup?"struck":""}">${r.kind}</span>${avatar(r.other)}<span><span class="${sup?"struck":""}">${esc(name(r.other))}</span>${sup?` <span style="color:var(--thread);font-size:12px">· ${esc(l.later)} (${code(l.until)})</span>`:""} ${epBadge(l.ep)}${isNew(l)?' <span class="newtag">NEW</span>':""}</span></button>`; }).join("")}</div>` : ""}
     ${(() => { const xw = crossWorld(id).filter(x => x.kind === "Counterpart"); return xw.length ? `<h3>In other worlds</h3><div class="rels">${xw.map(x => `<button class="rel" data-person="${x.id}"><span class="kind">${esc(worldName(worldOf(x.id)))}</span>${avatar(x.id)}<span>${esc(name(x.id))}</span></button>`).join("")}</div>` : ""; })()}
     ${trips.length ? `<h3>Time travel</h3><div class="bio">${trips.map(t => `<div class="row">${epBadge(t.ep)}<span class="mono">${esc(t.from)} → ${esc(tripTo(t))}</span><span style="color:var(--muted)">${esc(t.how)}</span></div>`).join("")}</div>` : ""}
     ${evs.length ? `<h3>On the timeline</h3><div class="bio">${evs.map(e => `<div class="row">${e.d ? `<button class="epb" data-yr="${e.w}|${e.d.slice(0,4)}" title="See ${e.d.slice(0,4)} on the timeline" style="cursor:pointer;background:none;font:inherit;font-family:var(--font-mono);font-size:11px;color:var(--accent);border-color:var(--accent)">${e.d.slice(0,4)}${e.w==="B"?" ◐":e.w==="O"?" ○":""}</button>` : `<span class="epb">?</span>`}<span class="${superseded(e)?"struck":""}">${esc(e.t)}</span></div>`).join("")}</div>` : ""}

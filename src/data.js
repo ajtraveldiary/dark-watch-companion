@@ -1422,3 +1422,11 @@ module.exports.DEATHS = [
   { ep:"3.8",  v:"sonja", by:null, y:"1971", w:"O", how:"in a car crash with her husband and baby daughter" },
   { ep:"3.8",  v:"charlotte_o", by:null, y:"1971", w:"O", how:"as a baby, in a car crash with her parents" }
 ];
+
+// ---------- Mystery figures that turn out to be a known character ----------
+// From ep on, the mystery figure's card folds into the real character's: one card, one entry in People and the tree.
+module.exports.MERGES = [
+  { from:"kidnapper",  into:"helge",     ep:"1.7" },
+  { from:"soldier",    into:"elisabeth", ep:"2.1" },
+  { from:"oldclaudia", into:"claudia",   ep:"2.2" }
+];
