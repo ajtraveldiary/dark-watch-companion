@@ -1379,11 +1379,15 @@ function summaryOf(id, links, evs, trips, hasYears){
   say("Raised", "Raised"); say("Grandparent of", "Grandparent of"); say("Sibling of", "Sibling of");
   // Deaths: how this person died, and anyone they killed, from the episode that shows it
   const wTag = d => d.w === "B" ? ", other world" : d.w === "O" ? ", origin world" : "";
-  const vName = d => (typeof d.v === "string" ? name(d.v) : d.v.n).replace(/^The /, "the ");
+  const vName = d => d.label || (typeof d.v === "string" ? name(d.v) : d.v.n).replace(/^The /, "the ");
+  // the same person at another age (e.g. the old woman = Claudia) counts as this person
+  const selves = new Set([id, ...D.LINKS.filter(l => l.type === "same" && l.ep <= V && (l.a === id || l.b === id)).map(l => l.a === id ? l.b : l.a)]);
   (D.DEATHS || []).filter(d => d.ep <= V).forEach(d => {
     const bys = [].concat(d.by || []);
-    if (d.v === id) out.push(`Died (${d.y}${wTag(d)}): ${d.how}.`);
-    if (bys.includes(id)) out.push(d.involved ? `Involved in the death of ${vName(d)} (${d.y}${wTag(d)}).` : `Killed ${vName(d)} (${d.y}${wTag(d)}).`);
+    const as = x => x === id ? "" : (d.label && x === d.v ? " (her older self)" : ` (as ${name(x).replace(/^The /, "the ")})`);
+    if (d.v === id || (!d.own && selves.has(d.v))) out.push(`Died (${d.y}${wTag(d)}): ${d.how}${as(d.v)}.`);
+    const me = bys.find(x => selves.has(x));
+    if (me) out.push(d.involved ? `Involved in the death of ${vName(d)} (${d.y}${wTag(d)}).` : `Killed ${vName(d)} (${d.y}${wTag(d)})${as(me)}.`);
   });
   const years = new Set(evs.filter(e => e.d).map(e => e.d.slice(0,4)));
   (D.SIGHTINGS || []).forEach(r => { if (r.id === id && r.ep <= V && /^\d{4}$/.test(r.y)) years.add(r.y); });

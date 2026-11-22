@@ -609,7 +609,7 @@ const EVENTS = [
   {ep:"2.3", w:"A", d:"1987-06-23", t:"Old Ulrich tells Egon who he is. Egon reads a 1986 interview where the boy named Ulrich as his father.", who:["ulrich","egon","michael"]},
   {ep:"2.3", w:"A", d:"1987-06-23", t:"Tannhaus tells Claudia he's been waiting for her. His book existed before he wrote it.", who:["tannhaus","claudia"]},
   {ep:"2.3", w:"A", d:"1954-06-23", t:"The old woman gives Tannhaus his book.", who:["oldclaudia","tannhaus"]},
-  {ep:"2.3", w:"A", d:"1954-06-23", t:"Noah shoots the old woman at the Doppler cabin. Her missing notebook pages mention Charlotte. He lies to Adam.", who:["noah","oldclaudia","agnes","adam"]},
+  {ep:"2.3", w:"A", d:"1954-06-23", t:"Noah shoots the older Claudia at the Doppler cabin. Her missing notebook pages mention Charlotte. He lies to Adam.", who:["noah","oldclaudia","agnes","adam"]},
   {ep:"2.3", w:"A", d:"2020-06-23", t:"Claudia (from 1987) sees Regina in 2020, losing her hair.", who:["claudia","regina"]},
 
   // ---- S2E4 ----
@@ -1402,7 +1402,7 @@ module.exports.DEATHS = [
   { ep:"1.7",  v:"mads", by:["helge","noah"], y:"1986", how:"after Helge, working with Noah, took him to the bunker" },
   { ep:"1.10", v:"helge", by:null, y:"1986", how:"in a car crash with his younger self, having come back from 2019" },
   { ep:"2.1",  v:{n:"an older Sic Mundus man"}, by:"noah", y:"1921", how:"killed by young Noah with a pickaxe in the caves" },
-  { ep:"2.3",  v:"oldclaudia", by:"noah", y:"1954", how:"shot by Noah at the Doppler cabin" },
+  { ep:"2.3",  v:"oldclaudia", label:"the older Claudia Tiedemann", by:"noah", y:"1954", how:"shot by Noah at the Doppler cabin" },
   { ep:"2.7",  v:"egon", by:"claudia", y:"1987", how:"after a struggle with Claudia over a phone", involved:true },
   { ep:"2.8",  v:"noah", by:"agnes", y:"1921", how:"shot by his sister Agnes" },
   { ep:"2.8",  v:"martha", by:"adam", y:"2020", how:"shot by Adam in front of Jonas" },
@@ -1414,7 +1414,7 @@ module.exports.DEATHS = [
   { ep:"3.5",  v:"peter", by:null, y:"2020", how:"killed by a survivor, whom Elisabeth then kills" },
   { ep:"3.5",  v:{n:"the man who killed Peter"}, by:"elisabeth", y:"2020", how:"killed by Elisabeth" },
   { ep:"3.5",  v:"katharina", by:"helene", y:"1987", how:"killed by the lake by her own mother, Helene, who doesn't know her" },
-  { ep:"3.5",  v:"jonas", by:"martha_alt", y:"2019", w:"B", how:"shot by the Martha who brought him to her world" },
+  { ep:"3.5",  v:"jonas", own:true, by:"martha_alt", y:"2019", w:"B", how:"shot by the Martha who brought him to her world" },
   { ep:"3.6",  v:"martha_alt", by:"adam", y:"2053", how:"swallowed by the God particle when Adam pulls the lever" },
   { ep:"3.7",  v:"stranger", by:null, y:"1890", how:"electrocuted climbing a tower that powers the God particle" },
   { ep:"3.7",  v:"silja", by:null, y:"1910", how:"giving birth to Agnes" },
