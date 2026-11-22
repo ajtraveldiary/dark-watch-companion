@@ -1377,6 +1377,14 @@ function summaryOf(id, links, evs, trips, hasYears){
   say("Grandchild of", "Grandchild of"); say("Married to", "Married to"); say("Together with", "Together with");
   say("Affair with", "Had an affair with"); say("Parent of", "Parent of"); say("Adoptive parent of", "Adoptive parent of");
   say("Raised", "Raised"); say("Grandparent of", "Grandparent of"); say("Sibling of", "Sibling of");
+  // Deaths: how this person died, and anyone they killed, from the episode that shows it
+  const wTag = d => d.w === "B" ? ", other world" : d.w === "O" ? ", origin world" : "";
+  const vName = d => (typeof d.v === "string" ? name(d.v) : d.v.n).replace(/^The /, "the ");
+  (D.DEATHS || []).filter(d => d.ep <= V).forEach(d => {
+    const bys = [].concat(d.by || []);
+    if (d.v === id) out.push(`Died (${d.y}${wTag(d)}): ${d.how}.`);
+    if (bys.includes(id)) out.push(d.involved ? `Involved in the death of ${vName(d)} (${d.y}${wTag(d)}).` : `Killed ${vName(d)} (${d.y}${wTag(d)}).`);
+  });
   const years = new Set(evs.filter(e => e.d).map(e => e.d.slice(0,4)));
   (D.SIGHTINGS || []).forEach(r => { if (r.id === id && r.ep <= V && /^\d{4}$/.test(r.y)) years.add(r.y); });
   const ys = [...years].sort(); if (ys.length && !hasYears) out.push(`Seen in ${andList(ys)}.`);

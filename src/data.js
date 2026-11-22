@@ -706,6 +706,7 @@ const EVENTS = [
 
   // ---- S3E8 ----
   {ep:"3.8", w:"A", d:"2053-09-26", t:"Claudia: there is a third world, the origin. Tannhaus split it trying to undo his family's death. Adam's efforts only keep the knot alive.", who:["claudia","adam","tannhaus"]},
+  {ep:"3.8", w:"O", d:"1971", t:"On the bridge, Marek Tannhaus, his wife Sonja and baby Charlotte die in a car crash. Grieving, H.G. Tannhaus builds a time machine to undo it, and splits the world in two.", who:["marek","sonja","charlotte_o","tannhaus"]},
   {ep:"3.8", w:"O", d:"1971", t:"Jonas and the other Martha stop Marek Tannhaus's car on the night of the crash. They, and everything of the knot, fade away.", who:["jonas","martha_alt","marek","sonja","charlotte_o","tannhaus"]},
   {ep:"3.8", w:"O", d:null, t:"At a dinner at the Kahnwald house, Hannah says she's pregnant and likes the name Jonas.", who:["hannah","regina","peter","benni","torben"]}
 ];
@@ -1392,3 +1393,32 @@ module.exports.YEARS = {
     ["2019","1.10","Tells Bartosz that Claudia is his enemy and recruits him."]
   ]
 };
+
+// ---------- Deaths and killings: shown in each person's card ("Died" / "Killed") from the episode that shows them ----------
+// v: who dies (a character id, or {n:"description"} for someone unnamed). by: who caused it (id, list of ids, or null).
+// y: year (w: "B" other world, "O" origin world). how: short, plain description of the death.
+module.exports.DEATHS = [
+  { ep:"1.1",  v:"michael", by:null, y:"2019", how:"hanged himself in his attic" },
+  { ep:"1.7",  v:"mads", by:["helge","noah"], y:"1986", how:"after Helge, working with Noah, took him to the bunker" },
+  { ep:"1.10", v:"helge", by:null, y:"1986", how:"in a car crash with his younger self, having come back from 2019" },
+  { ep:"2.1",  v:{n:"an older Sic Mundus man"}, by:"noah", y:"1921", how:"killed by young Noah with a pickaxe in the caves" },
+  { ep:"2.3",  v:"oldclaudia", by:"noah", y:"1954", how:"shot by Noah at the Doppler cabin" },
+  { ep:"2.7",  v:"egon", by:"claudia", y:"1987", how:"after a struggle with Claudia over a phone", involved:true },
+  { ep:"2.8",  v:"noah", by:"agnes", y:"1921", how:"shot by his sister Agnes" },
+  { ep:"2.8",  v:"martha", by:"adam", y:"2020", how:"shot by Adam in front of Jonas" },
+  { ep:"3.1",  v:"bernd", by:"unknown", y:"1987", how:"strangled by the scarred men for the plant's master key" },
+  { ep:"3.2",  v:"jasmin", by:"unknown", y:"1987", how:"strangled by the scarred man" },
+  { ep:"3.2",  v:"regina", by:"tronte", y:"2020", how:"smothered by Tronte after the apocalypse" },
+  { ep:"3.3",  v:"gustav", by:"unknown", y:"1888", how:"killed on the road when the scarred man stops his carriage" },
+  { ep:"3.3",  v:"mads", by:"helge", y:"1986", w:"B", how:"old Helge confesses to killing him" },
+  { ep:"3.5",  v:"peter", by:null, y:"2020", how:"killed by a survivor, whom Elisabeth then kills" },
+  { ep:"3.5",  v:{n:"the man who killed Peter"}, by:"elisabeth", y:"2020", how:"killed by Elisabeth" },
+  { ep:"3.5",  v:"katharina", by:"helene", y:"1987", how:"killed by the lake by her own mother, Helene, who doesn't know her" },
+  { ep:"3.5",  v:"jonas", by:"martha_alt", y:"2019", w:"B", how:"shot by the Martha who brought him to her world" },
+  { ep:"3.6",  v:"martha_alt", by:"adam", y:"2053", how:"swallowed by the God particle when Adam pulls the lever" },
+  { ep:"3.7",  v:"stranger", by:null, y:"1890", how:"electrocuted climbing a tower that powers the God particle" },
+  { ep:"3.7",  v:"silja", by:null, y:"1910", how:"giving birth to Agnes" },
+  { ep:"3.8",  v:"marek", by:null, y:"1971", w:"O", how:"in a car crash with his wife and baby daughter" },
+  { ep:"3.8",  v:"sonja", by:null, y:"1971", w:"O", how:"in a car crash with her husband and baby daughter" },
+  { ep:"3.8",  v:"charlotte_o", by:null, y:"1971", w:"O", how:"as a baby, in a car crash with her parents" }
+];

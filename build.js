@@ -19,6 +19,7 @@ const out = {
   REALWORLD: D.REALWORLD,
   PLACES: D.PLACES.map(p => ({...p, ep:E(p.ep)})),
   TIMEORDER: D.TIMEORDER.map(r => ({...r, ep:E(r.ep)})),
+  DEATHS: D.DEATHS.map(d => { [].concat(d.by || [], typeof d.v === "string" ? [d.v] : []).forEach(id => { if (!D.CHARACTERS.some(c => c.id === id)) throw new Error("DEATHS id " + id); }); return {...d, ep:E(d.ep)}; }),
   YEARS: Object.fromEntries(Object.entries(D.YEARS).map(([id, rows]) => { if (!D.CHARACTERS.some(c => c.id === id)) throw new Error("YEARS id " + id);
     return [id, rows.map(([y, ep, t, x]) => ({y, ep:E(ep), t, until: x ? E(x.until) : undefined, later: x ? x.later : undefined}))]; })),
   CONCEPTS: D.CONCEPTS.map(c => ({...c, ep:E(c.ep), more:(c.more || []).map(m => ({...m, ep:E(m.ep)}))})),
