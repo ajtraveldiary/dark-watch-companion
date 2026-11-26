@@ -1090,31 +1090,60 @@ module.exports.PLACES = [
 // ---------- Recap tab: the season retold in time order, plus "explained" once a season is finished ----------
 // Each paragraph shows only from its episode on (ep = where the last fact in it is revealed). Our own words.
 module.exports.TIMEORDER = [
-  { s:1, y:"1953", ep:"1.8", t:"November 1953. Winden is getting ready to build its nuclear power plant. On the building site, workers find two dead boys with burned-out eyes, wearing clothes nobody in 1953 could have made, with 1986 coins on red cords round their necks." },
-  { s:1, y:"1953", ep:"1.8", t:"Ulrich arrives through the caves from 2019. He meets newcomer Agnes Nielsen and her son Tronte, the boy who will grow up to be his father, and young Jana, his future mother. Convinced that young Helge Doppler will become the child killer, he beats the boy with a rock and leaves him in the bunker. In the clockmaker's shop, young Tannhaus finds the jacket Ulrich left behind, with a smartphone holding a 2019 photo." },
-  { s:1, y:"1953", ep:"1.9", t:"An elderly woman asks young Tannhaus to build a time machine. Greta Doppler confesses to Pastor Noah that she never wanted Helge. Egon Tiedemann arrests Ulrich." },
-  { s:1, y:"1953", ep:"1.10", t:"Egon interrogates and beats Ulrich, now the prime suspect in a murder case from his own future. He is stuck in 1953." },
+  { s:1, y:"1953", ep:"1.8", d:"1953-11-10a", t:"November 1953. Winden is getting ready to build its nuclear power plant. On the building site, workers find two dead boys with burned-out eyes, wearing clothes nobody in 1953 could have made, with 1986 coins on red cords round their necks." },
+  { s:1, y:"1953", ep:"1.8", d:"1953-11-10b", t:"Ulrich arrives through the caves from 2019. He meets newcomer Agnes Nielsen and her son Tronte, the boy who will grow up to be his father, and young Jana, his future mother. Convinced that young Helge Doppler will become the child killer, he beats the boy with a rock and leaves him in the bunker. In the clockmaker's shop, young Tannhaus finds the jacket Ulrich left behind, with a smartphone holding a 2019 photo." },
+  { s:1, y:"1953", ep:"1.9", d:"1953-11-11", t:"An elderly woman asks young Tannhaus to build a time machine. Greta Doppler confesses to Pastor Noah that she never wanted Helge. Egon Tiedemann arrests Ulrich." },
+  { s:1, y:"1953", ep:"1.10", d:"1953-11-12", t:"Egon interrogates and beats Ulrich, now the prime suspect in a murder case from his own future. He is stuck in 1953." },
 
-  { s:1, y:"1986", ep:"1.3", t:"In the summer an incident at the plant is quietly covered up. Claudia Tiedemann becomes plant director, and Bernd Doppler hands her the key to yellow barrels hidden in the caves." },
-  { s:1, y:"1986", ep:"1.6", t:"Teenage Ulrich and Katharina tie Regina to a tree by the caves and leave her there. She screams at something in the dark." },
-  { s:1, y:"1986", ep:"1.7", t:"Behind the missing children is Helge Doppler, now a guard at the plant. Working with Noah, he takes boys through the bunker. Ulrich's little brother Mads vanishes in November and is never found." },
-  { s:1, y:"1986", ep:"1.3", t:"On 5 November, Mikkel Nielsen walks out of the caves, from 2019. He ends up in hospital in the care of nurse Ines Kahnwald. Birds fall from the sky and 33 sheep die on a farm. Old Tannhaus finishes a brass device identical to the Stranger's." },
-  { s:1, y:"1986", ep:"1.5", t:"Pastor Noah visits Mikkel in hospital. Teen Hannah tells the police that Ulrich raped Katharina, and Egon arrests him. The Stranger visits Tannhaus to talk about time." },
-  { s:1, y:"1986", ep:"1.7", t:"Jonas comes through the caves on 8 November and finds Mikkel in hospital. The Stranger warns him: Mikkel grows up to be Michael, Jonas's father, so taking him home would erase Jonas himself." },
-  { s:1, y:"1986", ep:"1.8", t:"The Stranger tells Tannhaus he came from the future to destroy the wormhole, and shows him a broken device bearing Tannhaus's own initials." },
-  { s:1, y:"1986", ep:"1.9", t:"A wounded man buries a gun and two passports in false names. Bernd admits to Claudia that the summer incident leaked radiation. She hires the man, who now calls himself Aleksander, and he seals the cave door." },
-  { s:1, y:"1986", ep:"1.10", t:"On 12 November everything meets. Old Helge, come from 2019, tries to stop his younger self and dies when their cars collide. Helge straps Jonas into the chair, and the Stranger reveals that he is Jonas, from the future. Ines adopts Mikkel and names him Michael Kahnwald. A wormhole opens: young Helge from 1953 lands in 1986, and Jonas is thrown forward." },
+  { s:1, y:"1986", ep:"1.3", d:"1986-08", t:"In the summer an incident at the plant is quietly covered up. Claudia Tiedemann becomes plant director, and Bernd Doppler hands her the key to yellow barrels hidden in the caves." },
+  { s:1, y:"1986", ep:"1.6", d:"1986-10", t:"Teenage Ulrich and Katharina tie Regina to a tree by the caves and leave her there. She screams at something in the dark." },
+  { s:1, y:"1986", ep:"1.7", d:"1986-11-01", t:"Behind the missing children is Helge Doppler, now a guard at the plant. Working with Noah, he takes boys through the bunker. Ulrich's little brother Mads vanishes in November and is never found." },
+  { s:1, y:"1986", ep:"1.3", d:"1986-11-05", t:"On 5 November, Mikkel Nielsen walks out of the caves, from 2019. He ends up in hospital in the care of nurse Ines Kahnwald. Birds fall from the sky and 33 sheep die on a farm. Old Tannhaus finishes a brass device identical to the Stranger's." },
+  { s:1, y:"1986", ep:"1.5", d:"1986-11-07", t:"Pastor Noah visits Mikkel in hospital. Teen Hannah tells the police that Ulrich raped Katharina, and Egon arrests him. The Stranger visits Tannhaus to talk about time." },
+  { s:1, y:"1986", ep:"1.7", d:"1986-11-09", t:"Jonas comes through the caves on 8 November and finds Mikkel in hospital. The Stranger warns him: Mikkel grows up to be Michael, Jonas's father, so taking him home would erase Jonas himself." },
+  { s:1, y:"1986", ep:"1.8", d:"1986-11-10", t:"The Stranger tells Tannhaus he came from the future to destroy the wormhole, and shows him a broken device bearing Tannhaus's own initials." },
+  { s:1, y:"1986", ep:"1.9", d:"1986-11-11", t:"A wounded man buries a gun and two passports in false names. Bernd admits to Claudia that the summer incident leaked radiation. She hires the man, who now calls himself Aleksander, and he seals the cave door." },
+  { s:1, y:"1986", ep:"1.10", d:"1986-11-12", t:"On 12 November everything meets. Old Helge, come from 2019, tries to stop his younger self and dies when their cars collide. Helge straps Jonas into the chair, and the Stranger reveals that he is Jonas, from the future. Ines adopts Mikkel and names him Michael Kahnwald. A wormhole opens: young Helge from 1953 lands in 1986, and Jonas is thrown forward." },
 
-  { s:1, y:"2019", ep:"1.1", t:"In June, Michael Kahnwald hangs himself in his attic, leaving a sealed letter not to be opened before 4 November at 22:13. In October, Erik Obendorf goes missing." },
-  { s:1, y:"2019", ep:"1.1", t:"On 4 November, Jana tells Ulrich that everything is repeating itself. That night the teenagers go to the caves, and Mikkel disappears. The next morning a boy's body turns up in the forest: burned eyes, burst eardrums, 1980s clothes. It isn't Mikkel." },
-  { s:1, y:"2019", ep:"1.10", t:"That same night, in the bunker, Peter Doppler sees a flash and a boy's body falls through. Tronte and an old woman named Claudia have him leave it where it must be found." },
-  { s:1, y:"2019", ep:"1.2", t:"A stranger checks into room 8 of the Waldhotel and covers the walls with notes on time. Ulrich finds a sealed steel door in the caves marked with a radiation sign." },
-  { s:1, y:"2019", ep:"1.5", t:"Yasin Friese goes missing after a hooded man tells him \"Noah sent me.\" Through Regina, the Stranger gets Michael's letter to Jonas: Michael was Mikkel, who fell from 2019 into 1986." },
-  { s:1, y:"2019", ep:"1.6", t:"Jonas follows a red thread to a door marked \"Sic Mundus Creatus Est\" and goes through. Ulrich identifies the dead boy as his brother Mads, missing since 1986 and not a day older." },
-  { s:1, y:"2019", ep:"1.7", t:"Charlotte finds the caves run under the forest road near the Doppler cabin. Noah chalks two dates from 1953 on the bunker wall. Ulrich chases old Helge into the caves." },
-  { s:1, y:"2019", ep:"1.10", t:"Charlotte finds a 1953 newspaper with Ulrich's photo as a suspected child murderer. Jonas burns his father's letter. Noah tells Bartosz that Claudia is his enemy and recruits him. The Stranger loads radioactive material into his device at Tannhaus's shop to destroy the wormhole." },
+  { s:1, y:"2019", ep:"1.1", d:"2019-06-21", t:"In June, Michael Kahnwald hangs himself in his attic, leaving a sealed letter not to be opened before 4 November at 22:13. In October, Erik Obendorf goes missing." },
+  { s:1, y:"2019", ep:"1.1", d:"2019-11-04a", t:"On 4 November, Jana tells Ulrich that everything is repeating itself. That night the teenagers go to the caves, and Mikkel disappears. The next morning a boy's body turns up in the forest: burned eyes, burst eardrums, 1980s clothes. It isn't Mikkel." },
+  { s:1, y:"2019", ep:"1.10", d:"2019-11-04b", t:"That same night, in the bunker, Peter Doppler sees a flash and a boy's body falls through. Tronte and an old woman named Claudia have him leave it where it must be found." },
+  { s:1, y:"2019", ep:"1.2", d:"2019-11-05", t:"A stranger checks into room 8 of the Waldhotel and covers the walls with notes on time. Ulrich finds a sealed steel door in the caves marked with a radiation sign." },
+  { s:1, y:"2019", ep:"1.5", d:"2019-11-07", t:"Yasin Friese goes missing after a hooded man tells him \"Noah sent me.\" Through Regina, the Stranger gets Michael's letter to Jonas: Michael was Mikkel, who fell from 2019 into 1986." },
+  { s:1, y:"2019", ep:"1.6", d:"2019-11-08", t:"Jonas follows a red thread to a door marked \"Sic Mundus Creatus Est\" and goes through. Ulrich identifies the dead boy as his brother Mads, missing since 1986 and not a day older." },
+  { s:1, y:"2019", ep:"1.7", d:"2019-11-09", t:"Charlotte finds the caves run under the forest road near the Doppler cabin. Noah chalks two dates from 1953 on the bunker wall. Ulrich chases old Helge into the caves." },
+  { s:1, y:"2019", ep:"1.10", d:"2019-11-12", t:"Charlotte finds a 1953 newspaper with Ulrich's photo as a suspected child murderer. Jonas burns his father's letter. Noah tells Bartosz that Claudia is his enemy and recruits him. The Stranger loads radioactive material into his device at Tannhaus's shop to destroy the wormhole." },
 
-  { s:1, y:"2052", ep:"1.10", t:"Jonas wakes in a ruined, radioactive Winden. A masked soldier knocks him out: \"Welcome to the future.\"" }
+  { s:1, y:"2052", ep:"1.10", d:"2052-a", t:"Jonas wakes in a ruined, radioactive Winden. A masked soldier knocks him out: \"Welcome to the future.\"" },
+
+  { s:2, y:"1921", ep:"2.1", d:"1921-06-21", t:"June 1921. Members of Sic Mundus are digging in the caves. Young Noah kills one of them, an older man, with a pickaxe." },
+  { s:2, y:"1921", ep:"2.4", d:"1921-06-23", t:"Jonas, thrown back from 2053, collapses in a field. Two men carry him into town, where Erna gives him food and a room. Next day he meets young Noah." },
+  { s:2, y:"1921", ep:"2.4", d:"1921-06-24", t:"Beneath the church, the leader of Sic Mundus shows Jonas his scar. Adam is Jonas, grown old." },
+  { s:2, y:"1921", ep:"2.5", d:"1921-06-25a", t:"Adam offers Jonas a way to stop his father's suicide, and sends him to June 2019." },
+  { s:2, y:"1921", ep:"2.6", d:"1921-06-25b", t:"Adam holds Martha's St. Christopher medal. An older Magnus stands with him." },
+  { s:2, y:"1921", ep:"2.8", d:"1921-06-27", t:"Noah turns his gun on Adam, who tells him Charlotte is Elisabeth's daughter and also her mother. Noah's sister Agnes shoots him dead." },
+
+  { s:2, y:"1954", ep:"2.2", d:"1954-06-01", t:"The old woman, Claudia's older self, buries a time machine in the forest for her younger self to find in 1987." },
+  { s:2, y:"1954", ep:"2.3", d:"1954-06-23", t:"Helge, missing for seven months, walks home and won't speak. Agnes and Doris begin an affair. The older Claudia gives Tannhaus a copy of his own book. Noah shoots her at the Doppler cabin; pages missing from her notebook mention Charlotte, and Noah lies to Adam about them." },
+  { s:2, y:"1954", ep:"2.7", d:"1954-06-26", t:"Egon recognises the dead woman, and Helge calls her \"the White Devil\". Hannah arrives from 2020 posing as Katharina, visits Ulrich in the asylum, and decides to stay." },
+
+  { s:2, y:"1987", ep:"2.2", d:"1987-06-22", t:"June 1987. An old woman reclaims the Tiedemanns' dog and tells Claudia she is her future self: stop Adam. Claudia digs up the time machine her older self buried. Egon, dying of cancer, visits an asylum inmate called the Inspector, the man who attacked Helge in 1953, now old. Regina is engaged to Aleksander. Hannah and the Stranger, come from 2020, watch Mikkel at dinner with Ines." },
+  { s:2, y:"1987", ep:"2.3", d:"1987-06-23", t:"The Inspector tells Egon he is Ulrich. Tannhaus tells Claudia he has been waiting for her: his book existed before he wrote it." },
+  { s:2, y:"1987", ep:"2.5", d:"1987-06-25", t:"Old Ulrich escapes and finds Mikkel, but Ines drugs him and he is caught. Bernd's data shows the 1986 incident fits the Higgs mechanism. Martha, Magnus, Franziska and Bartosz arrive from 2020." },
+  { s:2, y:"1987", ep:"2.7", d:"1987-06-26", t:"Egon dies after a struggle with Claudia over a phone: \"You are the White Devil.\" Jonas, a year older, finds Claudia, and they leave for the future." },
+
+  { s:2, y:"2019", ep:"2.6", d:"2019-06-20", t:"20 June 2019, the day before Michael's death. Jonas, sent from 1921, tells Michael he knows he is Mikkel. Michael says that on 4 November an older Jonas led him through the passage. Old Claudia tells Jonas that Adam lied, and that she has seen a world without him. Michael writes his letter. That night young Jonas and Martha sleep together, and on a swing Ulrich and Hannah's affair begins." },
+
+  { s:2, y:"2020", ep:"2.1", d:"2020-06-20", t:"June 2020, six months on. Elisabeth recognises Noah in a photo dated 8 January 1921: he hasn't aged. Adam tells Noah the apocalypse must happen." },
+  { s:2, y:"2020", ep:"2.1", d:"2020-06-21", t:"A task force under Clausen arrives in Winden. Regina refuses hospital care. The Stranger stops Hannah's suicide attempt and shows her he is Jonas." },
+  { s:2, y:"2020", ep:"2.3", d:"2020-06-23", t:"Claudia, from 1987, sees her daughter Regina in 2020, losing her hair." },
+  { s:2, y:"2020", ep:"2.4", d:"2020-06-24", t:"Clausen confronts Aleksander about the name he used to have. Claudia learns that Egon dies on 26 June 1987. Katharina learns Mikkel is alive in another time. Martha, Magnus and Franziska take Bartosz's time machine." },
+  { s:2, y:"2020", ep:"2.5", d:"2020-06-25", t:"Charlotte tells the Stranger that Tannhaus isn't her real grandfather. Noah tells her he is her father." },
+  { s:2, y:"2020", ep:"2.7", d:"2020-06-26", t:"Clausen arrests Aleksander: the real Aleksander was Clausen's brother. Martha learns the Stranger is Jonas. Hannah leaves for 1954." },
+  { s:2, y:"2020", ep:"2.8", d:"2020-06-27", t:"27 June 2020. Elisabeth finds polaroids of herself, Noah and baby Charlotte. The Stranger locks Martha in the bunker, and Claudia takes Regina away. Katharina goes into the caves with the time machine. Adam shoots Martha in front of young Jonas. Another Martha appears (\"The question isn't when, but what world\") and takes Jonas away. The apocalypse hits, and through a portal Elisabeth in 2053 and Charlotte in 2020 face each other." },
+
+  { s:2, y:"2052", ep:"2.1", d:"2052-b", t:"In the ruins, Jonas hears Claudia's tapes about the God particle. Elisabeth Doppler leads the survivors." },
+  { s:2, y:"2053", ep:"2.2", d:"2053-06-21", t:"In 2053 Jonas tries to stabilise the God particle, but the diesel runs out. Elisabeth's people catch him in the forbidden zone. A girl, Silja, frees him; he refuels the particle and steps in." }
 ];
 module.exports.EXPLAINED = {
   1: { ep:"1.10", parts: [
@@ -1125,6 +1154,14 @@ module.exports.EXPLAINED = {
     { h:"A machine nobody invented", t:"Tannhaus's device matches the broken one the Stranger carries, which bears Tannhaus's own initials. The machine seems to exist only because it already existed: there may be no first moment when anyone designed it." },
     { h:"Who the Stranger is", t:"The Stranger is Jonas, older, back from the future to close the wormhole and undo what happened. By the end of the season his plan has not saved anything. Young Jonas is thrown to 2052 and finds Winden destroyed." },
     { h:"Questions the season leaves open", t:"What destroys Winden before 2052? Who is Noah, and what is he building? Who is the old woman called Claudia, and why is Noah at war with her? Can Ulrich get home from 1953, and can Jonas get back from 2052?" }
+  ]},
+  2: { ep:"2.8", parts: [
+    { h:"Two sides of the same loop", t:"Adam, the leader of Sic Mundus, is Jonas grown old. He wants the apocalypse to happen and steers people towards it. Old Claudia works against him. She warns her younger self to stop Adam, and tells Jonas that Adam lied." },
+    { h:"Jonas causes his father's suicide", t:"Jonas goes back to June 2019 to stop Michael killing himself. His visit is what makes Michael write the letter and do it. Trying to prevent it is part of how it happens, the same rule Season 1 set up." },
+    { h:"More things with no origin", t:"Tannhaus's book reaches him from the older Claudia before he has written it. The time machine Claudia digs up in 1987 was buried by her older self. Charlotte is Elisabeth's daughter and also her mother. Each exists only because it already did." },
+    { h:"Why the old woman matters", t:"The old woman is Claudia, travelling through time to undo Adam's plan. Noah kills her in 1954, but she has already set her younger self on the same path. That is why Noah and Adam call her their enemy." },
+    { h:"The apocalypse", t:"Almost everyone spends the season trying to stop the apocalypse of 27 June 2020. It happens anyway. Elisabeth in 2053 and Charlotte in 2020 meet through the portal it leaves." },
+    { h:"Questions the season leaves open", t:"Who is the second Martha, and what did she mean by \"what world\"? Where has she taken Jonas? What is Adam's paradise? Where has Katharina gone? What happens to Hannah in 1954 and Ulrich in the asylum?" }
   ]}
 };
 

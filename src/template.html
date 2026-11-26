@@ -1270,20 +1270,21 @@ function renderTravels(){
 function renderRecap(){
   const el = $("#v-recap");
   if (W < 0) { el.innerHTML = lockedMsg("recap"); return; }
+  // The whole story so far, across seasons, in story-time order (by year, then by date within the year)
+  const rows = D.TIMEORDER.filter(r => r.ep <= V).sort((a, b) => a.y.localeCompare(b.y) || (a.d || "").localeCompare(b.d || ""));
+  const years = [...new Set(rows.map(r => r.y))];
   const seasons = [...new Set(EPS.filter(e => e.i <= V).map(e => e.s))];
-  el.innerHTML = `<div class="vhead"><h2>Recap</h2></div>` + seasons.map(sn => {
-    const rows = D.TIMEORDER.filter(r => r.s === sn && r.ep <= V);
-    const years = [...new Set(rows.map(r => r.y))].sort();
-    const ex = D.EXPLAINED[sn];
-    const done = ex && ex.ep <= V;
-    return `<div class="rc-season">
-      <h3 class="rc-h">Season ${sn} in time order</h3>
+  el.innerHTML = `<div class="vhead"><h2>Recap</h2></div>
+    <div class="rc-season">
+      <h3 class="rc-h">The story so far, in time order</h3>
       ${years.map(y => `<div class="rc-year"><div class="rc-y mono">${y}</div><div>${rows.filter(r => r.y === y).map(r => `<p class="${r.ep === V ? "rc-new" : ""}">${esc(r.t)}</p>`).join("")}</div></div>`).join("") || `<div class="empty">Nothing yet.</div>`}
-      ${done ? `<h3 class="rc-h" style="margin-top:26px">Season ${sn}, explained</h3>
-        <div class="rc-ex">${ex.parts.map(x => `<div class="card"><h4>${esc(x.h)}</h4><p>${esc(x.t)}</p></div>`).join("")}</div>`
-        : (ex ? `<div class="rc-lock">Season ${sn}, explained: unlocks when you finish the season.</div>` : "")}
-    </div>`;
-  }).reverse().join("");
+    </div>` + seasons.map(sn => {
+      const ex = D.EXPLAINED[sn];
+      if (!ex) return "";
+      return ex.ep <= V ? `<div class="rc-season"><h3 class="rc-h">Season ${sn}, explained</h3>
+        <div class="rc-ex">${ex.parts.map(x => `<div class="card"><h4>${esc(x.h)}</h4><p>${esc(x.t)}</p></div>`).join("")}</div></div>`
+        : `<div class="rc-lock">Season ${sn}, explained: unlocks when you finish the season.</div>`;
+    }).join("");
 }
 // ---------- Theories & concepts ----------
 function renderConcepts(){
